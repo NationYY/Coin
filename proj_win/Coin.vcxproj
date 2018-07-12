@@ -51,7 +51,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -119,7 +119,9 @@
     <ClCompile Include="..\src\http_api\http_api.cpp" />
     <ClCompile Include="..\src\mfc_window\Coin.cpp" />
     <ClCompile Include="..\src\mfc_window\CoinDlg.cpp" />
-    <ClCompile Include="..\src\stdafx.cpp" />
+    <ClCompile Include="..\src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\websocket_api\websocket_api.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,7 +144,7 @@
       <UserProperties RESOURCE_FILE="Coin.rc" />
     </VisualStudio>
   </ProjectExtensions>
-  <PropertyGroup> 
-    <TrackFileAccess>false</TrackFileAccess> 
+  <PropertyGroup>
+    <TrackFileAccess>false</TrackFileAccess>
   </PropertyGroup>
 </Project>

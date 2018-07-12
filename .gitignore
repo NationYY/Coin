@@ -33,3 +33,6 @@
 proj_win/Debug/
 proj_win/RCb02324
 proj_win/RCa02324
+proj_win/ipch/
+proj_win/Coin.sdf
+proj_win/Coin.opensdf

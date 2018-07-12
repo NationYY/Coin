@@ -3,7 +3,7 @@
 class CCoinexWebSocketAPI : public CWebSocketAPI
 {
 public:
-	CCoinexWebSocketAPI(string api_key, string secret_key);
+	CCoinexWebSocketAPI(string strAPIKey, string strSecretKey);
 	~CCoinexWebSocketAPI();
 	void LoginIn();
 	void GetServerTime();

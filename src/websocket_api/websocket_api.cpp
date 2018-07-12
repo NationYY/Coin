@@ -2,7 +2,7 @@
 #include "websocket_api.h"
 
 
-CWebSocketAPI::CWebSocketAPI() : pWebsocket(NULL)
+CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL)
 {
 }
 
@@ -11,52 +11,47 @@ CWebSocketAPI::~CWebSocketAPI()
 {
 }
 
-void CWebSocketAPI::SetKey(string api_key, string secret_key)
+void CWebSocketAPI::SetKey(string strAPIKey, string strSecretKey)
 {
-	m_api_key = api_key;
-	m_secret_key = secret_key;
+	m_strAPIKey = strAPIKey;
+	m_strSecretKey = strSecretKey;
 }
 
-void CWebSocketAPI::SetUri(string uri)
+void CWebSocketAPI::SetURI(string strURI)
 {
-	m_uri = uri;
+	m_strURI = strURI;
 }
 
-void CWebSocketAPI::Request(const char* requestInfo)
+void CWebSocketAPI::Request(const char* szRequestInfo)
 {
-
-	if(pWebsocket)
-	{
-		pWebsocket->request(requestInfo);
-	}
+	if(m_pWebsocket)
+		m_pWebsocket->request(szRequestInfo);
 }
 
 void CWebSocketAPI::Close()
 {
-	if(pWebsocket)
+	if(m_pWebsocket)
 	{
-		pWebsocket->doclose();
-		WaitForSingleObject(hThread, INFINITE);
-		if(NULL != hThread)
-		{
-			CloseHandle(hThread);
-		}
+		m_pWebsocket->doclose();
+		WaitForSingleObject(m_hThread, INFINITE);
+		if(NULL != m_hThread)
+			CloseHandle(m_hThread);
 	}
 }
 
-void CWebSocketAPI::SetCallBackOpen(websocketpp_callbak_open callbak_open)
+void CWebSocketAPI::SetCallBackOpen(websocketpp_callbak_open callbak0pen)
 {
-	m_callbak_open = callbak_open;
+	m_callbakOpen = callbak0pen;
 }
 
-void CWebSocketAPI::SetCallBackClose(websocketpp_callbak_close callbak_close)
+void CWebSocketAPI::SetCallBackClose(websocketpp_callbak_close callbakClose)
 {
-	m_callbak_close = callbak_close;
+	m_callbakClose = callbakClose;
 }
 
-void CWebSocketAPI::SetCallBackMessage(websocketpp_callbak_message callbak_message)
+void CWebSocketAPI::SetCallBackMessage(websocketpp_callbak_message callbakMessage)
 {
-	m_callbak_message = callbak_message;
+	m_callbakMessage = callbakMessage;
 }
 
 unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
@@ -67,33 +62,25 @@ unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
 
 		for(int i = 0; i < MAX_RETRY_COUNT; i++)
 		{
-			if(api->pWebsocket)
-			{
-				api->pWebsocket->doclose();
-			}
+			if(api->m_pWebsocket)
+				api->m_pWebsocket->doclose();
 
-			if(api->pWebsocket == NULL)
-			{
-				api->pWebsocket = new WebSocket();
-			}
+			if(api->m_pWebsocket == NULL)
+				api->m_pWebsocket = new WebSocket();
 
-			if(api->pWebsocket)
+			if(api->m_pWebsocket)
 			{
-				api->pWebsocket->callbak_open = api->m_callbak_open;
-				api->pWebsocket->callbak_close = api->m_callbak_close;
-				api->pWebsocket->callbak_message = api->m_callbak_message;
-				api->pWebsocket->run(api->m_uri);
-				bool bManualClose = api->pWebsocket->m_manual_close;
-				delete api->pWebsocket;
-				api->pWebsocket = NULL;
+				api->m_pWebsocket->callbak_open = api->m_callbakOpen;
+				api->m_pWebsocket->callbak_close = api->m_callbakClose;
+				api->m_pWebsocket->callbak_message = api->m_callbakMessage;
+				api->m_pWebsocket->run(api->m_strURI);
+				bool bManualClose = api->m_pWebsocket->m_manual_close;
+				delete api->m_pWebsocket;
+				api->m_pWebsocket = NULL;
 				if(bManualClose == false)//是否为主动关闭连接，如果不是用户主动关闭，当接到断开联接回调时则自动执行重新连接机制。
-				{
 					Sleep(2000);
-				}
 				else
-				{
 					return 0;
-				}
 			}
 			else
 			{
@@ -109,5 +96,5 @@ unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
 void CWebSocketAPI::Run()
 {
 	unsigned int threadId = 0;
-	hThread = (HANDLE)_beginthreadex(NULL, 0, CWebSocketAPI::RunThread, this, 0, &threadId);
+	m_hThread = (HANDLE)_beginthreadex(NULL, 0, CWebSocketAPI::RunThread, this, 0, &threadId);
 }

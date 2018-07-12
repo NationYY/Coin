@@ -3,10 +3,10 @@
 #include <json/json.h>
 #include <clib/lib/math/math_ex.h>
 
-CCoinexWebSocketAPI::CCoinexWebSocketAPI(string api_key, string secret_key)
+CCoinexWebSocketAPI::CCoinexWebSocketAPI(string strAPIKey, string strSecretKey)
 {
-	SetKey(api_key, secret_key);
-	SetUri("wss://socket.coinex.com/");
+	SetKey(strAPIKey, strSecretKey);
+	SetURI("wss://socket.coinex.com/");
 }
 
 
@@ -23,7 +23,7 @@ void CCoinexWebSocketAPI::LoginIn()
 {
 	time_t tNow = time(NULL)*1000;
 	char szBuff[256];
-	_snprintf(szBuff, 256, "access_id=%s&tonce=%lld&secret_key=%s", m_api_key.c_str(), tNow, m_secret_key.c_str());
+	_snprintf(szBuff, 256, "access_id=%s&tonce=%lld&secret_key=%s", m_strAPIKey.c_str(), tNow, m_strSecretKey.c_str());
 	clib::string out;
 	clib::math::md5(szBuff, strlen(szBuff), out);
 	_strupr((char*)out.c_str());
@@ -31,7 +31,7 @@ void CCoinexWebSocketAPI::LoginIn()
 	Json::Value root;
 	root["method"] = "server.sign";
 	Json::Value params;
-	params["access_id"] = m_api_key;
+	params["access_id"] = m_strAPIKey;
 	params["tonce"] = tNow;
 	params["authorization"] = out.c_str();
 	root["params"] = params;
