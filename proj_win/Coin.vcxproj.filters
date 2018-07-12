@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="coin_ex">
+      <UniqueIdentifier>{c101a52f-0130-46ec-9294-7ae5d68598b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mfc_window">
+      <UniqueIdentifier>{cd0cbaba-8298-40c0-9ec2-bdd82fc49b9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="websocket_api">
+      <UniqueIdentifier>{08839a99-583b-47e8-882c-3cb212db1e33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http_api">
+      <UniqueIdentifier>{282f3858-7dd6-4cd8-85ea-247a19a95f59}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\coin_ex\coinex_web_socket_api.h">
+      <Filter>coin_ex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\http_api\http_api.h">
+      <Filter>http_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mfc_window\Coin.h">
+      <Filter>mfc_window</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mfc_window\CoinDlg.h">
+      <Filter>mfc_window</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\websocket_api\websocket.h">
+      <Filter>websocket_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\websocket_api\websocket_api.h">
+      <Filter>websocket_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\resource.h" />
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\coin_ex\coinex_web_socket_api.cpp">
+      <Filter>coin_ex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\http_api\http_api.cpp">
+      <Filter>http_api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mfc_window\Coin.cpp">
+      <Filter>mfc_window</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mfc_window\CoinDlg.cpp">
+      <Filter>mfc_window</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\websocket_api\websocket_api.cpp">
+      <Filter>websocket_api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Coin.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Coin.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\Coin.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\src\ReadMe.txt" />
+  </ItemGroup>
+</Project>

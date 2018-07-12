@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE262317-44B3-496E-9F14-1668FB1A3C1B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Coin", "Coin.vcxproj", "{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}.Debug|Win32.Build.0 = Debug|Win32
+		{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}.Release|Win32.ActiveCfg = Release|Win32
+		{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A1CD91CC-0D81-47E4-BC20-98630DC67EEB} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
+	EndGlobalSection
+EndGlobal
