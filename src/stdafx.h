@@ -33,8 +33,8 @@
 
 #include <afxcontrolbars.h>     // 功能区和控件条的 MFC 支持
 
-
-
+#include <string>
+using namespace std;
 
 
 
