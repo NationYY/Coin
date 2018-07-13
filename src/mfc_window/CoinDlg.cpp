@@ -7,11 +7,7 @@
 #include "CoinDlg.h"
 #include "afxdialogex.h"
 #include <string>
-#include <curl/curl.h>
-
 #include "coinex_web_socket_api.h"
-#include <iostream>
-#include <sstream>
 
 
 #ifdef _DEBUG

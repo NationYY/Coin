@@ -106,6 +106,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\coin_ex\coinex_web_socket_api.h" />
     <ClInclude Include="..\src\http_api\http_api.h" />
+    <ClInclude Include="..\src\http_api\http_def.h" />
     <ClInclude Include="..\src\mfc_window\Coin.h" />
     <ClInclude Include="..\src\mfc_window\CoinDlg.h" />
     <ClInclude Include="..\src\resource.h" />
