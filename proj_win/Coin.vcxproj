@@ -104,6 +104,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\coin_ex\coinex_http_api.h" />
     <ClInclude Include="..\src\coin_ex\coinex_web_socket_api.h" />
     <ClInclude Include="..\src\http_api\http_api.h" />
     <ClInclude Include="..\src\http_api\http_def.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="..\src\websocket_api\websocket_api.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\coin_ex\coinex_http_api.cpp" />
     <ClCompile Include="..\src\coin_ex\coinex_web_socket_api.cpp" />
     <ClCompile Include="..\src\http_api\http_api.cpp" />
     <ClCompile Include="..\src\mfc_window\Coin.cpp" />

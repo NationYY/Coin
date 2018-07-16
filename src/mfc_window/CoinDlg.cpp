@@ -8,7 +8,7 @@
 #include "afxdialogex.h"
 #include <string>
 #include "coinex_web_socket_api.h"
-
+#include "coinex_http_api.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -68,74 +68,6 @@ END_MESSAGE_MAP()
 
 
 // CCoinDlg 消息处理程序
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-	size_t realsize = size * nmemb;
-	std::string * tmp = (std::string *) userp;
-
-	(*tmp).append((char*)contents, realsize);
-
-	return realsize;
-}
-
-CURLcode curl_get_req(const std::string &url, std::string &response)
-{
-	// init curl  
-	CURL *curl = curl_easy_init();
-	// res code  
-	CURLcode res;
-	if(curl)
-	{
-		// set params  
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str()); // url  
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false); // if want to use https  
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false); // set peer and host verify false  
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-		curl_easy_setopt(curl, CURLOPT_READFUNCTION, NULL);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
-		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-		//curl_easy_setopt(curl, CURLOPT_HEADER, 1);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3); // set transport and time out time  
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3);
-		// start req  
-		res = curl_easy_perform(curl);
-	}
-	// release curl  
-	curl_easy_cleanup(curl);
-	return res;
-}
-
-CURLcode curl_post_req(const std::string &url, const std::string &postParams, std::string &response)
-{
-	// init curl  
-	CURL *curl = curl_easy_init();
-	// res code  
-	CURLcode res;
-	if(curl)
-	{
-		// set params  
-		curl_easy_setopt(curl, CURLOPT_POST, 1); // post req  
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str()); // url  
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postParams.c_str()); // params  
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false); // if want to use https  
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false); // set peer and host verify false  
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-		curl_easy_setopt(curl, CURLOPT_READFUNCTION, NULL);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
-		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-		//curl_easy_setopt(curl, CURLOPT_HEADER, 1);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3);
-		// start req  
-		res = curl_easy_perform(curl);
-	}
-	// release curl  
-	curl_easy_cleanup(curl);
-	return res;
-}
-
 void com_callbak_open()
 {
 	//向服务器发送命令
@@ -158,6 +90,7 @@ void com_callbak_message(const char *message)
 	OutputDebugString(message);
 };
 CCoinexWebSocketAPI* comapi;
+CCoinexHttpAPI* pHttpAPI = NULL;
 BOOL CCoinDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -210,11 +143,16 @@ BOOL CCoinDlg::OnInitDialog()
 	curl_post_req("https://api.coinex.com/v1", json_file, aa);
 	*/
 
-	comapi = new CCoinexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
-	comapi->SetCallBackOpen(com_callbak_open);
-	comapi->SetCallBackClose(com_callbak_close);
-	comapi->SetCallBackMessage(com_callbak_message);
-	comapi->Run();//启动连接服务器线程
+	//comapi = new CCoinexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
+	//comapi->SetCallBackOpen(com_callbak_open);
+	//comapi->SetCallBackClose(com_callbak_close);
+	//comapi->SetCallBackMessage(com_callbak_message);
+	//comapi->Run();//启动连接服务器线程
+
+
+	pHttpAPI = new CCoinexHttpAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958", "application/json");
+	pHttpAPI->SetCallBackMessage(com_callbak_message);
+	pHttpAPI->Run(1);
 	//person["age"] = root;
 	//root.append(person);
 
@@ -276,11 +214,22 @@ HCURSOR CCoinDlg::OnQueryDragIcon()
 
 void CCoinDlg::OnBnClickedButton1()
 {
-	comapi->Ping();
-	comapi->Ping();
-	comapi->Ping();
-	comapi->Ping();
+	//comapi->Ping();
+	//comapi->Ping();
+	//comapi->Ping();
+	//comapi->Ping();
 	//comapi->LoginIn();
 	//comapi->LoginIn();
+	if(pHttpAPI)
+		pHttpAPI->API_market_list();
 	// TODO:  在此添加控件通知处理程序代码
+}
+
+
+LRESULT CCoinDlg::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	// TODO:  在此添加专用代码和/或调用基类
+	if(pHttpAPI)
+		pHttpAPI->Update();
+	return CDialogEx::DefWindowProc(message, wParam, lParam);
 }

@@ -43,6 +43,9 @@
     <ClInclude Include="..\src\http_api\http_def.h">
       <Filter>http_api</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\coin_ex\coinex_http_api.h">
+      <Filter>coin_ex</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\coin_ex\coinex_web_socket_api.cpp">
@@ -61,6 +64,9 @@
       <Filter>websocket_api</Filter>
     </ClCompile>
     <ClCompile Include="..\src\stdafx.cpp" />
+    <ClCompile Include="..\src\coin_ex\coinex_http_api.cpp">
+      <Filter>coin_ex</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Coin.rc">

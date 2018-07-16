@@ -2,8 +2,10 @@
 #include "websocket_api.h"
 
 
-CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL)
+CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_callbakOpen(NULL), m_callbakClose(NULL),
+ m_callbakMessage(NULL), m_hThread(NULL)
 {
+	m_strAPIKey = m_strURI = m_strSecretKey = "";
 }
 
 

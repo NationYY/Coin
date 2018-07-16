@@ -3,6 +3,7 @@
 #include <boost/thread/thread.hpp>
 #include <curl/curl.h>
 #include "http_def.h"
+#include <deque>
 class CHttpAPI
 {
 	
@@ -11,13 +12,17 @@ public:
 	~CHttpAPI();
 	void SetKey(string strAPIKey, string strSecretKey);
 	void SetURL(string strURL);
+	void SetContentType(string strContentType);
 	void Run(int threadNums);
 	void Update();
+	void SetCallBackMessage(http_callbak_message callbakMessage);
+	void PushReqInfo(SHttpReqInfo info);
 private:
 	void _ProcessHttp();
 	void _GetReq(CURL* pCurl, const char* szMethod, std::string& strResponse);
 	void _PostReq(CURL* pCurl, const char* szMethod, const char* szPostParams, std::string& strResponse);
 private:
+	http_callbak_message m_callbakMessage;
 	boost::thread_group m_workers;
 	std::deque<SHttpReqInfo> m_queueReqInfo;
 	boost::mutex m_reqMutex;
@@ -27,6 +32,7 @@ private:
 	string m_strAPIKey;			//用户申请的apiKey
 	string m_strSecretKey;		//请求参数签名的私钥
 	string m_strURL;
+	string m_strContentType;
 	int m_threadNum;
 };
 
