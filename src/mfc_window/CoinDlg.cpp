@@ -89,6 +89,12 @@ void com_callbak_message(const char *message)
 {
 	OutputDebugString(message);
 };
+
+void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet)
+{
+	OutputDebugString(strRet.c_str());
+};
+
 CCoinexWebSocketAPI* comapi;
 CCoinexHttpAPI* pHttpAPI = NULL;
 BOOL CCoinDlg::OnInitDialog()
@@ -151,7 +157,7 @@ BOOL CCoinDlg::OnInitDialog()
 
 
 	pHttpAPI = new CCoinexHttpAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958", "application/json");
-	pHttpAPI->SetCallBackMessage(com_callbak_message);
+	pHttpAPI->SetCallBackMessage(local_http_callbak_message);
 	pHttpAPI->Run(1);
 	//person["age"] = root;
 	//root.append(person);
@@ -221,7 +227,7 @@ void CCoinDlg::OnBnClickedButton1()
 	//comapi->LoginIn();
 	//comapi->LoginIn();
 	if(pHttpAPI)
-		pHttpAPI->API_market_list();
+		pHttpAPI->API_Balance();
 	// TODO:  在此添加控件通知处理程序代码
 }
 

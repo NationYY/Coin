@@ -16,10 +16,10 @@ public:
 	void Run(int threadNums);
 	void Update();
 	void SetCallBackMessage(http_callbak_message callbakMessage);
-	void PushReqInfo(SHttpReqInfo info);
+	void PushReqInfo(SHttpReqInfo& info);
 private:
 	void _ProcessHttp();
-	void _GetReq(CURL* pCurl, const char* szMethod, std::string& strResponse);
+	void _GetReq(CURL* pCurl, const char* szMethod, const char* szGetParams, std::string& strResponse);
 	void _PostReq(CURL* pCurl, const char* szMethod, const char* szPostParams, std::string& strResponse);
 private:
 	http_callbak_message m_callbakMessage;
@@ -29,10 +29,12 @@ private:
 	std::deque<SHttpResponse> m_queueResponseInfo;
 	boost::mutex m_responseMutex;
 	boost::condition_variable m_condReqInfo;
-	string m_strAPIKey;			//用户申请的apiKey
-	string m_strSecretKey;		//请求参数签名的私钥
 	string m_strURL;
 	string m_strContentType;
 	int m_threadNum;
+protected:
+	string m_strAPIKey;			//用户申请的apiKey
+	string m_strSecretKey;		//请求参数签名的私钥
+	
 };
 

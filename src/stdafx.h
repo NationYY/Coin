@@ -34,6 +34,9 @@
 #include <afxcontrolbars.h>     // 功能区和控件条的 MFC 支持
 
 #include <string>
+#include <json/json.h>
+#include "common/common.h"
+
 using namespace std;
 
 

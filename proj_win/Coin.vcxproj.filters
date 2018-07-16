@@ -17,6 +17,9 @@
     <Filter Include="http_api">
       <UniqueIdentifier>{282f3858-7dd6-4cd8-85ea-247a19a95f59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{6b10f716-db32-4d18-b0fc-e863e3d114a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\coin_ex\coinex_web_socket_api.h">
@@ -45,6 +48,9 @@
     </ClInclude>
     <ClInclude Include="..\src\coin_ex\coinex_http_api.h">
       <Filter>coin_ex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\common.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

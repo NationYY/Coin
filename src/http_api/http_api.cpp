@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "http_api.h"
-
-
+#include "clib/lib/clib.h"
+#include "clib/lib/memory_manager/memory_allocator.h"
+#include "clib/lib/math/math_ex.h"
 CHttpAPI::CHttpAPI()
 {
 }
@@ -58,7 +59,7 @@ void CHttpAPI::_ProcessHttp()
 	curl_easy_setopt(pCurl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 3);
 	curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 3);
-	struct curl_slist* pHeaders = NULL;
+	curl_slist* pHeaders = NULL;
 	pHeaders = curl_slist_append(pHeaders, "User-Agent:Mozilla / 5.0£®Windows NT 6.1; WOW64£©AppleWebKit / 537.36£®KHTML£¨»ÁGecko£©Chrome / 39.0.2171.71 Safari / 537.36");
 	if(m_strContentType != "")
 	{
@@ -69,7 +70,7 @@ void CHttpAPI::_ProcessHttp()
 	curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
 	while(true)
 	{
-		SHttpReqInfo info;
+		SHttpReqInfo reqInfo;
 		{
 			boost::mutex::scoped_lock sl(m_reqMutex);
 			if(m_queueReqInfo.empty())
@@ -77,28 +78,89 @@ void CHttpAPI::_ProcessHttp()
 				m_condReqInfo.wait(sl);
 				continue;
 			}
-			info = m_queueReqInfo.front();
+			reqInfo = m_queueReqInfo.front();
 			m_queueReqInfo.pop_front();
 		}
+		switch(reqInfo.confirmationType)
+		{
+		case eHttpConfirmationType_HeaderAuthorization:
+			{
+				std::string confirmation = "";
+				std::map<std::string, SHttpParam>::iterator itB = reqInfo.mapParams.begin();
+				std::map<std::string, SHttpParam>::iterator itE = reqInfo.mapParams.end();
+				while(itB != itE)
+				{
+					if(confirmation != "")
+						confirmation.append("&");
+					confirmation.append(itB->first).append("=").append(itB->second.value);
+					itB++;
+				}
+				confirmation.append("&secret_key=").append(m_strSecretKey); 
+				clib::string out;
+				clib::math::md5(confirmation.c_str(), confirmation.length(), out);
+				_strupr((char*)out.c_str());
+				std::string strAuthorization = "authorization:";
+				strAuthorization.append(out.c_str());
+				curl_slist* pHeaders = NULL;
+				pHeaders = curl_slist_append(pHeaders, strAuthorization.c_str());
+				curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+			}
+			break;
+		default:
+			break;
+		}
 		std::string strResponse = "";
-		if(info.type == eHttpReqType_Get)
-			_GetReq(pCurl, info.strMethod.c_str(), strResponse);
-		else if(info.type == eHttpReqType_Post)
-			_PostReq(pCurl, info.strMethod.c_str(), info.strPostParams.c_str(), strResponse);
+		if(reqInfo.reqType == eHttpReqType_Get)
+		{
+			std::string params = "";
+			std::map<std::string, SHttpParam>::iterator itB = reqInfo.mapParams.begin();
+			std::map<std::string, SHttpParam>::iterator itE = reqInfo.mapParams.end();
+			while(itB != itE)
+			{
+				if(params != "")
+					params.append("&");
+				params.append(itB->first).append("=").append(itB->second.value);
+				itB++;
+			}
+			_GetReq(pCurl, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
+		}
+		else if(reqInfo.reqType == eHttpReqType_Post)
+		{
+			std::string params = "{";
+			std::map<std::string, SHttpParam>::iterator itB = reqInfo.mapParams.begin();
+			std::map<std::string, SHttpParam>::iterator itE = reqInfo.mapParams.end();
+			while(itB != itE)
+			{
+				if(params != "")
+					params.append(",");
+				params.append("\"").append(itB->first).append("\"").append(":");
+				if(itB->second.type == eHttpParamType_String)
+					params.append("\"").append(itB->second.value).append("\"");
+				else if(itB->second.type == eHttpParamType_Int)
+					params.append(itB->second.value);
+				itB++;
+			}
+			_PostReq(pCurl, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
+		}
 		if(strResponse != "")
 		{
+			Json::Reader reader;
+			SHttpResponse responseInfo;
+			reader.parse(strResponse.c_str(), responseInfo.retObj);
+			responseInfo.apiType = reqInfo.apiType;
+			responseInfo.strRet = strResponse;
 			boost::mutex::scoped_lock sl(m_responseMutex);
-			SHttpResponse info;
-			info.strResponse = strResponse;
-			m_queueResponseInfo.push_back(info);
+			m_queueResponseInfo.push_back(responseInfo);
 		}
 	}
 	curl_easy_cleanup(pCurl);
 }
-void CHttpAPI::_GetReq(CURL* pCurl, const char* szMethod, std::string& strResponse)
+void CHttpAPI::_GetReq(CURL* pCurl, const char* szMethod, const char* szGetParams, std::string& strResponse)
 {
 	std::string strURL = m_strURL;
 	strURL.append("/").append(szMethod);
+	if(szGetParams && strlen(szGetParams) > 0)
+		strURL.append("?").append(szGetParams);
 	curl_easy_setopt(pCurl, CURLOPT_URL, strURL.c_str());
 	curl_easy_setopt(pCurl, CURLOPT_POST, 0); // post req 
 	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&strResponse);
@@ -120,18 +182,18 @@ void CHttpAPI::Update()
 {
 	if(m_queueResponseInfo.size())
 	{
-		SHttpResponse info;
+		SHttpResponse responseInfo;
 		{
 			boost::mutex::scoped_lock sl(m_responseMutex);
 			if(m_queueResponseInfo.empty())
 				return;
-			info = m_queueResponseInfo.front();
+			responseInfo = m_queueResponseInfo.front();
 			m_queueResponseInfo.pop_front();
 		}
-		if(info.strResponse != "")
+		if(responseInfo.apiType != eHttpAPIType_Max)
 		{
 			if(m_callbakMessage)
-				m_callbakMessage(info.strResponse.c_str());
+				m_callbakMessage(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet);
 		}
 	}
 }
@@ -141,7 +203,7 @@ void CHttpAPI::SetCallBackMessage(http_callbak_message callbakMessage)
 	m_callbakMessage = callbakMessage;
 }
 
-void CHttpAPI::PushReqInfo(SHttpReqInfo info)
+void CHttpAPI::PushReqInfo(SHttpReqInfo& info)
 {
 	boost::mutex::scoped_lock sl(m_reqMutex);
 	m_queueReqInfo.push_back(info);
