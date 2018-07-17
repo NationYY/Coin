@@ -24,7 +24,7 @@ void CCoinexHttpAPI::API_market_list()
 	PushReqInfo(info);
 }
 
-void CCoinexHttpAPI::API_Balance()
+void CCoinexHttpAPI::API_balance()
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_Balance;

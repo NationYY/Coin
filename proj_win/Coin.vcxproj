@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ghoul_sdk_include);../src/websocket_api;../src/mfc_window;../src/http_api;../src/coin_ex;../src;$(openssl_include);$(websocket_include);./</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ghoul_sdk_include);../src/websocket_api;../src/mfc_window;../src/http_api;../src/exchange;../src;$(openssl_include);$(websocket_include);./</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -104,9 +104,10 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\coin_ex\coinex_http_api.h" />
-    <ClInclude Include="..\src\coin_ex\coinex_web_socket_api.h" />
     <ClInclude Include="..\src\common\common.h" />
+    <ClInclude Include="..\src\exchange\coin_ex\coinex_http_api.h" />
+    <ClInclude Include="..\src\exchange\coin_ex\coinex_web_socket_api.h" />
+    <ClInclude Include="..\src\exchange\okex\okex_web_socket_api.h" />
     <ClInclude Include="..\src\http_api\http_api.h" />
     <ClInclude Include="..\src\http_api\http_def.h" />
     <ClInclude Include="..\src\mfc_window\Coin.h" />
@@ -118,8 +119,9 @@
     <ClInclude Include="..\src\websocket_api\websocket_api.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\coin_ex\coinex_http_api.cpp" />
-    <ClCompile Include="..\src\coin_ex\coinex_web_socket_api.cpp" />
+    <ClCompile Include="..\src\exchange\coin_ex\coinex_http_api.cpp" />
+    <ClCompile Include="..\src\exchange\coin_ex\coinex_web_socket_api.cpp" />
+    <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp" />
     <ClCompile Include="..\src\http_api\http_api.cpp" />
     <ClCompile Include="..\src\mfc_window\Coin.cpp" />
     <ClCompile Include="..\src\mfc_window\CoinDlg.cpp" />

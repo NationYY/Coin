@@ -6,6 +6,6 @@ public:
 	CCoinexHttpAPI(string strAPIKey, string strSecretKey, string strContentType);
 	~CCoinexHttpAPI();
 	void API_market_list();
-	void API_Balance();
+	void API_balance();
 };
 

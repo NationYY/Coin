@@ -7,9 +7,10 @@
 #include "CoinDlg.h"
 #include "afxdialogex.h"
 #include <string>
-#include "coinex_web_socket_api.h"
-#include "coinex_http_api.h"
-
+#include "coin_ex/coinex_web_socket_api.h"
+#include "coin_ex/coinex_http_api.h"
+#include "okex/okex_web_socket_api.h"
+#include <MMSystem.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -95,8 +96,18 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	OutputDebugString(strRet.c_str());
 };
 
+
+
 CCoinexWebSocketAPI* comapi;
 CCoinexHttpAPI* pHttpAPI = NULL;
+COkexWebSocketAPI* pOkexWebSocketAPI = NULL;
+void CALLBACK UpdateFunc(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dwl, DWORD dw2)
+{
+	CCoinDlg* pDlg = (CCoinDlg*)dwUser;
+	if(pHttpAPI)
+		pHttpAPI->Update();
+}
+
 BOOL CCoinDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -159,11 +170,27 @@ BOOL CCoinDlg::OnInitDialog()
 	pHttpAPI = new CCoinexHttpAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958", "application/json");
 	pHttpAPI->SetCallBackMessage(local_http_callbak_message);
 	pHttpAPI->Run(1);
+
+	pOkexWebSocketAPI = new COkexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
+	pOkexWebSocketAPI->SetCallBackOpen(com_callbak_open);
+	pOkexWebSocketAPI->SetCallBackClose(com_callbak_close);
+	pOkexWebSocketAPI->SetCallBackMessage(com_callbak_message);
+	pOkexWebSocketAPI->Run();
 	//person["age"] = root;
 	//root.append(person);
 
 	//std::string json_file = writer.write(root);
 	//curl_get_req("https://api.coinex.com/v1/market/list", a);
+
+	TIMECAPS   tc;
+	UINT wTimerRes;
+	if(timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)//向机器申请一个多媒体定时器       
+		return FALSE;
+	wTimerRes = min(max(tc.wPeriodMin, 1), tc.wPeriodMax);
+	timeBeginPeriod(wTimerRes);
+	MMRESULT g_wTimerID = timeSetEvent(6, wTimerRes, (LPTIMECALLBACK)UpdateFunc, (DWORD)this, TIME_PERIODIC);
+	if(g_wTimerID == 0)
+		return FALSE;
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -227,15 +254,8 @@ void CCoinDlg::OnBnClickedButton1()
 	//comapi->LoginIn();
 	//comapi->LoginIn();
 	if(pHttpAPI)
-		pHttpAPI->API_Balance();
+		pHttpAPI->API_balance();
+	if(pOkexWebSocketAPI)
+		pOkexWebSocketAPI->API_sub_spot_ticker("bch_btc");
 	// TODO:  在此添加控件通知处理程序代码
-}
-
-
-LRESULT CCoinDlg::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
-{
-	// TODO:  在此添加专用代码和/或调用基类
-	if(pHttpAPI)
-		pHttpAPI->Update();
-	return CDialogEx::DefWindowProc(message, wParam, lParam);
 }
