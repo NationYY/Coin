@@ -75,6 +75,7 @@ unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
 				api->m_pWebsocket->callbak_open = api->m_callbakOpen;
 				api->m_pWebsocket->callbak_close = api->m_callbakClose;
 				api->m_pWebsocket->callbak_message = api->m_callbakMessage;
+				api->m_pWebsocket->set_websoket_api(api);
 				api->m_pWebsocket->run(api->m_strURI);
 				bool bManualClose = api->m_pWebsocket->m_manual_close;
 				delete api->m_pWebsocket;
@@ -101,11 +102,12 @@ void CWebSocketAPI::Run()
 	m_hThread = (HANDLE)_beginthreadex(NULL, 0, CWebSocketAPI::RunThread, this, 0, &threadId);
 }
 
-void CWebSocketAPI::PushRet(Json::Value& retObj, const char* szRet)
+void CWebSocketAPI::PushRet(int type, Json::Value& retObj, const char* szRet)
 {
 	SWebSocketResponse info;
 	info.retObj = retObj;
 	info.strRet = szRet;
+	info.type = type;
 	boost::mutex::scoped_lock sl(m_responseMutex);
 	m_queueResponseInfo.push_back(info);
 }
@@ -122,7 +124,22 @@ void CWebSocketAPI::Update()
 			responseInfo = m_queueResponseInfo.front();
 			m_queueResponseInfo.pop_front();
 		}
-		if(m_callbakMessage)
-			m_callbakMessage(responseInfo.retObj, responseInfo.strRet);
+		switch(responseInfo.type)
+		{
+		case 0:
+			if(m_callbakClose)
+				m_callbakClose();
+			break;
+		case 1:
+			if(m_callbakOpen)
+				m_callbakOpen();
+			break;
+		case 2:
+			if(m_callbakMessage)
+				m_callbakMessage(responseInfo.retObj, responseInfo.strRet);
+			break;
+		default:
+			break;
+		}
 	}
 }

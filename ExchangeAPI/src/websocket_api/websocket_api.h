@@ -15,7 +15,7 @@ public:
 	void Run();
 	void Close();
 	void Update();
-	void PushRet(Json::Value& retObj, const char* szRet);
+	void PushRet(int type, Json::Value& retObj, const char* szRet);
 	static unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg);
 	//订阅交易深度
 	virtual void API_EntrustDepth(const char* szType, int depthSize, bool bAdd){}

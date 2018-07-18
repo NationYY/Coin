@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CCoinDlg::OnBnClickedButton1)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -96,15 +97,18 @@ CCoinexHttpAPI* pHttpAPI = NULL;
 COkexWebSocketAPI* pOkexWebSocketAPI = NULL;
 CExxWebSocketAPI* pExxWebSocketAPI = NULL;
 CExxHttpAPI* pExxHttpAPI = NULL;
+CCoinexWebSocketAPI* pCoinexWebSocketAPI = NULL;
 void CALLBACK UpdateFunc(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dwl, DWORD dw2)
 {
 	CCoinDlg* pDlg = (CCoinDlg*)dwUser;
 	if(pHttpAPI)
 		pHttpAPI->Update();
-	if(pOkexWebSocketAPI)
-		pOkexWebSocketAPI->Update();
-	if(pExxWebSocketAPI)
-		pExxWebSocketAPI->Update();
+	if(pExxHttpAPI)
+		pExxHttpAPI->Update();
+	//if(pCoinexWebSocketAPI)
+	//	pCoinexWebSocketAPI->Update();
+	//if(pCoinexWebSocketAPI)
+	//	pCoinexWebSocketAPI->Update();
 }
 
 BOOL CCoinDlg::OnInitDialog()
@@ -152,17 +156,17 @@ BOOL CCoinDlg::OnInitDialog()
 	pExxHttpAPI->SetCallBackMessage(local_http_callbak_message);
 	pExxHttpAPI->Run(1);
 
-	pOkexWebSocketAPI = new COkexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
-	pOkexWebSocketAPI->SetCallBackOpen(com_callbak_open);
-	pOkexWebSocketAPI->SetCallBackClose(com_callbak_close);
-	pOkexWebSocketAPI->SetCallBackMessage(com_callbak_message);
-	pOkexWebSocketAPI->Run();
+	//pCoinexWebSocketAPI = new CCoinexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
+	//pCoinexWebSocketAPI->SetCallBackOpen(com_callbak_open);
+	//pCoinexWebSocketAPI->SetCallBackClose(com_callbak_close);
+	//pCoinexWebSocketAPI->SetCallBackMessage(com_callbak_message);
+	//pCoinexWebSocketAPI->Run();
 
-	//pExxWebSocketAPI = new CExxWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
-	//pExxWebSocketAPI->SetCallBackOpen(com_callbak_open);
-	//pExxWebSocketAPI->SetCallBackClose(com_callbak_close);
-	//pExxWebSocketAPI->SetCallBackMessage(com_callbak_message);
-	//pExxWebSocketAPI->Run();
+	pExxWebSocketAPI = new CExxWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
+	pExxWebSocketAPI->SetCallBackOpen(com_callbak_open);
+	pExxWebSocketAPI->SetCallBackClose(com_callbak_close);
+	pExxWebSocketAPI->SetCallBackMessage(com_callbak_message);
+	pExxWebSocketAPI->Run();
 
 	TIMECAPS   tc;
 	UINT wTimerRes;
@@ -173,6 +177,7 @@ BOOL CCoinDlg::OnInitDialog()
 	MMRESULT g_wTimerID = timeSetEvent(6, wTimerRes, (LPTIMECALLBACK)UpdateFunc, (DWORD)this, TIME_PERIODIC);
 	if(g_wTimerID == 0)
 		return FALSE;
+	SetTimer(1, 1, NULL);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -237,11 +242,21 @@ void CCoinDlg::OnBnClickedButton1()
 	//comapi->LoginIn();
 	//if(pHttpAPI)
 	//	pHttpAPI->API_balance();
-	//if(pOkexWebSocketAPI)
-	//	pOkexWebSocketAPI->API_sub_spot_ticker("bch_btc");
+	//if(pCoinexWebSocketAPI)
+	//	pCoinexWebSocketAPI->API_sub_spot_ticker("bch_btc");
 	if(pExxHttpAPI)
 		pExxHttpAPI->API_Balance();
 	if(pExxWebSocketAPI)
 		pExxWebSocketAPI->API_EntrustDepth("ETH_BTC", 5, true);
 	// TODO:  在此添加控件通知处理程序代码
+}
+
+void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+	if(pCoinexWebSocketAPI)
+		pCoinexWebSocketAPI->Update();
+	if(pExxWebSocketAPI)
+		pExxWebSocketAPI->Update();
+	CDialogEx::OnTimer(nIDEvent);
 }

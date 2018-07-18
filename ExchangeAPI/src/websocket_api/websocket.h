@@ -32,11 +32,13 @@ typedef client::connection_ptr connection_ptr;
 
 struct SWebSocketResponse
 {
+	int type; //0:close 1:open 2:api
 	Json::Value retObj;
 	std::string strRet;
 	SWebSocketResponse()
 	{
 		strRet = "";
+		type = 0;
 	}
 };
 
@@ -156,17 +158,9 @@ public:
 	{
 	}
 	
-    void on_open(websocketpp::connection_hdl hdl) 
-	{
-		m_hdl = hdl;
-		m_manual_close = false;
-		if(callbak_open != 0)callbak_open();
-    }
+    void on_open(websocketpp::connection_hdl hdl);
     void on_message(websocketpp::connection_hdl hdl, message_ptr msg);
-    void on_close(websocketpp::connection_hdl hdl) 
-	{
-		int a = 3;
-    }
+    void on_close(websocketpp::connection_hdl hdl);
 
     void doclose() 
 	{

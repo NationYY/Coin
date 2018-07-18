@@ -6,7 +6,7 @@ CExxHttpAPI::CExxHttpAPI(string strAPIKey, string strSecretKey, string strConten
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetContentType(strContentType);
-	SetURL("https://trade.exx.com/api");
+	SetURL("https://trade.exxvip.com/api");
 }
 
 
