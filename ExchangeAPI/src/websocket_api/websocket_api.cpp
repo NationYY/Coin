@@ -100,3 +100,29 @@ void CWebSocketAPI::Run()
 	unsigned int threadId = 0;
 	m_hThread = (HANDLE)_beginthreadex(NULL, 0, CWebSocketAPI::RunThread, this, 0, &threadId);
 }
+
+void CWebSocketAPI::PushRet(Json::Value& retObj, const char* szRet)
+{
+	SWebSocketResponse info;
+	info.retObj = retObj;
+	info.strRet = szRet;
+	boost::mutex::scoped_lock sl(m_responseMutex);
+	m_queueResponseInfo.push_back(info);
+}
+
+void CWebSocketAPI::Update()
+{
+	if(m_queueResponseInfo.size())
+	{
+		SWebSocketResponse responseInfo;
+		{
+			boost::mutex::scoped_lock sl(m_responseMutex);
+			if(m_queueResponseInfo.empty())
+				return;
+			responseInfo = m_queueResponseInfo.front();
+			m_queueResponseInfo.pop_front();
+		}
+		if(m_callbakMessage)
+			m_callbakMessage(responseInfo.retObj, responseInfo.strRet);
+	}
+}

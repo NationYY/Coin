@@ -1,5 +1,5 @@
 #pragma once
-#include "websocket_api.h"
+#include "websocket_api/websocket_api.h"
 class COkexWebSocketAPI : public CWebSocketAPI
 {
 public:

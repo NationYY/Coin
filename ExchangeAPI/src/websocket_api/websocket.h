@@ -14,7 +14,7 @@
 
 typedef void (*websocketpp_callbak_open)();
 typedef void (*websocketpp_callbak_close)();
-typedef void (*websocketpp_callbak_message)(const char *message);
+typedef void (*websocketpp_callbak_message)(Json::Value& retObj, const std::string& strRet);
 
 
 //typedef websocketpp::client<websocketpp::config::asio_client> client;
@@ -29,6 +29,16 @@ using namespace std;
 typedef websocketpp::config::asio_tls_client::message_type::ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 typedef client::connection_ptr connection_ptr;
+
+struct SWebSocketResponse
+{
+	Json::Value retObj;
+	std::string strRet;
+	SWebSocketResponse()
+	{
+		strRet = "";
+	}
+};
 
 #define MAX_RETRY_COUNT		10000
 
@@ -46,6 +56,7 @@ private:
 	websocketpp::connection_hdl m_hdl;
 	std::string m_uri;
 	CONNECTION_STATE m_con_state;
+	class CWebSocketAPI* m_pWebSocketAPI;
 public:
 
 	websocketpp_callbak_open callbak_open;
@@ -60,7 +71,8 @@ public:
 	m_con_state(CONNECTION_STATE_UNKONWN),
 	callbak_open(0),
 	callbak_close(0),
-	callbak_message(0)
+	callbak_message(0),
+	m_pWebSocketAPI(NULL)
 	{
 		
         m_endpoint.set_access_channels(websocketpp::log::alevel::all);
@@ -150,11 +162,7 @@ public:
 		m_manual_close = false;
 		if(callbak_open != 0)callbak_open();
     }
-    void on_message(websocketpp::connection_hdl hdl, message_ptr msg) 
-	{
-		//std::cout << "Message: " << msg->get_payload().c_str() << std::endl;
-		if(callbak_message != 0)callbak_message(msg->get_payload().c_str());
-    }
+    void on_message(websocketpp::connection_hdl hdl, message_ptr msg);
     void on_close(websocketpp::connection_hdl hdl) 
 	{
 		int a = 3;
@@ -186,6 +194,9 @@ public:
 
 		//m_endpoint.send(hdl, "{'event':'addChannel','channel':'ok_btcusd_ticker'}", websocketpp::frame::opcode::text);
 		// m_endpoint.send(hdl, "{'event':'addChannel','channel':'ok_btcusd_depth'}", websocketpp::frame::opcode::text);
+	}
+	void set_websoket_api(class CWebSocketAPI* pAPI){
+		m_pWebSocketAPI = pAPI;
 	}
 };
 

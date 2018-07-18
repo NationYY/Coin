@@ -24,13 +24,13 @@ void CCoinexHttpAPI::API_market_list()
 	PushReqInfo(info);
 }
 
-void CCoinexHttpAPI::API_balance()
+void CCoinexHttpAPI::API_Balance()
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_Balance;
 	info.reqType = eHttpReqType_Get;
 	info.strMethod = "balance/info";
-	info.confirmationType = eHttpConfirmationType_HeaderAuthorization;
+	info.confirmationType = eHttpConfirmationType_HeaderAuthorization_MD5;
 	info.mapParams["access_id"] = SHttpParam(eHttpParamType_String, m_strAPIKey);
 	char szBuffer[128];
 	_snprintf(szBuffer, 128, "%lld", time(NULL)*1000);

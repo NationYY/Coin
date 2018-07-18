@@ -3,6 +3,7 @@
 #include "clib/lib/clib.h"
 #include "clib/lib/memory_manager/memory_allocator.h"
 #include "clib/lib/math/math_ex.h"
+#include "encrypt/hmac.h"
 CHttpAPI::CHttpAPI()
 {
 }
@@ -57,8 +58,8 @@ void CHttpAPI::_ProcessHttp()
 	curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, NULL);
 	curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 	curl_easy_setopt(pCurl, CURLOPT_NOSIGNAL, 1);
-	curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 3);
-	curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 3);
+	curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 10);
+	curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 10);
 	curl_slist* pHeaders = NULL;
 	pHeaders = curl_slist_append(pHeaders, "User-Agent:Mozilla / 5.0£®Windows NT 6.1; WOW64£©AppleWebKit / 537.36£®KHTML£¨»ÁGecko£©Chrome / 39.0.2171.71 Safari / 537.36");
 	if(m_strContentType != "")
@@ -81,21 +82,22 @@ void CHttpAPI::_ProcessHttp()
 			reqInfo = m_queueReqInfo.front();
 			m_queueReqInfo.pop_front();
 		}
+		std::string params = "";
+		std::map<std::string, SHttpParam>::iterator itB = reqInfo.mapParams.begin();
+		std::map<std::string, SHttpParam>::iterator itE = reqInfo.mapParams.end();
+		while(itB != itE)
+		{
+			if(params != "")
+				params.append("&");
+			params.append(itB->first).append("=").append(itB->second.value);
+			itB++;
+		}
 		switch(reqInfo.confirmationType)
 		{
-		case eHttpConfirmationType_HeaderAuthorization:
+		case eHttpConfirmationType_HeaderAuthorization_MD5:
 			{
-				std::string confirmation = "";
-				std::map<std::string, SHttpParam>::iterator itB = reqInfo.mapParams.begin();
-				std::map<std::string, SHttpParam>::iterator itE = reqInfo.mapParams.end();
-				while(itB != itE)
-				{
-					if(confirmation != "")
-						confirmation.append("&");
-					confirmation.append(itB->first).append("=").append(itB->second.value);
-					itB++;
-				}
-				confirmation.append("&secret_key=").append(m_strSecretKey); 
+				std::string confirmation = params;
+				confirmation.append("&secret_key=").append(m_strSecretKey);
 				clib::string out;
 				clib::math::md5(confirmation.c_str(), confirmation.length(), out);
 				_strupr((char*)out.c_str());
@@ -106,24 +108,28 @@ void CHttpAPI::_ProcessHttp()
 				curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
 			}
 			break;
+		case eHttpConfirmationType_Signature_HmacSHA512:
+			{
+				std::string confirmation = params;
+				unsigned char *out = NULL;
+				unsigned int outSize = 0;
+				HmacEncode("sha512", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
+				params.append("&signature=");
+				for(int i = 0; i < outSize; i++) 
+				{
+					char szBuffer[12] = {0};
+					_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
+					params.append(szBuffer);
+				}
+				free(out);
+			}
+			break;
 		default:
 			break;
 		}
 		std::string strResponse = "";
 		if(reqInfo.reqType == eHttpReqType_Get)
-		{
-			std::string params = "";
-			std::map<std::string, SHttpParam>::iterator itB = reqInfo.mapParams.begin();
-			std::map<std::string, SHttpParam>::iterator itE = reqInfo.mapParams.end();
-			while(itB != itE)
-			{
-				if(params != "")
-					params.append("&");
-				params.append(itB->first).append("=").append(itB->second.value);
-				itB++;
-			}
 			_GetReq(pCurl, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
-		}
 		else if(reqInfo.reqType == eHttpReqType_Post)
 		{
 			std::string params = "{";

@@ -14,7 +14,8 @@ enum eHttpParamType
 
 enum eHttpConfirmationType
 {
-	eHttpConfirmationType_HeaderAuthorization,
+	eHttpConfirmationType_HeaderAuthorization_MD5,
+	eHttpConfirmationType_Signature_HmacSHA512,
 	eHttpConfirmationType_Max,
 };
 

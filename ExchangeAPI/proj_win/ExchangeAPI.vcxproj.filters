@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{1eef01db-a379-48c1-b5f2-3d4542b88c4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exchange">
+      <UniqueIdentifier>{268e9406-70e0-486c-81eb-92ea152349bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="http_api">
+      <UniqueIdentifier>{04634b97-ded3-4ea6-b2f6-fa9f97bf9727}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="websocket_api">
+      <UniqueIdentifier>{eac542d8-d54f-4e8b-a52d-8114a7e8271c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exchange\coinex">
+      <UniqueIdentifier>{b0c0a66e-2782-437c-a538-a6ebfcc3196b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exchange\okex">
+      <UniqueIdentifier>{f1bb609e-ed24-4363-b253-cc3d8bb91e77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="encrypt">
+      <UniqueIdentifier>{a17f2f8f-86ab-4f39-9673-2da911fde129}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exchange\exx">
+      <UniqueIdentifier>{4cf93577-4003-48b6-9830-8d7789acdf1d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\src\ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\stdafx.cpp" />
+    <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp">
+      <Filter>exchange\okex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp">
+      <Filter>exchange\coinex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\coinex\coinex_web_socket_api.cpp">
+      <Filter>exchange\coinex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\http_api\http_api.cpp">
+      <Filter>http_api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\websocket_api\websocket_api.cpp">
+      <Filter>websocket_api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\exx\exx_http_api.cpp">
+      <Filter>exchange\exx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\exx\exx_web_socket_api.cpp">
+      <Filter>exchange\exx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\websocket_api\websocket.cpp">
+      <Filter>websocket_api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\encrypt\hmac.cpp">
+      <Filter>encrypt</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\targetver.h" />
+    <ClInclude Include="..\src\exchange\okex\okex_web_socket_api.h">
+      <Filter>exchange\okex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\coinex\coinex_http_api.h">
+      <Filter>exchange\coinex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\coinex\coinex_web_socket_api.h">
+      <Filter>exchange\coinex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\http_api\http_api.h">
+      <Filter>http_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\http_api\http_def.h">
+      <Filter>http_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\websocket_api\websocket.h">
+      <Filter>websocket_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\websocket_api\websocket_api.h">
+      <Filter>websocket_api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\api_common.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\exx\exx_http_api.h">
+      <Filter>exchange\exx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\exx\exx_web_socket_api.h">
+      <Filter>exchange\exx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\encrypt\hmac.h">
+      <Filter>encrypt</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

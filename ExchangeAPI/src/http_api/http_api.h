@@ -17,6 +17,7 @@ public:
 	void Update();
 	void SetCallBackMessage(http_callbak_message callbakMessage);
 	void PushReqInfo(SHttpReqInfo& info);
+	virtual void API_Balance(){}
 private:
 	void _ProcessHttp();
 	void _GetReq(CURL* pCurl, const char* szMethod, const char* szGetParams, std::string& strResponse);

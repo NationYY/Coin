@@ -8,83 +8,26 @@
     <Filter Include="mfc_window">
       <UniqueIdentifier>{cd0cbaba-8298-40c0-9ec2-bdd82fc49b9a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="websocket_api">
-      <UniqueIdentifier>{08839a99-583b-47e8-882c-3cb212db1e33}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="http_api">
-      <UniqueIdentifier>{282f3858-7dd6-4cd8-85ea-247a19a95f59}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="common">
-      <UniqueIdentifier>{6b10f716-db32-4d18-b0fc-e863e3d114a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="exchange">
-      <UniqueIdentifier>{82ca0eb5-ed62-4c9a-9c1c-df90b60b0409}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="exchange\okex">
-      <UniqueIdentifier>{9931d088-139c-4786-b9b4-91714e1286b9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="exchange\coin_ex">
-      <UniqueIdentifier>{c101a52f-0130-46ec-9294-7ae5d68598b6}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\http_api\http_api.h">
-      <Filter>http_api</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mfc_window\Coin.h">
       <Filter>mfc_window</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mfc_window\CoinDlg.h">
       <Filter>mfc_window</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\websocket_api\websocket.h">
-      <Filter>websocket_api</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\websocket_api\websocket_api.h">
-      <Filter>websocket_api</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\stdafx.h" />
     <ClInclude Include="..\src\targetver.h" />
-    <ClInclude Include="..\src\http_api\http_def.h">
-      <Filter>http_api</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\common\common.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\exchange\coin_ex\coinex_http_api.h">
-      <Filter>exchange\coin_ex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\exchange\coin_ex\coinex_web_socket_api.h">
-      <Filter>exchange\coin_ex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\exchange\okex\okex_web_socket_api.h">
-      <Filter>exchange\okex</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\http_api\http_api.cpp">
-      <Filter>http_api</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\mfc_window\Coin.cpp">
       <Filter>mfc_window</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mfc_window\CoinDlg.cpp">
       <Filter>mfc_window</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\websocket_api\websocket_api.cpp">
-      <Filter>websocket_api</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\stdafx.cpp" />
-    <ClCompile Include="..\src\exchange\coin_ex\coinex_http_api.cpp">
-      <Filter>exchange\coin_ex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\exchange\coin_ex\coinex_web_socket_api.cpp">
-      <Filter>exchange\coin_ex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp">
-      <Filter>exchange\okex</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Coin.rc">
