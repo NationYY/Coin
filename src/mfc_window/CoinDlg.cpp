@@ -82,7 +82,9 @@ void com_callbak_close()
 };
 void com_callbak_message(Json::Value& retObj, const std::string& strRet)
 {
+	std::string a = retObj[0][0].asString();
 	OutputDebugString(strRet.c_str());
+	OutputDebugString("\n");
 };
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet)
@@ -90,26 +92,13 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	OutputDebugString(strRet.c_str());
 };
 
-
-
-CCoinexWebSocketAPI* comapi;
-CCoinexHttpAPI* pHttpAPI = NULL;
-COkexWebSocketAPI* pOkexWebSocketAPI = NULL;
 CExxWebSocketAPI* pExxWebSocketAPI = NULL;
 CExxHttpAPI* pExxHttpAPI = NULL;
-CCoinexWebSocketAPI* pCoinexWebSocketAPI = NULL;
+/*
 void CALLBACK UpdateFunc(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dwl, DWORD dw2)
 {
 	CCoinDlg* pDlg = (CCoinDlg*)dwUser;
-	if(pHttpAPI)
-		pHttpAPI->Update();
-	if(pExxHttpAPI)
-		pExxHttpAPI->Update();
-	//if(pCoinexWebSocketAPI)
-	//	pCoinexWebSocketAPI->Update();
-	//if(pCoinexWebSocketAPI)
-	//	pCoinexWebSocketAPI->Update();
-}
+}*/
 
 BOOL CCoinDlg::OnInitDialog()
 {
@@ -141,26 +130,9 @@ BOOL CCoinDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO:  在此添加额外的初始化代码
-	//comapi = new CCoinexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
-	//comapi->SetCallBackOpen(com_callbak_open);
-	//comapi->SetCallBackClose(com_callbak_close);
-	//comapi->SetCallBackMessage(com_callbak_message);
-	//comapi->Run();//启动连接服务器线程
-
-
-	pHttpAPI = new CCoinexHttpAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958", "application/json");
-	pHttpAPI->SetCallBackMessage(local_http_callbak_message);
-	pHttpAPI->Run(1);
-
 	pExxHttpAPI = new CExxHttpAPI("c9e68ce5-c5e5-40da-9d1d-63238d2ffc79", "9b9b4f5b65c0ea198eb6b4a550ee83a2ff9ca52a", "");
 	pExxHttpAPI->SetCallBackMessage(local_http_callbak_message);
 	pExxHttpAPI->Run(1);
-
-	//pCoinexWebSocketAPI = new CCoinexWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
-	//pCoinexWebSocketAPI->SetCallBackOpen(com_callbak_open);
-	//pCoinexWebSocketAPI->SetCallBackClose(com_callbak_close);
-	//pCoinexWebSocketAPI->SetCallBackMessage(com_callbak_message);
-	//pCoinexWebSocketAPI->Run();
 
 	pExxWebSocketAPI = new CExxWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
 	pExxWebSocketAPI->SetCallBackOpen(com_callbak_open);
@@ -168,7 +140,7 @@ BOOL CCoinDlg::OnInitDialog()
 	pExxWebSocketAPI->SetCallBackMessage(com_callbak_message);
 	pExxWebSocketAPI->Run();
 
-	TIMECAPS   tc;
+	/*TIMECAPS   tc;
 	UINT wTimerRes;
 	if(timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)//向机器申请一个多媒体定时器       
 		return FALSE;
@@ -176,7 +148,7 @@ BOOL CCoinDlg::OnInitDialog()
 	timeBeginPeriod(wTimerRes);
 	MMRESULT g_wTimerID = timeSetEvent(6, wTimerRes, (LPTIMECALLBACK)UpdateFunc, (DWORD)this, TIME_PERIODIC);
 	if(g_wTimerID == 0)
-		return FALSE;
+		return FALSE;*/
 	SetTimer(1, 1, NULL);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -234,16 +206,6 @@ HCURSOR CCoinDlg::OnQueryDragIcon()
 
 void CCoinDlg::OnBnClickedButton1()
 {
-	//comapi->Ping();
-	//comapi->Ping();
-	//comapi->Ping();
-	//comapi->Ping();
-	//comapi->LoginIn();
-	//comapi->LoginIn();
-	//if(pHttpAPI)
-	//	pHttpAPI->API_balance();
-	//if(pCoinexWebSocketAPI)
-	//	pCoinexWebSocketAPI->API_sub_spot_ticker("bch_btc");
 	if(pExxHttpAPI)
 		pExxHttpAPI->API_Balance();
 	if(pExxWebSocketAPI)
@@ -254,11 +216,9 @@ void CCoinDlg::OnBnClickedButton1()
 void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	if(pCoinexWebSocketAPI)
-		pCoinexWebSocketAPI->Update();
 	if(pExxWebSocketAPI)
 		pExxWebSocketAPI->Update();
-	if(pOkexWebSocketAPI)
-		pOkexWebSocketAPI->Update();
+	if(pExxHttpAPI)
+		pExxHttpAPI->Update();
 	CDialogEx::OnTimer(nIDEvent);
 }
