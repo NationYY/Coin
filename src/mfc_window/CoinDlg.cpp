@@ -258,5 +258,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 		pCoinexWebSocketAPI->Update();
 	if(pExxWebSocketAPI)
 		pExxWebSocketAPI->Update();
+	if(pOkexWebSocketAPI)
+		pOkexWebSocketAPI->Update();
 	CDialogEx::OnTimer(nIDEvent);
 }
