@@ -17,7 +17,7 @@
 #define new DEBUG_NEW
 #endif
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-
+CCoinDlg* g_pCoinDlg = NULL;
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -54,6 +54,7 @@ END_MESSAGE_MAP()
 CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CCoinDlg::IDD, pParent)
 {
+	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -80,8 +81,12 @@ void com_callbak_close()
 {
 	std::cout << "连接已经断开！ " << std::endl;
 };
-void com_callbak_message(Json::Value& retObj, const std::string& strRet)
+void exx_websocket_callbak_message(Json::Value& retObj, const std::string& strRet)
 {
+	if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && (retObj[0][0].asString() == "AE" || retObj[0][0].asString() == "E"))
+	{
+		if(retObj[0][0].asString() == "AE")
+	}
 	std::string a = retObj[0][0].asString();
 	OutputDebugString(strRet.c_str());
 	OutputDebugString("\n");
@@ -137,7 +142,7 @@ BOOL CCoinDlg::OnInitDialog()
 	pExxWebSocketAPI = new CExxWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
 	pExxWebSocketAPI->SetCallBackOpen(com_callbak_open);
 	pExxWebSocketAPI->SetCallBackClose(com_callbak_close);
-	pExxWebSocketAPI->SetCallBackMessage(com_callbak_message);
+	pExxWebSocketAPI->SetCallBackMessage(exx_websocket_callbak_message);
 	pExxWebSocketAPI->Run();
 
 	/*TIMECAPS   tc;
