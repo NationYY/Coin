@@ -2,7 +2,7 @@
 #include "exx_web_socket_api.h"
 
 
-CExxWebSocketAPI::CExxWebSocketAPI(string strAPIKey, string strSecretKey)
+CExxWebSocketAPI::CExxWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetURI("wss://ws.exx.com/websocket");

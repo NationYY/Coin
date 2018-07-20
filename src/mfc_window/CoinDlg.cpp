@@ -7,11 +7,7 @@
 #include "CoinDlg.h"
 #include "afxdialogex.h"
 #include <string>
-#include "exchange/coinex/coinex_web_socket_api.h"
-#include "exchange/coinex/coinex_http_api.h"
-#include "exchange/okex/okex_web_socket_api.h"
-#include "exchange/exx/exx_web_socket_api.h"
-#include "exchange/exx/exx_http_api.h"
+#include "exchange/exx/exx_exchange.h"
 #include <MMSystem.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -61,6 +57,7 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST1, m_listBalance);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -81,24 +78,31 @@ void com_callbak_close()
 {
 	std::cout << "连接已经断开！ " << std::endl;
 };
-void exx_websocket_callbak_message(Json::Value& retObj, const std::string& strRet)
+void local_websocket_callbak_message(Json::Value& retObj, const std::string& strRet)
 {
-	if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && (retObj[0][0].asString() == "AE" || retObj[0][0].asString() == "E"))
-	{
-		if(retObj[0][0].asString() == "AE")
-	}
-	std::string a = retObj[0][0].asString();
 	OutputDebugString(strRet.c_str());
 	OutputDebugString("\n");
 };
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet)
 {
+	switch(apiType)
+	{
+	case eHttpAPIType_Balance:
+		g_pCoinDlg->UpdateBalance();
+		break;
+	case eHttpAPIType_Ticker:
+		break;
+	case eHttpAPIType_Max:
+		break;
+	default:
+		break;
+	}
 	OutputDebugString(strRet.c_str());
+	OutputDebugString("\n");
 };
 
-CExxWebSocketAPI* pExxWebSocketAPI = NULL;
-CExxHttpAPI* pExxHttpAPI = NULL;
+CExchange* pExchange = NULL;
 /*
 void CALLBACK UpdateFunc(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dwl, DWORD dw2)
 {
@@ -135,15 +139,12 @@ BOOL CCoinDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO:  在此添加额外的初始化代码
-	pExxHttpAPI = new CExxHttpAPI("c9e68ce5-c5e5-40da-9d1d-63238d2ffc79", "9b9b4f5b65c0ea198eb6b4a550ee83a2ff9ca52a", "");
-	pExxHttpAPI->SetCallBackMessage(local_http_callbak_message);
-	pExxHttpAPI->Run(1);
-
-	pExxWebSocketAPI = new CExxWebSocketAPI("4836FE0E839B4ABB9541536CAE04FE9E", "65FAB5F4DDBB4EC5ABAF4B34337027758B4430B77971C958");
-	pExxWebSocketAPI->SetCallBackOpen(com_callbak_open);
-	pExxWebSocketAPI->SetCallBackClose(com_callbak_close);
-	pExxWebSocketAPI->SetCallBackMessage(exx_websocket_callbak_message);
-	pExxWebSocketAPI->Run();
+	pExchange = new CExxExchange("c9e68ce5-c5e5-40da-9d1d-63238d2ffc79", "9b9b4f5b65c0ea198eb6b4a550ee83a2ff9ca52a", "");
+	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
+	pExchange->SetWebSocketCallBackOpen(com_callbak_open);
+	pExchange->SetWebSocketCallBackClose(com_callbak_close);
+	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pExchange->Run();
 
 	/*TIMECAPS   tc;
 	UINT wTimerRes;
@@ -154,6 +155,13 @@ BOOL CCoinDlg::OnInitDialog()
 	MMRESULT g_wTimerID = timeSetEvent(6, wTimerRes, (LPTIMECALLBACK)UpdateFunc, (DWORD)this, TIME_PERIODIC);
 	if(g_wTimerID == 0)
 		return FALSE;*/
+	
+
+	m_listBalance.InsertColumn(0, "币种", LVCFMT_CENTER, 40);
+	m_listBalance.InsertColumn(1, "余额", LVCFMT_CENTER, 100);
+	m_listBalance.InsertColumn(2, "可用", LVCFMT_CENTER, 100);
+	m_listBalance.InsertColumn(2, "冻结", LVCFMT_CENTER, 100);
+	m_listBalance.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	SetTimer(1, 1, NULL);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -211,19 +219,45 @@ HCURSOR CCoinDlg::OnQueryDragIcon()
 
 void CCoinDlg::OnBnClickedButton1()
 {
-	if(pExxHttpAPI)
-		pExxHttpAPI->API_Balance();
-	if(pExxWebSocketAPI)
-		pExxWebSocketAPI->API_EntrustDepth("ETH_BTC", 5, true);
+	if(pExchange->GetHttp())
+		pExchange->GetHttp()->API_Balance();
+	if(pExchange->GetHttp())
+		pExchange->GetHttp()->API_Ticker("eth_btc");
+	if(pExchange->GetWebSocket())
+		pExchange->GetWebSocket()->API_EntrustDepth("ETH_BTC", 5, true);
 	// TODO:  在此添加控件通知处理程序代码
 }
 
 void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	if(pExxWebSocketAPI)
-		pExxWebSocketAPI->Update();
-	if(pExxHttpAPI)
-		pExxHttpAPI->Update();
+	if(pExchange->GetWebSocket())
+		pExchange->GetWebSocket()->Update();
+	if(pExchange->GetHttp())
+		pExchange->GetHttp()->Update();
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+void CCoinDlg::UpdateBalance()
+{
+	m_listBalance.DeleteAllItems();
+	CDataCenter* pDataCenter = pExchange->GetDataCenter();
+	std::map<std::string, SBalanceInfo>::iterator itB = pDataCenter->m_mapBalanceInfo.begin();
+	std::map<std::string, SBalanceInfo>::iterator itE = pDataCenter->m_mapBalanceInfo.end();
+	int index = 0;
+	CString szFormat;
+	while(itB != itE)
+	{
+		m_listBalance.InsertItem(index, "");
+		szFormat.Format("%s", itB->first.c_str());
+		m_listBalance.SetItemText(index, 0, szFormat);
+		szFormat.Format("%lf", itB->second.total);
+		m_listBalance.SetItemText(index, 1, szFormat);
+		szFormat.Format("%lf", itB->second.freeze);
+		m_listBalance.SetItemText(index, 2, szFormat);
+		szFormat.Format("%lf", itB->second.balance);
+		m_listBalance.SetItemText(index, 3, szFormat);
+		index++;
+		++itB;
+	}
 }

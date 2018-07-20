@@ -29,10 +29,11 @@ struct SHttpParam
 	{
 	}
 	eHttpParamType type;
-	string value;
+	std::string value;
 };
 struct SHttpReqInfo
 {
+	std::string strURL;
 	eHttpAPIType apiType;
 	eHttpReqType reqType;
 	std::string strMethod;
@@ -40,7 +41,7 @@ struct SHttpReqInfo
 	eHttpConfirmationType confirmationType;
 	SHttpReqInfo()
 	{
-		strMethod = "";
+		strMethod = strURL = "";
 		reqType = eHttpReqType_Max;
 		apiType = eHttpAPIType_Max;
 		confirmationType = eHttpConfirmationType_Max;

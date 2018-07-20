@@ -27,3 +27,27 @@ void WebSocket::on_close(websocketpp::connection_hdl hdl)
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->PushRet(0, retObj, "");
 }
+
+void WebSocket::start()
+{
+	websocketpp::lib::error_code ec;
+	client::connection_ptr con = m_endpoint.get_connection(m_uri, ec);
+
+	if(ec) {
+		m_endpoint.get_alog().write(websocketpp::log::alevel::app, ec.message());
+	}
+
+	m_endpoint.set_open_handshake_timeout(30000);
+	m_endpoint.set_close_handshake_timeout(30000);
+
+
+	//con->set_proxy("http://humupdates.uchicago.edu:8443");
+
+	m_endpoint.connect(con);
+
+	// Start the ASIO io_service run loop
+	m_endpoint.run();
+	Json::Value retObj;
+	if(m_pWebSocketAPI)
+		m_pWebSocketAPI->PushRet(0, retObj, "");
+}

@@ -1,17 +1,31 @@
 #pragma once
 #include <boost/thread/thread.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include "websocket.h"
+typedef boost::function<void()> WEBSOCKET_OPEN_FUNCTION_TYPE;
+typedef boost::function<void()> WEBSOCKET_CLOSE_FUNCTION_TYPE;
+typedef boost::function<void(Json::Value&, const std::string&)> WEBSOCKET_MESSAGE_FUNCTION_TYPE;
 class CWebSocketAPI
 {
 public:
 	CWebSocketAPI();
 	~CWebSocketAPI();
-	void SetKey(string strAPIKey, string strSecretKey);
-	void SetURI(string strURI);
+	void SetKey(std::string strAPIKey, std::string strSecretKey);
+	void SetURI(std::string strURI);
 	void Request(const char* szRequestInfo);
-	void SetCallBackOpen(websocketpp_callbak_open callbak0pen);
-	void SetCallBackClose(websocketpp_callbak_close callbakClose);
-	void SetCallBackMessage(websocketpp_callbak_message callbakMessage);
+	void CWebSocketAPI::SetCallBackOpen(WEBSOCKET_OPEN_FUNCTION_TYPE func){
+		m_openFunc = func;
+	}
+
+	void CWebSocketAPI::SetCallBackClose(WEBSOCKET_CLOSE_FUNCTION_TYPE func){
+		m_closeFunc = func;
+	}
+
+	void CWebSocketAPI::SetCallBackMessage(WEBSOCKET_MESSAGE_FUNCTION_TYPE func){
+		m_messageFunc = func;
+	}
+	
 	void Run();
 	void Close();
 	void Update();
@@ -19,18 +33,19 @@ public:
 	static unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg);
 	//订阅交易深度
 	virtual void API_EntrustDepth(const char* szType, int depthSize, bool bAdd){}
-private:
-	websocketpp_callbak_open		m_callbakOpen;
-	websocketpp_callbak_close		m_callbakClose;
-	websocketpp_callbak_message		m_callbakMessage;
+
 protected:
-	string m_strAPIKey;			//用户申请的apiKey
-	string m_strSecretKey;		//请求参数签名的私钥
-	string m_strURI;
+	std::string m_strAPIKey;			//用户申请的apiKey
+	std::string m_strSecretKey;		//请求参数签名的私钥
+	std::string m_strURI;
 	WebSocket* m_pWebsocket;
 	HANDLE m_hThread;
 	std::deque<SWebSocketResponse> m_queueResponseInfo;
 	boost::mutex m_responseMutex;
+	WEBSOCKET_OPEN_FUNCTION_TYPE m_openFunc;
+	WEBSOCKET_CLOSE_FUNCTION_TYPE m_closeFunc;
+	WEBSOCKET_MESSAGE_FUNCTION_TYPE m_messageFunc;
+	bool m_bConnect;
 	
 };
 

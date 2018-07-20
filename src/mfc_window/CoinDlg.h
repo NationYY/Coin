@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "afxcmn.h"
 
 
 // CCoinDlg ¶Ô»°¿ò
@@ -32,4 +33,7 @@ protected:
 public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+public:
+	void UpdateBalance();
+	CListCtrl m_listBalance;
 };

@@ -2,8 +2,7 @@
 #include "websocket_api.h"
 
 
-CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_callbakOpen(NULL), m_callbakClose(NULL),
- m_callbakMessage(NULL), m_hThread(NULL)
+CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false)
 {
 	m_strAPIKey = m_strURI = m_strSecretKey = "";
 }
@@ -13,19 +12,21 @@ CWebSocketAPI::~CWebSocketAPI()
 {
 }
 
-void CWebSocketAPI::SetKey(string strAPIKey, string strSecretKey)
+void CWebSocketAPI::SetKey(std::string strAPIKey, std::string strSecretKey)
 {
 	m_strAPIKey = strAPIKey;
 	m_strSecretKey = strSecretKey;
 }
 
-void CWebSocketAPI::SetURI(string strURI)
+void CWebSocketAPI::SetURI(std::string strURI)
 {
 	m_strURI = strURI;
 }
 
 void CWebSocketAPI::Request(const char* szRequestInfo)
 {
+	if(!m_bConnect)
+		return;
 	if(m_pWebsocket)
 		m_pWebsocket->request(szRequestInfo);
 }
@@ -39,21 +40,6 @@ void CWebSocketAPI::Close()
 		if(NULL != m_hThread)
 			CloseHandle(m_hThread);
 	}
-}
-
-void CWebSocketAPI::SetCallBackOpen(websocketpp_callbak_open callbak0pen)
-{
-	m_callbakOpen = callbak0pen;
-}
-
-void CWebSocketAPI::SetCallBackClose(websocketpp_callbak_close callbakClose)
-{
-	m_callbakClose = callbakClose;
-}
-
-void CWebSocketAPI::SetCallBackMessage(websocketpp_callbak_message callbakMessage)
-{
-	m_callbakMessage = callbakMessage;
 }
 
 unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
@@ -72,9 +58,6 @@ unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
 
 			if(api->m_pWebsocket)
 			{
-				api->m_pWebsocket->callbak_open = api->m_callbakOpen;
-				api->m_pWebsocket->callbak_close = api->m_callbakClose;
-				api->m_pWebsocket->callbak_message = api->m_callbakMessage;
 				api->m_pWebsocket->set_websoket_api(api);
 				api->m_pWebsocket->run(api->m_strURI);
 				bool bManualClose = api->m_pWebsocket->m_manual_close;
@@ -127,16 +110,18 @@ void CWebSocketAPI::Update()
 		switch(responseInfo.type)
 		{
 		case 0:
-			if(m_callbakClose)
-				m_callbakClose();
+			m_bConnect = false;
+			if(m_closeFunc)
+				m_closeFunc();
 			break;
 		case 1:
-			if(m_callbakOpen)
-				m_callbakOpen();
+			m_bConnect = true;
+			if(m_openFunc)
+				m_openFunc();
 			break;
 		case 2:
-			if(m_callbakMessage)
-				m_callbakMessage(responseInfo.retObj, responseInfo.strRet);
+			if(m_messageFunc)
+				m_messageFunc(responseInfo.retObj, responseInfo.strRet);
 			break;
 		default:
 			break;

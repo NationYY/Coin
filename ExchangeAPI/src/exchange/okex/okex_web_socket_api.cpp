@@ -2,7 +2,7 @@
 #include "okex_web_socket_api.h"
 
 
-COkexWebSocketAPI::COkexWebSocketAPI(string strAPIKey, string strSecretKey)
+COkexWebSocketAPI::COkexWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetURI("wss://real.okex.com:10441/websocket");

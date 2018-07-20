@@ -12,7 +12,6 @@
 #include <string>
 #include <json/json.h>
 #include "common/api_common.h"
-
-using namespace std;
+#include "common/singleton.h"
 
 // TODO:  在此处引用程序需要的其他头文件

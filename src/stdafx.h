@@ -35,6 +35,7 @@
 
 #include <string>
 #include "common/api_common.h"
+#include "common/singleton.h"
 #include <json/json.h>
 using namespace std;
 

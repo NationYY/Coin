@@ -2,7 +2,7 @@
 #include "coinex_http_api.h"
 
 
-CCoinexHttpAPI::CCoinexHttpAPI(string strAPIKey, string strSecretKey, string strContentType)
+CCoinexHttpAPI::CCoinexHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strContentType)
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetContentType(strContentType);

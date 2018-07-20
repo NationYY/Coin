@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "exx_http_api.h"
+#include "exchange/data_center.h"
 
-
-CExxHttpAPI::CExxHttpAPI(string strAPIKey, string strSecretKey, string strContentType)
+CExxHttpAPI::CExxHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strContentType)
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetContentType(strContentType);
@@ -27,3 +27,15 @@ void CExxHttpAPI::API_Balance()
 	info.mapParams["nonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
 	PushReqInfo(info);
 }
+
+void CExxHttpAPI::API_Ticker(const char* szType)
+{
+	SHttpReqInfo info;
+	info.strURL = "https://api.exxvip.com/data/v1";
+	info.apiType = eHttpAPIType_Ticker;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "ticker";
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, szType);
+	PushReqInfo(info);
+}
+

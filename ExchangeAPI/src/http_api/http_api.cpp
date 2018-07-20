@@ -13,18 +13,18 @@ CHttpAPI::~CHttpAPI()
 {
 }
 
-void CHttpAPI::SetKey(string strAPIKey, string strSecretKey)
+void CHttpAPI::SetKey(std::string strAPIKey, std::string strSecretKey)
 {
 	m_strAPIKey = strAPIKey;
 	m_strSecretKey = strSecretKey;
 }
 
-void CHttpAPI::SetURL(string strURL)
+void CHttpAPI::SetURL(std::string strURL)
 {
 	m_strURL = strURL;
 }
 
-void CHttpAPI::SetContentType(string strContentType)
+void CHttpAPI::SetContentType(std::string strContentType)
 {
 	m_strContentType = strContentType;
 }
@@ -115,7 +115,7 @@ void CHttpAPI::_ProcessHttp()
 				unsigned int outSize = 0;
 				HmacEncode("sha512", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
 				params.append("&signature=");
-				for(int i = 0; i < outSize; i++) 
+				for(int i = 0; i < (int)outSize; i++) 
 				{
 					char szBuffer[12] = {0};
 					_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
@@ -129,7 +129,7 @@ void CHttpAPI::_ProcessHttp()
 		}
 		std::string strResponse = "";
 		if(reqInfo.reqType == eHttpReqType_Get)
-			_GetReq(pCurl, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
+			_GetReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
 		else if(reqInfo.reqType == eHttpReqType_Post)
 		{
 			std::string params = "{";
@@ -146,7 +146,7 @@ void CHttpAPI::_ProcessHttp()
 					params.append(itB->second.value);
 				itB++;
 			}
-			_PostReq(pCurl, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
+			_PostReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), params.c_str(), strResponse);
 		}
 		if(strResponse != "")
 		{
@@ -161,9 +161,11 @@ void CHttpAPI::_ProcessHttp()
 	}
 	curl_easy_cleanup(pCurl);
 }
-void CHttpAPI::_GetReq(CURL* pCurl, const char* szMethod, const char* szGetParams, std::string& strResponse)
+void CHttpAPI::_GetReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szGetParams, std::string& strResponse)
 {
 	std::string strURL = m_strURL;
+	if(_strURL != "")
+		strURL = _strURL;
 	strURL.append("/").append(szMethod);
 	if(szGetParams && strlen(szGetParams) > 0)
 		strURL.append("?").append(szGetParams);
@@ -173,9 +175,11 @@ void CHttpAPI::_GetReq(CURL* pCurl, const char* szMethod, const char* szGetParam
 	CURLcode res = curl_easy_perform(pCurl);
 }
 
-void CHttpAPI::_PostReq(CURL* pCurl, const char* szMethod, const char* szPostParams, std::string& strResponse)
+void CHttpAPI::_PostReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szPostParams, std::string& strResponse)
 {
 	std::string strURL = m_strURL;
+	if(_strURL != "")
+		strURL = _strURL;
 	strURL.append("/").append(szMethod);
 	curl_easy_setopt(pCurl, CURLOPT_URL, m_strURL.c_str());
 	curl_easy_setopt(pCurl, CURLOPT_POST, 1); // post req
@@ -197,21 +201,22 @@ void CHttpAPI::Update()
 			m_queueResponseInfo.pop_front();
 		}
 		if(responseInfo.apiType != eHttpAPIType_Max)
-		{
-			if(m_callbakMessage)
-				m_callbakMessage(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet);
-		}
+			OnResponse(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet);
 	}
 }
 
-void CHttpAPI::SetCallBackMessage(http_callbak_message callbakMessage)
-{
-	m_callbakMessage = callbakMessage;
-}
+
 
 void CHttpAPI::PushReqInfo(SHttpReqInfo& info)
 {
 	boost::mutex::scoped_lock sl(m_reqMutex);
 	m_queueReqInfo.push_back(info);
 	m_condReqInfo.notify_one();
+}
+
+
+void CHttpAPI::OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)
+{
+	if(m_callBackFunc)
+		m_callBackFunc(type, retObj, strRet);
 }

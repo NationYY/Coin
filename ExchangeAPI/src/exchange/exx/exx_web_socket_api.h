@@ -3,7 +3,7 @@
 class CExxWebSocketAPI : public CWebSocketAPI
 {
 public:
-	CExxWebSocketAPI(string strAPIKey, string strSecretKey);
+	CExxWebSocketAPI(std::string strAPIKey, std::string strSecretKey);
 	~CExxWebSocketAPI();
 	virtual void API_EntrustDepth(const char* szType, int depthSize, bool bAdd);
 };

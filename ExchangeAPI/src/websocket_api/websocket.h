@@ -21,10 +21,6 @@ typedef void (*websocketpp_callbak_message)(Json::Value& retObj, const std::stri
 typedef websocketpp::client<websocketpp::config::asio_tls> client;
 
 
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
-using websocketpp::lib::bind;
-using namespace std;
 // pull out the type of messages sent by our config
 typedef websocketpp::config::asio_tls_client::message_type::ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
@@ -60,20 +56,12 @@ private:
 	CONNECTION_STATE m_con_state;
 	class CWebSocketAPI* m_pWebSocketAPI;
 public:
-
-	websocketpp_callbak_open callbak_open;
-	websocketpp_callbak_close  callbak_close;
-	websocketpp_callbak_message callbak_message;
-
 	bool m_manual_close;//是否为主动关闭连接，如果不是用户主动关闭，当接到断开联接回调时则自动执行重新连接机制。
     typedef WebSocket type;
 
     WebSocket() :  
 	m_manual_close(false),
 	m_con_state(CONNECTION_STATE_UNKONWN),
-	callbak_open(0),
-	callbak_close(0),
-	callbak_message(0),
 	m_pWebSocketAPI(NULL)
 	{
 		
@@ -85,11 +73,11 @@ public:
 
         //Register our handlers
         //m_endpoint.set_socket_init_handler(bind(&type::on_socket_init,this,::_1));
-        m_endpoint.set_tls_init_handler(bind(&type::on_tls_init,this,::_1));
-        m_endpoint.set_message_handler(bind(&type::on_message,this,::_1,::_2));
-        m_endpoint.set_open_handler(bind(&type::on_open,this,::_1));
-        m_endpoint.set_close_handler(bind(&type::on_close,this,::_1));
-        m_endpoint.set_fail_handler(bind(&type::on_fail,this,::_1));
+		m_endpoint.set_tls_init_handler(websocketpp::lib::bind(&type::on_tls_init, this, websocketpp::lib::placeholders::_1));
+		m_endpoint.set_message_handler(websocketpp::lib::bind(&type::on_message, this, websocketpp::lib::placeholders::_1, websocketpp::lib::placeholders::_2));
+		m_endpoint.set_open_handler(websocketpp::lib::bind(&type::on_open, this, websocketpp::lib::placeholders::_1));
+		m_endpoint.set_close_handler(websocketpp::lib::bind(&type::on_close, this, websocketpp::lib::placeholders::_1));
+		m_endpoint.set_fail_handler(websocketpp::lib::bind(&type::on_fail, this, websocketpp::lib::placeholders::_1));
 		
     }
 
@@ -97,27 +85,7 @@ public:
 	{
 	}
 
-    void start()
-	{
-        websocketpp::lib::error_code ec;
-        client::connection_ptr con = m_endpoint.get_connection(m_uri, ec);
-
-        if (ec) {
-            m_endpoint.get_alog().write(websocketpp::log::alevel::app,ec.message());
-        }
-
-		m_endpoint.set_open_handshake_timeout(30000);
-		m_endpoint.set_close_handshake_timeout(30000);
-
-
-        //con->set_proxy("http://humupdates.uchicago.edu:8443");
-
-        m_endpoint.connect(con);
-	
-        // Start the ASIO io_service run loop
-        m_endpoint.run();
-		if(callbak_close != 0)callbak_close();
-    }
+	void start();
 
     void on_socket_init(websocketpp::connection_hdl) 
 	{

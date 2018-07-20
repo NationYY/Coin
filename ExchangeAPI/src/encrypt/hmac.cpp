@@ -35,7 +35,7 @@ int HmacEncode(const char * algo,
 	//	engine = EVP_md2();
 	//}
 	else {
-		std::cout << "Algorithm " << algo << " is not supported by this program!" << endl;
+		std::cout << "Algorithm " << algo << " is not supported by this program!" << std::endl;
 		return -1;
 	}
 

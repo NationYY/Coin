@@ -31,9 +31,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\src\ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\src\stdafx.cpp" />
     <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp">
       <Filter>exchange\okex</Filter>
@@ -61,6 +58,15 @@
     </ClCompile>
     <ClCompile Include="..\src\encrypt\hmac.cpp">
       <Filter>encrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\data_center.cpp">
+      <Filter>exchange</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\exchange.cpp">
+      <Filter>exchange</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\exx\exx_exchange.cpp">
+      <Filter>exchange\exx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -98,6 +104,18 @@
     </ClInclude>
     <ClInclude Include="..\src\encrypt\hmac.h">
       <Filter>encrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\singleton.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\data_center.h">
+      <Filter>exchange</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\exchange.h">
+      <Filter>exchange</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\exx\exx_exchange.h">
+      <Filter>exchange\exx</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

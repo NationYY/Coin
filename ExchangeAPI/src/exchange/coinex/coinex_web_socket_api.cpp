@@ -3,7 +3,7 @@
 #include <json/json.h>
 #include <clib/lib/math/math_ex.h>
 
-CCoinexWebSocketAPI::CCoinexWebSocketAPI(string strAPIKey, string strSecretKey)
+CCoinexWebSocketAPI::CCoinexWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetURI("wss://socket.coinex.com/");

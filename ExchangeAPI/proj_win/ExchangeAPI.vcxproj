@@ -82,12 +82,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="..\src\ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\src\encrypt\hmac.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_web_socket_api.cpp" />
+    <ClCompile Include="..\src\exchange\data_center.cpp" />
+    <ClCompile Include="..\src\exchange\exchange.cpp" />
+    <ClCompile Include="..\src\exchange\exx\exx_exchange.cpp" />
     <ClCompile Include="..\src\exchange\exx\exx_http_api.cpp" />
     <ClCompile Include="..\src\exchange\exx\exx_web_socket_api.cpp" />
     <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp" />
@@ -100,9 +100,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\common\api_common.h" />
+    <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\encrypt\hmac.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_http_api.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_web_socket_api.h" />
+    <ClInclude Include="..\src\exchange\data_center.h" />
+    <ClInclude Include="..\src\exchange\exchange.h" />
+    <ClInclude Include="..\src\exchange\exx\exx_exchange.h" />
     <ClInclude Include="..\src\exchange\exx\exx_http_api.h" />
     <ClInclude Include="..\src\exchange\exx\exx_web_socket_api.h" />
     <ClInclude Include="..\src\exchange\okex\okex_web_socket_api.h" />
