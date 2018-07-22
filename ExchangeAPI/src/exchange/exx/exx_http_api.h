@@ -7,8 +7,5 @@ public:
 	~CExxHttpAPI();
 	virtual void API_Balance();
 	virtual void API_Ticker(const char* szType);
-public:
-	double m_buyPrice;
-	double m_sellPrice;
 };
 

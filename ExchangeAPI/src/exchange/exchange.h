@@ -39,9 +39,9 @@ protected:
 	CWebSocketAPI* m_pWebSocketAPI;
 	CHttpAPI* m_pHttpAPI;
 	http_callbak_message m_httpCallbakMessage;
-	websocketpp_callbak_open		m_webSocketCallbakOpen;
-	websocketpp_callbak_close		m_webSocketCallbakClose;
-	websocketpp_callbak_message		m_webSocketCallbakMessage;
+	websocketpp_callbak_open m_webSocketCallbakOpen;
+	websocketpp_callbak_close m_webSocketCallbakClose;
+	websocketpp_callbak_message m_webSocketCallbakMessage;
 	
 };
 

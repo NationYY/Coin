@@ -9,23 +9,27 @@
 typedef boost::function<void(eHttpAPIType, Json::Value&, const std::string&)> HTTP_CALLBACK_FUNCTION_TYPE;
 class CHttpAPI
 {
-	
 public:
 	CHttpAPI();
 	~CHttpAPI();
 	void SetKey(std::string strAPIKey, std::string strSecretKey);
 	void SetURL(std::string strURL);
 	void SetContentType(std::string strContentType);
+	void SetUTF8(bool bValue){
+		m_bUTF8 = bValue;
+	}
 	void Run(int threadNums);
 	void Update();
 	void SetCallBakFunction(HTTP_CALLBACK_FUNCTION_TYPE func){
 		m_callBackFunc = func;
 	}
-	void PushReqInfo(SHttpReqInfo& info);
-	virtual void API_Balance(){}
-	virtual void API_Ticker(const char* szType) {}
+	void RequestAsync(SHttpReqInfo& info);
+	void Request(SHttpReqInfo& reqInfo, SHttpResponse& resInfo);
+	virtual void API_Balance() = 0;
+	virtual void API_Ticker(const char* szType) = 0;
 private:
 	void _ProcessHttp();
+	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resInfo);
 	void _GetReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szGetParams, std::string& strResponse);
 	void _PostReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szPostParams, std::string& strResponse);
 protected:
@@ -41,6 +45,8 @@ private:
 	std::string m_strURL;
 	std::string m_strContentType;
 	int m_threadNum;
+	bool m_bUTF8;
+	CURL* m_pMainCurl;
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥

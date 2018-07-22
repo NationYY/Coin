@@ -7,6 +7,7 @@
 #include "CoinDlg.h"
 #include "afxdialogex.h"
 #include <string>
+#include "exchange/zbg/zbg_exchange.h"
 #include "exchange/exx/exx_exchange.h"
 #include <MMSystem.h>
 #ifdef _DEBUG
@@ -137,9 +138,12 @@ BOOL CCoinDlg::OnInitDialog()
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
-
+	if(!m_config.open("./config.ini"))
+		return FALSE;
+	const char* id = m_config.get("data", "id", "");
+	const char* key = m_config.get("data", "key", "");
 	// TODO:  在此添加额外的初始化代码
-	pExchange = new CExxExchange("c9e68ce5-c5e5-40da-9d1d-63238d2ffc79", "9b9b4f5b65c0ea198eb6b4a550ee83a2ff9ca52a", "");
+	pExchange = new CExxExchange(id, key);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
 	pExchange->SetWebSocketCallBackOpen(com_callbak_open);
 	pExchange->SetWebSocketCallBackClose(com_callbak_close);
@@ -221,10 +225,10 @@ void CCoinDlg::OnBnClickedButton1()
 {
 	if(pExchange->GetHttp())
 		pExchange->GetHttp()->API_Balance();
-	if(pExchange->GetHttp())
-		pExchange->GetHttp()->API_Ticker("eth_btc");
+	//if(pExchange->GetHttp())
+	//	pExchange->GetHttp()->API_Ticker("eth_btc");
 	if(pExchange->GetWebSocket())
-		pExchange->GetWebSocket()->API_EntrustDepth("ETH_BTC", 5, true);
+		pExchange->GetWebSocket()->API_EntrustDepth("EOP_USDT", 5, true);
 	// TODO:  在此添加控件通知处理程序代码
 }
 

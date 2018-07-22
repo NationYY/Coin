@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "exx_web_socket_api.h"
+#include "exx_websocket_api.h"
 
 
 CExxWebSocketAPI::CExxWebSocketAPI(std::string strAPIKey, std::string strSecretKey)

@@ -1,15 +1,25 @@
 #include "stdafx.h"
 #include "websocket.h"
 #include "websocket_api.h"
+#include "common/func_common.h"
 void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 {
-	//std::cout << "Message: " << msg->get_payload().c_str() << std::endl;
 	Json::Value retObj;
 	Json::Reader reader;
-	reader.parse(msg->get_payload().c_str(), retObj);
-	if(m_pWebSocketAPI)
-		m_pWebSocketAPI->PushRet(2, retObj, msg->get_payload().c_str());
-	//if(callbak_message != 0)callbak_message(msg->get_payload().c_str());
+	if(m_bUTF8)
+	{
+		char szRet[2048] = { 0 };
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)msg->get_payload().c_str(), msg->get_payload().length(), szRet, 2048);
+		reader.parse(szRet, retObj);
+		if(m_pWebSocketAPI)
+			m_pWebSocketAPI->PushRet(2, retObj, szRet);
+	}
+	else
+	{
+		reader.parse(msg->get_payload().c_str(), retObj);
+		if(m_pWebSocketAPI)
+			m_pWebSocketAPI->PushRet(2, retObj, msg->get_payload().c_str());
+	}
 }
 
 void WebSocket::on_open(websocketpp::connection_hdl hdl)

@@ -14,6 +14,12 @@ public:
 	void SetKey(std::string strAPIKey, std::string strSecretKey);
 	void SetURI(std::string strURI);
 	void Request(const char* szRequestInfo);
+	void SetUTF8(bool bValue){
+		m_bUTF8 = bValue;
+	}
+	bool GetIsUTF8(){
+		return m_bUTF8;
+	}
 	void CWebSocketAPI::SetCallBackOpen(WEBSOCKET_OPEN_FUNCTION_TYPE func){
 		m_openFunc = func;
 	}
@@ -32,7 +38,7 @@ public:
 	void PushRet(int type, Json::Value& retObj, const char* szRet);
 	static unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg);
 	//订阅交易深度
-	virtual void API_EntrustDepth(const char* szType, int depthSize, bool bAdd){}
+	virtual void API_EntrustDepth(const char* szType, int depthSize, bool bAdd) = 0;
 
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
@@ -46,6 +52,7 @@ protected:
 	WEBSOCKET_CLOSE_FUNCTION_TYPE m_closeFunc;
 	WEBSOCKET_MESSAGE_FUNCTION_TYPE m_messageFunc;
 	bool m_bConnect;
+	bool m_bUTF8;
 	
 };
 

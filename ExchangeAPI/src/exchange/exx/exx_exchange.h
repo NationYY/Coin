@@ -3,7 +3,7 @@
 class CExxExchange : public CExchange
 {
 public:
-	CExxExchange(std::string strAPIKey, std::string strSecretKey, std::string strContentType);
+	CExxExchange(std::string strAPIKey, std::string strSecretKey);
 	~CExxExchange();
 	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet);
 private:

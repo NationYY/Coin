@@ -1,12 +1,12 @@
 #include "stdafx.h"
 #include "exx_exchange.h"
 #include "exchange/exx/exx_http_api.h"
-#include "exchange/exx/exx_web_socket_api.h"
+#include "exchange/exx/exx_websocket_api.h"
 
-CExxExchange::CExxExchange(std::string strAPIKey, std::string strSecretKey, std::string strContentType)
+CExxExchange::CExxExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CExxWebSocketAPI(strAPIKey, strSecretKey);
-	m_pHttpAPI = new CExxHttpAPI(strAPIKey, strSecretKey, strContentType);
+	m_pHttpAPI = new CExxHttpAPI(strAPIKey, strSecretKey, "");
 }
 
 

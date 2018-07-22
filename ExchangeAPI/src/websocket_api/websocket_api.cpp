@@ -2,7 +2,8 @@
 #include "websocket_api.h"
 
 
-CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false)
+CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false),
+ m_bUTF8(false)
 {
 	m_strAPIKey = m_strURI = m_strSecretKey = "";
 }
@@ -59,6 +60,7 @@ unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
 			if(api->m_pWebsocket)
 			{
 				api->m_pWebsocket->set_websoket_api(api);
+				api->m_pWebsocket->set_utf8(api->GetIsUTF8());
 				api->m_pWebsocket->run(api->m_strURI);
 				bool bManualClose = api->m_pWebsocket->m_manual_close;
 				delete api->m_pWebsocket;

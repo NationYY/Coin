@@ -7,6 +7,11 @@ enum eHttpAPIType
 	eHttpAPIType_Max,
 };
 
+enum eMarketType
+{
+	
+};
+
 struct SBalanceInfo
 {
 	std::string name;

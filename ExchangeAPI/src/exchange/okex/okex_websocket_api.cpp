@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "okex_web_socket_api.h"
+#include "okex_websocket_api.h"
 
 
 COkexWebSocketAPI::COkexWebSocketAPI(std::string strAPIKey, std::string strSecretKey)

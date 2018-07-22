@@ -4,7 +4,7 @@
 
 #pragma once
 #include "afxcmn.h"
-
+#include <clib/lib/util/config.h>
 
 // CCoinDlg ¶Ô»°¿ò
 class CCoinDlg : public CDialogEx
@@ -36,4 +36,5 @@ public:
 public:
 	void UpdateBalance();
 	CListCtrl m_listBalance;
+	clib::config m_config;
 };

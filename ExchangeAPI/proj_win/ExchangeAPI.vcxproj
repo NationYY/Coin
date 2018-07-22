@@ -58,7 +58,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;iconv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -82,15 +82,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\common\func_common.cpp" />
     <ClCompile Include="..\src\encrypt\hmac.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp" />
-    <ClCompile Include="..\src\exchange\coinex\coinex_web_socket_api.cpp" />
+    <ClCompile Include="..\src\exchange\coinex\coinex_websocket_api.cpp" />
     <ClCompile Include="..\src\exchange\data_center.cpp" />
     <ClCompile Include="..\src\exchange\exchange.cpp" />
     <ClCompile Include="..\src\exchange\exx\exx_exchange.cpp" />
     <ClCompile Include="..\src\exchange\exx\exx_http_api.cpp" />
-    <ClCompile Include="..\src\exchange\exx\exx_web_socket_api.cpp" />
-    <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp" />
+    <ClCompile Include="..\src\exchange\exx\exx_websocket_api.cpp" />
+    <ClCompile Include="..\src\exchange\okex\okex_websocket_api.cpp" />
+    <ClCompile Include="..\src\exchange\zbg\zbg_exchange.cpp" />
+    <ClCompile Include="..\src\exchange\zbg\zbg_http_api.cpp" />
+    <ClCompile Include="..\src\exchange\zbg\zbg_websocket_api.cpp" />
     <ClCompile Include="..\src\http_api\http_api.cpp" />
     <ClCompile Include="..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -100,16 +104,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\common\api_common.h" />
+    <ClInclude Include="..\src\common\func_common.h" />
     <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\encrypt\hmac.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_http_api.h" />
-    <ClInclude Include="..\src\exchange\coinex\coinex_web_socket_api.h" />
+    <ClInclude Include="..\src\exchange\coinex\coinex_websocket_api.h" />
     <ClInclude Include="..\src\exchange\data_center.h" />
     <ClInclude Include="..\src\exchange\exchange.h" />
     <ClInclude Include="..\src\exchange\exx\exx_exchange.h" />
     <ClInclude Include="..\src\exchange\exx\exx_http_api.h" />
-    <ClInclude Include="..\src\exchange\exx\exx_web_socket_api.h" />
-    <ClInclude Include="..\src\exchange\okex\okex_web_socket_api.h" />
+    <ClInclude Include="..\src\exchange\exx\exx_websocket_api.h" />
+    <ClInclude Include="..\src\exchange\okex\okex_websocket_api.h" />
+    <ClInclude Include="..\src\exchange\zbg\zbg_exchange.h" />
+    <ClInclude Include="..\src\exchange\zbg\zbg_http_api.h" />
+    <ClInclude Include="..\src\exchange\zbg\zbg_websocket_api.h" />
     <ClInclude Include="..\src\http_api\http_api.h" />
     <ClInclude Include="..\src\http_api\http_def.h" />
     <ClInclude Include="..\src\stdafx.h" />

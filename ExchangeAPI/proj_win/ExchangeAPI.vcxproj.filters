@@ -29,16 +29,13 @@
     <Filter Include="exchange\exx">
       <UniqueIdentifier>{4cf93577-4003-48b6-9830-8d7789acdf1d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="exchange\zbg">
+      <UniqueIdentifier>{fec44168-f2a5-4786-8aba-9e5b3d02a29b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\stdafx.cpp" />
-    <ClCompile Include="..\src\exchange\okex\okex_web_socket_api.cpp">
-      <Filter>exchange\okex</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp">
-      <Filter>exchange\coinex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\exchange\coinex\coinex_web_socket_api.cpp">
       <Filter>exchange\coinex</Filter>
     </ClCompile>
     <ClCompile Include="..\src\http_api\http_api.cpp">
@@ -48,9 +45,6 @@
       <Filter>websocket_api</Filter>
     </ClCompile>
     <ClCompile Include="..\src\exchange\exx\exx_http_api.cpp">
-      <Filter>exchange\exx</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\exchange\exx\exx_web_socket_api.cpp">
       <Filter>exchange\exx</Filter>
     </ClCompile>
     <ClCompile Include="..\src\websocket_api\websocket.cpp">
@@ -68,17 +62,32 @@
     <ClCompile Include="..\src\exchange\exx\exx_exchange.cpp">
       <Filter>exchange\exx</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\exchange\okex\okex_websocket_api.cpp">
+      <Filter>exchange\okex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\exx\exx_websocket_api.cpp">
+      <Filter>exchange\exx</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\coinex\coinex_websocket_api.cpp">
+      <Filter>exchange\coinex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\zbg\zbg_exchange.cpp">
+      <Filter>exchange\zbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\zbg\zbg_http_api.cpp">
+      <Filter>exchange\zbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\zbg\zbg_websocket_api.cpp">
+      <Filter>exchange\zbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\common\func_common.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\stdafx.h" />
     <ClInclude Include="..\src\targetver.h" />
-    <ClInclude Include="..\src\exchange\okex\okex_web_socket_api.h">
-      <Filter>exchange\okex</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\exchange\coinex\coinex_http_api.h">
-      <Filter>exchange\coinex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\exchange\coinex\coinex_web_socket_api.h">
       <Filter>exchange\coinex</Filter>
     </ClInclude>
     <ClInclude Include="..\src\http_api\http_api.h">
@@ -99,9 +108,6 @@
     <ClInclude Include="..\src\exchange\exx\exx_http_api.h">
       <Filter>exchange\exx</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\exchange\exx\exx_web_socket_api.h">
-      <Filter>exchange\exx</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\encrypt\hmac.h">
       <Filter>encrypt</Filter>
     </ClInclude>
@@ -116,6 +122,27 @@
     </ClInclude>
     <ClInclude Include="..\src\exchange\exx\exx_exchange.h">
       <Filter>exchange\exx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\okex\okex_websocket_api.h">
+      <Filter>exchange\okex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\exx\exx_websocket_api.h">
+      <Filter>exchange\exx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\coinex\coinex_websocket_api.h">
+      <Filter>exchange\coinex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\zbg\zbg_exchange.h">
+      <Filter>exchange\zbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\zbg\zbg_http_api.h">
+      <Filter>exchange\zbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\zbg\zbg_websocket_api.h">
+      <Filter>exchange\zbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\func_common.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -55,6 +55,7 @@ private:
 	std::string m_uri;
 	CONNECTION_STATE m_con_state;
 	class CWebSocketAPI* m_pWebSocketAPI;
+	bool m_bUTF8;
 public:
 	bool m_manual_close;//是否为主动关闭连接，如果不是用户主动关闭，当接到断开联接回调时则自动执行重新连接机制。
     typedef WebSocket type;
@@ -62,7 +63,8 @@ public:
     WebSocket() :  
 	m_manual_close(false),
 	m_con_state(CONNECTION_STATE_UNKONWN),
-	m_pWebSocketAPI(NULL)
+	m_pWebSocketAPI(NULL),
+	m_bUTF8(false)
 	{
 		
         m_endpoint.set_access_channels(websocketpp::log::alevel::all);
@@ -159,6 +161,10 @@ public:
 	}
 	void set_websoket_api(class CWebSocketAPI* pAPI){
 		m_pWebSocketAPI = pAPI;
+	}
+
+	void set_utf8(bool bValue){
+		m_bUTF8 = bValue;
 	}
 };
 
