@@ -34,6 +34,9 @@ public:
 	CDataCenter* GetDataCenter(){
 		return &m_dataCenter;
 	}
+	virtual const std::list<eMarketType>& GetSupportMarket(){
+		return m_listSupportMarket;
+	}
 protected:
 	CDataCenter m_dataCenter;
 	CWebSocketAPI* m_pWebSocketAPI;
@@ -42,6 +45,7 @@ protected:
 	websocketpp_callbak_open m_webSocketCallbakOpen;
 	websocketpp_callbak_close m_webSocketCallbakClose;
 	websocketpp_callbak_message m_webSocketCallbakMessage;
+	std::list<eMarketType> m_listSupportMarket;
 	
 };
 

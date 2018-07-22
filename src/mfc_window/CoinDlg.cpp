@@ -140,10 +140,10 @@ BOOL CCoinDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 	if(!m_config.open("./config.ini"))
 		return FALSE;
-	const char* id = m_config.get("data", "id", "");
-	const char* key = m_config.get("data", "key", "");
+	const char* id = m_config.get("zbg", "id", "");
+	const char* key = m_config.get("zbg", "key", "");
 	// TODO:  在此添加额外的初始化代码
-	pExchange = new CExxExchange(id, key);
+	pExchange = new CZbgExchange(id, key);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
 	pExchange->SetWebSocketCallBackOpen(com_callbak_open);
 	pExchange->SetWebSocketCallBackClose(com_callbak_close);
@@ -228,7 +228,7 @@ void CCoinDlg::OnBnClickedButton1()
 	//if(pExchange->GetHttp())
 	//	pExchange->GetHttp()->API_Ticker("eth_btc");
 	if(pExchange->GetWebSocket())
-		pExchange->GetWebSocket()->API_EntrustDepth("EOP_USDT", 5, true);
+		pExchange->GetWebSocket()->API_EntrustDepth("ZB_BTC", 5, true);
 	// TODO:  在此添加控件通知处理程序代码
 }
 

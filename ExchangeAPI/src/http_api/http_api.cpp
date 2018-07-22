@@ -171,10 +171,7 @@ void CHttpAPI::_PostReq(CURL* pCurl, std::string& _strURL, const char* szMethod,
 	strURL.append("/").append(szMethod);
 	curl_easy_setopt(pCurl, CURLOPT_URL, strURL.c_str());
 	curl_easy_setopt(pCurl, CURLOPT_POST, 1); // post req
-	if(szPostParams == "{}")
-		curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, "");
-	else
-		curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, szPostParams);
+	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, szPostParams);
 	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&strResponse);
 	CURLcode res = curl_easy_perform(pCurl);
 }

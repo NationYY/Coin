@@ -3,23 +3,37 @@
 #include "exchange/zbg/zbg_http_api.h"
 #include "exchange/zbg/zbg_websocket_api.h"
 
-CZBGExchange::CZBGExchange(std::string strAPIKey, std::string strSecretKey)
+CZbgExchange::CZbgExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CZbgWebsocketAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI = new CZbgHttpAPI(strAPIKey, strSecretKey, "application/json;charset=UTF-8");
+	m_listSupportMarket.push_back(eMarketType_ETH_USDT);
+	m_listSupportMarket.push_back(eMarketType_BTC_USDT);
 }
 
 
-CZBGExchange::~CZBGExchange()
+CZbgExchange::~CZbgExchange()
 {
 }
 
-void CZBGExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)
+void CZbgExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)
 {
 	CExchange::OnHttpResponse(type, retObj, strRet);
 }
 
-void CZBGExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
+void CZbgExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
 {
 	CExchange::OnWebsocketResponse(retObj, strRet);
+}
+
+void CZbgExchange::Run()
+{
+	CExchange::Run();
+	SHttpReqInfo info;
+	info.reqType = eHttpReqType_Post;
+	info.strMethod = "exchange/config/controller/website/currencycontroller/getCurrencyList";
+	info.confirmationType = eHttpConfirmationType_Zbg;
+	SHttpResponse resInfo;
+	m_pHttpAPI->Request(info, resInfo);
+
 }
