@@ -59,6 +59,7 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST1, m_listBalance);
+	DDX_Control(pDX, IDC_LIST2, m_listCtrlSellEntrustDepth);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -87,6 +88,12 @@ void com_callbak_Fail()
 
 void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
 {
+	switch(apiType)
+	{
+	case eWebsocketAPIType_EntrustDepth:
+		g_pCoinDlg->UpdateEntrustDepth();
+		break;
+	}
 	OutputDebugString(strRet.c_str());
 	OutputDebugString("\n");
 };
@@ -171,9 +178,12 @@ BOOL CCoinDlg::OnInitDialog()
 	m_listBalance.InsertColumn(0, "币种", LVCFMT_CENTER, 40);
 	m_listBalance.InsertColumn(1, "余额", LVCFMT_CENTER, 100);
 	m_listBalance.InsertColumn(2, "可用", LVCFMT_CENTER, 100);
-	m_listBalance.InsertColumn(2, "冻结", LVCFMT_CENTER, 100);
+	m_listBalance.InsertColumn(3, "冻结", LVCFMT_CENTER, 100);
 	m_listBalance.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	SetTimer(1, 1, NULL);
+	m_listCtrlSellEntrustDepth.InsertColumn(0, "价", LVCFMT_CENTER, 100);
+	m_listCtrlSellEntrustDepth.InsertColumn(1, "量", LVCFMT_CENTER, 100);
+	m_listCtrlSellEntrustDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -270,5 +280,37 @@ void CCoinDlg::UpdateBalance()
 		m_listBalance.SetItemText(index, 3, szFormat);
 		index++;
 		++itB;
+	}
+}
+
+void CCoinDlg::UpdateEntrustDepth()
+{
+	const int showLines = 5;
+	m_listCtrlSellEntrustDepth.DeleteAllItems();
+	CDataCenter* pDataCenter = pExchange->GetDataCenter();
+	if(pDataCenter->m_mapSellEntrustDepth.size() >= showLines)
+	{
+		for(int i = 0; i < showLines; ++i)
+		{
+			m_listBalance.InsertItem(i, "");
+		}
+		std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapSellEntrustDepth.begin();
+		std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapSellEntrustDepth.end();
+		CString szFormat;
+		int count = 0;
+		while(itB != itE)
+		{
+			szFormat.Format("%s", itB->first.c_str());
+			m_listBalance.SetItemText(showLines-1-count, 0, szFormat);
+			szFormat.Format("%s", itB->second.c_str());
+			m_listBalance.SetItemText(showLines-1-count, 1, szFormat);
+			if(++count >= showLines)
+				break;
+			++itB;
+		}
+	}
+	else
+	{
+
 	}
 }

@@ -35,6 +35,8 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 public:
 	void UpdateBalance();
+	void UpdateEntrustDepth();
 	CListCtrl m_listBalance;
 	clib::config m_config;
+	CListCtrl m_listCtrlSellEntrustDepth;
 };
