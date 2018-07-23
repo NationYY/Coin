@@ -7,11 +7,71 @@ CExxExchange::CExxExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CExxWebSocketAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI = new CExxHttpAPI(strAPIKey, strSecretKey, "");
+	m_listSupportMarket.push_back(eMarketType_ETH_BTC);
+	m_listSupportMarket.push_back(eMarketType_ETH_USDT);
+	m_listSupportMarket.push_back(eMarketType_BTC_USDT);
 }
 
 
 CExxExchange::~CExxExchange()
 {
+}
+
+void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
+{
+	if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && retObj[0][0].asString() == "AE")
+	{
+		if(retObj[0].size() > 5)
+		{
+			Json::Value info = retObj[0][4];
+			if(info["asks"].isArray())
+			{
+				for(int i = 0; i < info["asks"].size(); ++i)
+				{
+					std::string price = info["asks"][i][0].asString();
+					std::string volume = info["asks"][i][1].asString();
+					m_dataCenter.UpdateSellEntrustDepth(price, volume);
+				}
+			}
+			info = retObj[0][5];
+			if(info["bids"].isArray())
+			{
+				for(int i = 0; i < info["bids"].size(); ++i)
+				{
+					std::string price = info["bids"][i][0].asString();
+					std::string volume = info["bids"][i][1].asString();
+					m_dataCenter.UpdateBuyEntrustDepth(price, volume);
+				}
+			}
+		}
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, retObj, strRet);
+	}
+	else if(retObj.isArray() && retObj[0].isString() && retObj[0].asString() == "E")
+	{
+		if(retObj.size() > 6 && retObj[4].isString() && retObj[5].isString() && retObj[6].isString())
+		{
+			std::string type = retObj[4].asString();
+			std::string price = retObj[5].asString();
+			std::string volume = retObj[6].asString();
+			if(type == "BID")
+			{
+				if(volume == "0.00000000")
+					m_dataCenter.DelBuyEntrustDepth(price);
+				else
+					m_dataCenter.UpdateBuyEntrustDepth(price, volume);
+			}
+			else if(type == "ASK")
+			{
+				if(volume == "0.00000000")
+					m_dataCenter.DelSellEntrustDepth(price);
+				else
+					m_dataCenter.UpdateSellEntrustDepth(price, volume);
+			}
+		}
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, retObj, strRet);
+	}
 }
 
 void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)

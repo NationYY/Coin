@@ -27,7 +27,7 @@ void CZbgHttpAPI::API_Balance()
 	RequestAsync(info);
 }
 
-void CZbgHttpAPI::API_Ticker(const char* szType)
+void CZbgHttpAPI::API_Ticker(eMarketType type)
 {
 
 }

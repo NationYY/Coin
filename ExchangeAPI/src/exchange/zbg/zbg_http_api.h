@@ -7,6 +7,6 @@ public:
 	~CZbgHttpAPI();
 public:
 	virtual void API_Balance();
-	virtual void API_Ticker(const char* szType);
+	virtual void API_Ticker(eMarketType type);
 };
 

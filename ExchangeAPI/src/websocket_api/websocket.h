@@ -14,7 +14,8 @@
 
 typedef void (*websocketpp_callbak_open)();
 typedef void (*websocketpp_callbak_close)();
-typedef void (*websocketpp_callbak_message)(Json::Value& retObj, const std::string& strRet);
+typedef void (*websocketpp_callbak_fail)();
+typedef void (*websocketpp_callbak_message)(eWebsocketAPIType type, Json::Value& retObj, const std::string& strRet);
 
 
 //typedef websocketpp::client<websocketpp::config::asio_client> client;
@@ -28,7 +29,7 @@ typedef client::connection_ptr connection_ptr;
 
 struct SWebSocketResponse
 {
-	int type; //0:close 1:open 2:api
+	int type; //0:close 1:open 2:api 3:fail
 	Json::Value retObj;
 	std::string strRet;
 	SWebSocketResponse()
@@ -109,20 +110,7 @@ public:
         return ctx;
     }
 
-    void on_fail(websocketpp::connection_hdl hdl)
-	{
-		
-        client::connection_ptr con = m_endpoint.get_con_from_hdl(hdl);
-        
-        std::cout << "Fail handler" << std::endl;
-        std::cout << con->get_state() << std::endl;
-        std::cout << con->get_local_close_code() << std::endl;
-        std::cout << con->get_local_close_reason() << std::endl;
-        std::cout << con->get_remote_close_code() << std::endl;
-        std::cout << con->get_remote_close_reason() << std::endl;
-        std::cout << con->get_ec() << " - " << con->get_ec().message() << std::endl;
-		
-    }
+	void on_fail(websocketpp::connection_hdl hdl);
 
     void on_close_handshake_timeout(websocketpp::connection_hdl hdl)
 	{

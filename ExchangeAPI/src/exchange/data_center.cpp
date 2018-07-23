@@ -26,3 +26,23 @@ void CDataCenter::SetBuyAndSellPrice(double buyPrice, double sellPrice)
 	m_buyPrice = buyPrice;
 	m_sellPrice = sellPrice;
 }
+
+void CDataCenter::UpdateBuyEntrustDepth(std::string strPrice, std::string strVolume)
+{
+	m_mapBuyEntrustDepth[strPrice] = strVolume;
+}
+
+void CDataCenter::DelBuyEntrustDepth(std::string strPrice)
+{
+	m_mapBuyEntrustDepth.erase(strPrice);
+}
+
+void CDataCenter::UpdateSellEntrustDepth(std::string strPrice, std::string strVolume)
+{
+	m_mapSellEntrustDepth[strPrice] = strVolume;
+}
+
+void CDataCenter::DelSellEntrustDepth(std::string strPrice)
+{
+	m_mapSellEntrustDepth.erase(strPrice);
+}

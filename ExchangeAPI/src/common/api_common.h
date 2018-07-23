@@ -7,6 +7,12 @@ enum eHttpAPIType
 	eHttpAPIType_Max,
 };
 
+enum eWebsocketAPIType
+{
+	eWebsocketAPIType_EntrustDepth,	//交易深度
+	eWebsocketAPIType_Max,
+};
+
 enum eMarketType
 {
 	eMarketType_ETH_BTC,

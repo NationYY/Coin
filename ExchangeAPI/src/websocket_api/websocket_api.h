@@ -5,6 +5,7 @@
 #include "websocket.h"
 typedef boost::function<void()> WEBSOCKET_OPEN_FUNCTION_TYPE;
 typedef boost::function<void()> WEBSOCKET_CLOSE_FUNCTION_TYPE;
+typedef boost::function<void()> WEBSOCKET_FAIL_FUNCTION_TYPE;
 typedef boost::function<void(Json::Value&, const std::string&)> WEBSOCKET_MESSAGE_FUNCTION_TYPE;
 class CWebSocketAPI
 {
@@ -31,6 +32,11 @@ public:
 	void CWebSocketAPI::SetCallBackMessage(WEBSOCKET_MESSAGE_FUNCTION_TYPE func){
 		m_messageFunc = func;
 	}
+
+	void CWebSocketAPI::SetCallBackFail(WEBSOCKET_FAIL_FUNCTION_TYPE func){
+		m_failFunc = func;
+	}
+	
 	
 	void Run();
 	void Close();
@@ -38,7 +44,7 @@ public:
 	void PushRet(int type, Json::Value& retObj, const char* szRet);
 	static unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg);
 	//订阅交易深度
-	virtual void API_EntrustDepth(const char* szType, int depthSize, bool bAdd) = 0;
+	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd) = 0;
 
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
@@ -51,6 +57,7 @@ protected:
 	WEBSOCKET_OPEN_FUNCTION_TYPE m_openFunc;
 	WEBSOCKET_CLOSE_FUNCTION_TYPE m_closeFunc;
 	WEBSOCKET_MESSAGE_FUNCTION_TYPE m_messageFunc;
+	WEBSOCKET_FAIL_FUNCTION_TYPE m_failFunc;
 	bool m_bConnect;
 	bool m_bUTF8;
 	

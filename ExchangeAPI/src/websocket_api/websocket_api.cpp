@@ -125,6 +125,9 @@ void CWebSocketAPI::Update()
 			if(m_messageFunc)
 				m_messageFunc(responseInfo.retObj, responseInfo.strRet);
 			break;
+		case 3:
+			if(m_failFunc)
+				m_failFunc();
 		default:
 			break;
 		}

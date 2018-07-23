@@ -14,9 +14,22 @@ CExxWebSocketAPI::~CExxWebSocketAPI()
 }
 
 
-void CExxWebSocketAPI::API_EntrustDepth(const char* szType, int depthSize, bool bAdd)
+void CExxWebSocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
 {
 	char szBuffer[128] = { 0 };
-	_snprintf(szBuffer, 128, "{\"dataType\":\"1_ENTRUST_ADD_%s\",\"dataSize\":%d,\"action\":\"%s\"}", szType, depthSize, (bAdd?"ADD":"DEL"));
+	switch(type)
+	{
+	case eMarketType_ETH_BTC:
+		_snprintf(szBuffer, 128, "{\"dataType\":\"1_ENTRUST_ADD_ETH_BTC\",\"dataSize\":%d,\"action\":\"%s\"}", depthSize, (bAdd ? "ADD" : "DEL"));
+		break;
+	case eMarketType_ETH_USDT:
+		_snprintf(szBuffer, 128, "{\"dataType\":\"1_ENTRUST_ADD_ETH_USDT\",\"dataSize\":%d,\"action\":\"%s\"}", depthSize, (bAdd ? "ADD" : "DEL"));
+		break;
+	case eMarketType_BTC_USDT:
+		_snprintf(szBuffer, 128, "{\"dataType\":\"1_ENTRUST_ADD_BTC_USDT\",\"dataSize\":%d,\"action\":\"%s\"}", depthSize, (bAdd ? "ADD" : "DEL"));
+		break;
+	default:
+		break;
+	}
 	Request(szBuffer);
 }

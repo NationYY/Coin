@@ -77,9 +77,15 @@ void com_callbak_open()
 };
 void com_callbak_close()
 {
-	std::cout << "连接已经断开！ " << std::endl;
+	AfxMessageBox("连接已经断开");
 };
-void local_websocket_callbak_message(Json::Value& retObj, const std::string& strRet)
+void com_callbak_Fail()
+{
+	OutputDebugString("连接失败,尝试重连");
+	OutputDebugString("\n");
+}
+
+void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
 {
 	OutputDebugString(strRet.c_str());
 	OutputDebugString("\n");
@@ -140,13 +146,14 @@ BOOL CCoinDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 	if(!m_config.open("./config.ini"))
 		return FALSE;
-	const char* id = m_config.get("zbg", "id", "");
-	const char* key = m_config.get("zbg", "key", "");
+	const char* id = m_config.get("exx", "id", "");
+	const char* key = m_config.get("exx", "key", "");
 	// TODO:  在此添加额外的初始化代码
-	pExchange = new CZbgExchange(id, key);
+	pExchange = new CExxExchange(id, key);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
 	pExchange->SetWebSocketCallBackOpen(com_callbak_open);
 	pExchange->SetWebSocketCallBackClose(com_callbak_close);
+	pExchange->SetWebSocketCallBackFail(com_callbak_Fail);
 	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 	pExchange->Run();
 
@@ -228,7 +235,7 @@ void CCoinDlg::OnBnClickedButton1()
 	//if(pExchange->GetHttp())
 	//	pExchange->GetHttp()->API_Ticker("eth_btc");
 	if(pExchange->GetWebSocket())
-		pExchange->GetWebSocket()->API_EntrustDepth("ZB_BTC", 5, true);
+		pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_ETH_BTC, 5, true);
 	// TODO:  在此添加控件通知处理程序代码
 }
 

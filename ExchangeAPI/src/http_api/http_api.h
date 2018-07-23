@@ -26,7 +26,7 @@ public:
 	void RequestAsync(SHttpReqInfo& info);
 	void Request(SHttpReqInfo& reqInfo, SHttpResponse& resInfo);
 	virtual void API_Balance() = 0;
-	virtual void API_Ticker(const char* szType) = 0;
+	virtual void API_Ticker(eMarketType type) = 0;
 private:
 	void _ProcessHttp();
 	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resInfo);

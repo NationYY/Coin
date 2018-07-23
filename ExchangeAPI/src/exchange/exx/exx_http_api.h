@@ -6,6 +6,6 @@ public:
 	CExxHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strContentType);
 	~CExxHttpAPI();
 	virtual void API_Balance();
-	virtual void API_Ticker(const char* szType);
+	virtual void API_Ticker(eMarketType type);
 };
 

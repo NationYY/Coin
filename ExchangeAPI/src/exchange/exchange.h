@@ -17,6 +17,9 @@ public:
 	void SetWebSocketCallBackClose(websocketpp_callbak_close callbakClose){
 		m_webSocketCallbakClose = callbakClose;
 	}
+	void SetWebSocketCallBackFail(websocketpp_callbak_fail callbakFail){
+		m_webSocketCallbakFail = callbakFail;
+	}
 	void SetWebSocketCallBackMessage(websocketpp_callbak_message callbakMessage){
 		m_webSocketCallbakMessage = callbakMessage;
 	}
@@ -24,6 +27,7 @@ public:
 	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet);
 	virtual void OnWebsocketConnect();
 	virtual void OnWebsocketDisconnect();
+	virtual void OnWebsocketFailConnect();
 	virtual void OnWebsocketResponse(Json::Value& retObj, const std::string& strRet);
 	CHttpAPI* GetHttp(){
 		return m_pHttpAPI;
@@ -44,6 +48,7 @@ protected:
 	http_callbak_message m_httpCallbakMessage;
 	websocketpp_callbak_open m_webSocketCallbakOpen;
 	websocketpp_callbak_close m_webSocketCallbakClose;
+	websocketpp_callbak_fail m_webSocketCallbakFail;
 	websocketpp_callbak_message m_webSocketCallbakMessage;
 	std::list<eMarketType> m_listSupportMarket;
 	

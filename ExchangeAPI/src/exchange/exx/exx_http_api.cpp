@@ -28,14 +28,27 @@ void CExxHttpAPI::API_Balance()
 	RequestAsync(info);
 }
 
-void CExxHttpAPI::API_Ticker(const char* szType)
+void CExxHttpAPI::API_Ticker(eMarketType type)
 {
 	SHttpReqInfo info;
 	info.strURL = "https://api.exxvip.com/data/v1";
 	info.apiType = eHttpAPIType_Ticker;
 	info.reqType = eHttpReqType_Get;
 	info.strMethod = "ticker";
-	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, szType);
+	switch(type)
+	{
+	case eMarketType_ETH_BTC:
+		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "eth_btc");
+		break;
+	case eMarketType_ETH_USDT:
+		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "eth_usdt");
+		break;
+	case eMarketType_BTC_USDT:
+		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "btc_usdt");
+		break;
+	default:
+		break;
+	}
 	RequestAsync(info);
 }
 

@@ -23,6 +23,7 @@ void CExchange::Run()
 	{
 		m_pWebSocketAPI->SetCallBackOpen(boost::bind(&CExchange::OnWebsocketConnect, this));
 		m_pWebSocketAPI->SetCallBackClose(boost::bind(&CExchange::OnWebsocketDisconnect, this));
+		m_pWebSocketAPI->SetCallBackFail(boost::bind(&CExchange::OnWebsocketFailConnect, this));
 		m_pWebSocketAPI->SetCallBackMessage(boost::bind(&CExchange::OnWebsocketResponse, this, _1, _2));
 		m_pWebSocketAPI->Run();
 	}
@@ -52,10 +53,16 @@ void CExchange::OnWebsocketDisconnect()
 {
 	if(m_webSocketCallbakClose)
 		m_webSocketCallbakClose();
-
 }
+
+void CExchange::OnWebsocketFailConnect()
+{
+	if(m_webSocketCallbakFail)
+		m_webSocketCallbakFail();
+}
+
 void CExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
 {
 	if(m_webSocketCallbakMessage)
-		m_webSocketCallbakMessage(retObj, strRet);
+		m_webSocketCallbakMessage(eWebsocketAPIType_Max, retObj, strRet);
 }
