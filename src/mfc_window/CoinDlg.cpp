@@ -59,14 +59,15 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST1, m_listBalance);
-	DDX_Control(pDX, IDC_LIST2, m_listCtrlSellEntrustDepth);
+	DDX_Control(pDX, IDC_LIST2, m_listCtrlEntrustDepth);
+	DDX_Control(pDX, IDC_COMBO1, m_cbMarketType);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BUTTON1, &CCoinDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON1, &CCoinDlg::OnBnClickedButtonBegin)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -181,9 +182,35 @@ BOOL CCoinDlg::OnInitDialog()
 	m_listBalance.InsertColumn(3, "冻结", LVCFMT_CENTER, 100);
 	m_listBalance.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	SetTimer(1, 1, NULL);
-	m_listCtrlSellEntrustDepth.InsertColumn(0, "价", LVCFMT_CENTER, 100);
-	m_listCtrlSellEntrustDepth.InsertColumn(1, "量", LVCFMT_CENTER, 100);
-	m_listCtrlSellEntrustDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+	m_listCtrlEntrustDepth.InsertColumn(0, "", LVCFMT_CENTER, 30);
+	m_listCtrlEntrustDepth.InsertColumn(1, "价", LVCFMT_CENTER, 100);
+	m_listCtrlEntrustDepth.InsertColumn(2, "量", LVCFMT_CENTER, 100);
+	m_listCtrlEntrustDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
+	const std::list<eMarketType>& listMarket = pExchange->GetSupportMarket();
+	std::list<eMarketType>::const_iterator itB = listMarket.begin();
+	std::list<eMarketType>::const_iterator itE = listMarket.end();
+	int index = 0;
+	while(itB != itE)
+	{
+		switch(*itB)
+		{
+		case eMarketType_ETH_BTC:
+			m_cbMarketType.InsertString(index, "ETH/BTC");
+			break;
+		case eMarketType_ETH_USDT:
+			m_cbMarketType.InsertString(index, "ETH/USDT");
+			break;
+		case eMarketType_BTC_USDT:
+			m_cbMarketType.InsertString(index, "BTC/USDT");
+			break;
+		default:
+			break;
+		}
+		m_cbMarketType.SetItemData(index, *itB);
+		++itB;
+	}
+	
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -238,14 +265,24 @@ HCURSOR CCoinDlg::OnQueryDragIcon()
 
 
 
-void CCoinDlg::OnBnClickedButton1()
+void CCoinDlg::OnBnClickedButtonBegin()
 {
+	int sel = m_cbMarketType.GetCurSel();
+	if(CB_ERR == sel)
+	{
+		AfxMessageBox("请选择交易币对");
+		return;
+	}
+	DWORD type = m_cbMarketType.GetItemData(sel);
+	if(type < 0 || type >= eMarketType_Max)
+	{
+		AfxMessageBox("交易币对错误");
+		return;
+	}
 	if(pExchange->GetHttp())
 		pExchange->GetHttp()->API_Balance();
-	//if(pExchange->GetHttp())
-	//	pExchange->GetHttp()->API_Ticker("eth_btc");
 	if(pExchange->GetWebSocket())
-		pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_ETH_BTC, 5, true);
+		pExchange->GetWebSocket()->API_EntrustDepth((eMarketType)type, 5, true);
 	// TODO:  在此添加控件通知处理程序代码
 }
 
@@ -274,9 +311,9 @@ void CCoinDlg::UpdateBalance()
 		m_listBalance.SetItemText(index, 0, szFormat);
 		szFormat.Format("%lf", itB->second.total);
 		m_listBalance.SetItemText(index, 1, szFormat);
-		szFormat.Format("%lf", itB->second.freeze);
-		m_listBalance.SetItemText(index, 2, szFormat);
 		szFormat.Format("%lf", itB->second.balance);
+		m_listBalance.SetItemText(index, 2, szFormat);
+		szFormat.Format("%lf", itB->second.freeze);
 		m_listBalance.SetItemText(index, 3, szFormat);
 		index++;
 		++itB;
@@ -286,31 +323,65 @@ void CCoinDlg::UpdateBalance()
 void CCoinDlg::UpdateEntrustDepth()
 {
 	const int showLines = 5;
-	m_listCtrlSellEntrustDepth.DeleteAllItems();
+	m_listCtrlEntrustDepth.DeleteAllItems();
 	CDataCenter* pDataCenter = pExchange->GetDataCenter();
-	if(pDataCenter->m_mapSellEntrustDepth.size() >= showLines)
+	int sellLine = min(pDataCenter->m_mapSellEntrustDepth.size(), showLines);
+	for(int i = 0; i < sellLine; ++i)
 	{
-		for(int i = 0; i < showLines; ++i)
-		{
-			m_listBalance.InsertItem(i, "");
-		}
-		std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapSellEntrustDepth.begin();
-		std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapSellEntrustDepth.end();
+		m_listCtrlEntrustDepth.InsertItem(i, "");
+	}
+	std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapSellEntrustDepth.begin();
+	std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapSellEntrustDepth.end();
+	CString szFormat;
+	int count = 0;
+	while(itB != itE)
+	{
+		szFormat.Format("%d", count + 1);
+		m_listCtrlEntrustDepth.SetItemText(sellLine - 1 - count, 0, szFormat);
+		szFormat.Format("%s", itB->first.c_str());
+		m_listCtrlEntrustDepth.SetItemText(sellLine - 1 - count, 1, szFormat);
+		szFormat.Format("%s", itB->second.c_str());
+		m_listCtrlEntrustDepth.SetItemText(sellLine - 1 - count, 2, szFormat);
+		if(++count >= sellLine)
+			break;
+		++itB;
+	}
+	m_listCtrlEntrustDepth.InsertItem(sellLine, "");
+	m_listCtrlEntrustDepth.SetItemText(sellLine, 0, "---");
+	m_listCtrlEntrustDepth.SetItemText(sellLine, 1, "-------------");
+	m_listCtrlEntrustDepth.SetItemText(sellLine, 2, "-------------");
+	int buyLine = min(pDataCenter->m_mapBuyEntrustDepth.size(), showLines);
+	for(int i = 0; i < sellLine; ++i)
+	{
+		m_listCtrlEntrustDepth.InsertItem(sellLine+1+i, "");
+	}
+	if(buyLine > 0)
+	{
+		std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapBuyEntrustDepth.begin();
+		std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapBuyEntrustDepth.end();
 		CString szFormat;
 		int count = 0;
+		itE--;
 		while(itB != itE)
 		{
-			szFormat.Format("%s", itB->first.c_str());
-			m_listBalance.SetItemText(showLines-1-count, 0, szFormat);
-			szFormat.Format("%s", itB->second.c_str());
-			m_listBalance.SetItemText(showLines-1-count, 1, szFormat);
-			if(++count >= showLines)
+			szFormat.Format("%d", count + 1);
+			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 0, szFormat);
+			szFormat.Format("%s", itE->first.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 1, szFormat);
+			szFormat.Format("%s", itE->second.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 2, szFormat);
+			if(++count >= buyLine)
 				break;
-			++itB;
+			itE--;
 		}
-	}
-	else
-	{
-
+		if(count < buyLine)
+		{
+			szFormat.Format("%d", count + 1);
+			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 0, szFormat);
+			szFormat.Format("%s", itB->first.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 1, szFormat);
+			szFormat.Format("%s", itB->second.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 2, szFormat);
+		}
 	}
 }

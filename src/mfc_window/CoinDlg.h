@@ -5,6 +5,7 @@
 #pragma once
 #include "afxcmn.h"
 #include <clib/lib/util/config.h>
+#include "afxwin.h"
 
 // CCoinDlg ¶Ô»°¿ò
 class CCoinDlg : public CDialogEx
@@ -31,12 +32,13 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedButtonBegin();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 public:
 	void UpdateBalance();
 	void UpdateEntrustDepth();
 	CListCtrl m_listBalance;
 	clib::config m_config;
-	CListCtrl m_listCtrlSellEntrustDepth;
+	CListCtrl m_listCtrlEntrustDepth;
+	CComboBox m_cbMarketType;
 };

@@ -18,6 +18,7 @@ enum eMarketType
 	eMarketType_ETH_BTC,
 	eMarketType_ETH_USDT,
 	eMarketType_BTC_USDT,
+	eMarketType_Max,
 };
 
 struct SBalanceInfo
