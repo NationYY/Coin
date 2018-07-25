@@ -23,6 +23,9 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 	{
 		if(retObj[0].size() > 5)
 		{
+			int updateTime = 0;
+			if(retObj[0][3].isString())
+				updateTime = atoi(retObj[0][3].asString().c_str());
 			Json::Value info = retObj[0][4];
 			if(info["asks"].isArray())
 			{
@@ -30,7 +33,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 				{
 					std::string price = info["asks"][i][0].asString();
 					std::string volume = info["asks"][i][1].asString();
-					m_dataCenter.UpdateSellEntrustDepth(price, volume);
+					m_dataCenter.UpdateSellEntrustDepth(price, volume, updateTime);
 				}
 			}
 			info = retObj[0][5];
@@ -40,7 +43,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 				{
 					std::string price = info["bids"][i][0].asString();
 					std::string volume = info["bids"][i][1].asString();
-					m_dataCenter.UpdateBuyEntrustDepth(price, volume);
+					m_dataCenter.UpdateBuyEntrustDepth(price, volume, updateTime);
 				}
 			}
 		}
@@ -51,22 +54,25 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 	{
 		if(retObj.size() > 6 && retObj[4].isString() && retObj[5].isString() && retObj[6].isString())
 		{
+			int updateTime = 0;
+			if(retObj[2].isString())
+				updateTime = atoi(retObj[2].asString().c_str());
 			std::string type = retObj[4].asString();
 			std::string price = retObj[5].asString();
 			std::string volume = retObj[6].asString();
 			if(type == "BID")
 			{
 				if(volume == "0.00000000")
-					m_dataCenter.DelBuyEntrustDepth(price);
+					m_dataCenter.DelBuyEntrustDepth(price, updateTime);
 				else
-					m_dataCenter.UpdateBuyEntrustDepth(price, volume);
+					m_dataCenter.UpdateBuyEntrustDepth(price, volume, updateTime);
 			}
 			else if(type == "ASK")
 			{
 				if(volume == "0.00000000")
-					m_dataCenter.DelSellEntrustDepth(price);
+					m_dataCenter.DelSellEntrustDepth(price, updateTime);
 				else
-					m_dataCenter.UpdateSellEntrustDepth(price, volume);
+					m_dataCenter.UpdateSellEntrustDepth(price, volume, updateTime);
 			}
 		}
 		if(m_webSocketCallbakMessage)
@@ -85,6 +91,9 @@ void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const 
 		break;
 	case eHttpAPIType_Ticker:
 		Parse_Ticker(retObj, strRet);
+		break;
+	case eHttpAPIType_EntrustDepth:
+		Parse_EntrustDepth(retObj, strRet);
 		break;
 	default:
 		break;
@@ -131,6 +140,42 @@ void CExxExchange::Parse_Ticker(Json::Value& retObj, const std::string& strRet)
 		Json::Value& ticker = retObj["ticker"];
 		std::string strSell = ticker["sell"].asString();
 		std::string strBuy = ticker["buy"].asString();
+		int time = ticker["date"].asInt();
+		
 		m_dataCenter.SetBuyAndSellPrice(atof(strBuy.c_str()), atof(strSell.c_str()));
+	}
+}
+
+void CExxExchange::Parse_EntrustDepth(Json::Value& retObj, const std::string& strRet)
+{
+	m_dataCenter.ClearAllBalance();
+	int updateTime = 0;
+	if(retObj["timestamp"].isInt())
+		updateTime = retObj["timestamp"].asInt();
+	if(retObj["asks"].isArray())
+	{
+		Json::Value& asks = retObj["asks"];
+		for(int i = 0; i<asks.size(); ++i)
+		{
+			if(asks[i].isArray() && asks[i].size() > 1)
+			{
+				std::string price = asks[i][0].asString();
+				std::string volume = asks[i][1].asString();
+				m_dataCenter.UpdateSellEntrustDepth(price, volume, updateTime);
+			}
+		}
+	}
+	if(retObj["bids"].isArray())
+	{
+		Json::Value& bids = retObj["bids"];
+		for(int i = 0; i<bids.size(); ++i)
+		{
+			if(bids[i].isArray() && bids[i].size() > 1)
+			{
+				std::string price = bids[i][0].asString();
+				std::string volume = bids[i][1].asString();
+				m_dataCenter.UpdateBuyEntrustDepth(price, volume, updateTime);
+			}
+		}
 	}
 }

@@ -37,7 +37,9 @@ public:
 		m_failFunc = func;
 	}
 	
-	
+	bool IsConnect(){
+		return m_bConnect;
+	}
 	void Run();
 	void Close();
 	void Update();

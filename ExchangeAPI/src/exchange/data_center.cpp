@@ -2,7 +2,7 @@
 #include "data_center.h"
 
 
-CDataCenter::CDataCenter()
+CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0)
 {
 }
 
@@ -27,22 +27,26 @@ void CDataCenter::SetBuyAndSellPrice(double buyPrice, double sellPrice)
 	m_sellPrice = sellPrice;
 }
 
-void CDataCenter::UpdateBuyEntrustDepth(std::string strPrice, std::string strVolume)
+void CDataCenter::UpdateBuyEntrustDepth(std::string strPrice, std::string strVolume, int serverTime)
 {
 	m_mapBuyEntrustDepth[strPrice] = strVolume;
+	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::DelBuyEntrustDepth(std::string strPrice)
+void CDataCenter::DelBuyEntrustDepth(std::string strPrice, int serverTime)
 {
 	m_mapBuyEntrustDepth.erase(strPrice);
+	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::UpdateSellEntrustDepth(std::string strPrice, std::string strVolume)
+void CDataCenter::UpdateSellEntrustDepth(std::string strPrice, std::string strVolume, int serverTime)
 {
 	m_mapSellEntrustDepth[strPrice] = strVolume;
+	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::DelSellEntrustDepth(std::string strPrice)
+void CDataCenter::DelSellEntrustDepth(std::string strPrice, int serverTime)
 {
 	m_mapSellEntrustDepth.erase(strPrice);
+	m_updateEntrustDepthTime = serverTime;
 }

@@ -51,8 +51,8 @@ void CHttpAPI::Run(int threadNums)
 	curl_easy_setopt(m_pMainCurl, CURLOPT_READFUNCTION, NULL);
 	curl_easy_setopt(m_pMainCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 	curl_easy_setopt(m_pMainCurl, CURLOPT_NOSIGNAL, 1);
-	curl_easy_setopt(m_pMainCurl, CURLOPT_CONNECTTIMEOUT, 10);
-	curl_easy_setopt(m_pMainCurl, CURLOPT_TIMEOUT, 10);
+	curl_easy_setopt(m_pMainCurl, CURLOPT_CONNECTTIMEOUT, 5);
+	curl_easy_setopt(m_pMainCurl, CURLOPT_TIMEOUT, 5);
 	curl_slist* pHeaders = NULL;
 	pHeaders = curl_slist_append(pHeaders, "User-Agent:Mozilla / 5.0£®Windows NT 6.1; WOW64£©AppleWebKit / 537.36£®KHTML£¨»ÁGecko£©Chrome / 39.0.2171.71 Safari / 537.36");
 	if(m_strContentType != "")
@@ -303,24 +303,21 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 			AssembleParams(true, strPostParams, reqInfo.mapParams);
 		_PostReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strPostParams.c_str(), strResponse);
 	}
-	if(strResponse != "")
+	if(m_bUTF8)
 	{
-		if(m_bUTF8)
-		{
-			char szRet[2048] = { 0 };
-			CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 2048);
-			Json::Reader reader;
-			reader.parse(szRet, resInfo.retObj);
-			resInfo.apiType = reqInfo.apiType;
-			resInfo.strRet = szRet;
-		}
-		else
-		{
-			Json::Reader reader;
-			reader.parse(strResponse.c_str(), resInfo.retObj);
-			resInfo.apiType = reqInfo.apiType;
-			resInfo.strRet = strResponse;
-		}
+		char szRet[2048] = {0};
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 2048);
+		Json::Reader reader;
+		reader.parse(szRet, resInfo.retObj);
+		resInfo.apiType = reqInfo.apiType;
+		resInfo.strRet = szRet;
+	}
+	else
+	{
+		Json::Reader reader;
+		reader.parse(strResponse.c_str(), resInfo.retObj);
+		resInfo.apiType = reqInfo.apiType;
+		resInfo.strRet = strResponse;
 	}
 }
 

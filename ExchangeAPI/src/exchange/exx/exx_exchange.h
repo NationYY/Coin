@@ -11,5 +11,6 @@ public:
 private:
 	void Parse_Balance(Json::Value& retObj, const std::string& strRet);
 	void Parse_Ticker(Json::Value& retObj, const std::string& strRet);
+	void Parse_EntrustDepth(Json::Value& retObj, const std::string& strRet);
 };
 

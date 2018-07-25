@@ -6,7 +6,13 @@
 #include "afxcmn.h"
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
-
+enum eTimerType
+{
+	eTimerType_APIUpdate,
+	eTimerType_Balance,
+	eTimerType_EntrustDepth,
+	eTimerType_Trade,
+};
 // CCoinDlg ¶Ô»°¿ò
 class CCoinDlg : public CDialogEx
 {
@@ -41,4 +47,14 @@ public:
 	clib::config m_config;
 	CListCtrl m_listCtrlEntrustDepth;
 	CComboBox m_cbMarketType;
+	double m_tradeVolume;
+	int m_tradeFrequency;
+	CStatic m_staticUpdateTime;
+	CButton m_btnHightSpeed;
+	CButton m_btnNormalSpeed;
+	afx_msg void OnBnClickedRadioHightSpeed();
+	afx_msg void OnBnClickedRadioNormalSpeed();
+	int m_webSokectFailTimes;
+	afx_msg void OnBnClickedButtonStop();
+	bool m_bIsRun;
 };

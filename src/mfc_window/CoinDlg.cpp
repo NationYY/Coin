@@ -50,6 +50,10 @@ END_MESSAGE_MAP()
 
 CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CCoinDlg::IDD, pParent)
+	, m_tradeVolume(0)
+	, m_tradeFrequency(0)
+	, m_webSokectFailTimes(0)
+	, m_bIsRun(false)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -61,6 +65,11 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST1, m_listBalance);
 	DDX_Control(pDX, IDC_LIST2, m_listCtrlEntrustDepth);
 	DDX_Control(pDX, IDC_COMBO1, m_cbMarketType);
+	DDX_Text(pDX, IDC_EDIT1, m_tradeVolume);
+	DDX_Text(pDX, IDC_EDIT2, m_tradeFrequency);
+	DDX_Control(pDX, IDC_STATIC_UPDATE_TIME, m_staticUpdateTime);
+	DDX_Control(pDX, IDC_RADIO1, m_btnHightSpeed);
+	DDX_Control(pDX, IDC_RADIO2, m_btnNormalSpeed);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -69,6 +78,9 @@ BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CCoinDlg::OnBnClickedButtonBegin)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_RADIO1, &CCoinDlg::OnBnClickedRadioHightSpeed)
+	ON_BN_CLICKED(IDC_RADIO2, &CCoinDlg::OnBnClickedRadioNormalSpeed)
+	ON_BN_CLICKED(IDC_BUTTON2, &CCoinDlg::OnBnClickedButtonStop)
 END_MESSAGE_MAP()
 
 
@@ -76,6 +88,7 @@ END_MESSAGE_MAP()
 void com_callbak_open()
 {
 	AfxMessageBox("连接成功");
+	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA("高速行情(可用)");
 };
 void com_callbak_close()
 {
@@ -85,6 +98,10 @@ void com_callbak_Fail()
 {
 	OutputDebugString("连接失败,尝试重连");
 	OutputDebugString("\n");
+	g_pCoinDlg->m_webSokectFailTimes++;
+	CString temp;
+	temp.Format("高速行情(连接失败%d, 再次尝试中)", g_pCoinDlg->m_webSokectFailTimes);
+	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA(temp.GetBuffer());
 }
 
 void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
@@ -105,9 +122,12 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	{
 	case eHttpAPIType_Balance:
 		g_pCoinDlg->UpdateBalance();
+		g_pCoinDlg->SetTimer(eTimerType_Balance, 5000, NULL);
 		break;
 	case eHttpAPIType_Ticker:
 		break;
+	case eHttpAPIType_EntrustDepth:
+		g_pCoinDlg->UpdateEntrustDepth();
 	case eHttpAPIType_Max:
 		break;
 	default:
@@ -175,13 +195,13 @@ BOOL CCoinDlg::OnInitDialog()
 	if(g_wTimerID == 0)
 		return FALSE;*/
 	
-
+	m_btnHightSpeed.SetCheck(1);
 	m_listBalance.InsertColumn(0, "币种", LVCFMT_CENTER, 40);
 	m_listBalance.InsertColumn(1, "余额", LVCFMT_CENTER, 100);
 	m_listBalance.InsertColumn(2, "可用", LVCFMT_CENTER, 100);
 	m_listBalance.InsertColumn(3, "冻结", LVCFMT_CENTER, 100);
 	m_listBalance.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
-	SetTimer(1, 1, NULL);
+	
 	m_listCtrlEntrustDepth.InsertColumn(0, "", LVCFMT_CENTER, 30);
 	m_listCtrlEntrustDepth.InsertColumn(1, "价", LVCFMT_CENTER, 100);
 	m_listCtrlEntrustDepth.InsertColumn(2, "量", LVCFMT_CENTER, 100);
@@ -210,6 +230,10 @@ BOOL CCoinDlg::OnInitDialog()
 		m_cbMarketType.SetItemData(index, *itB);
 		++itB;
 	}
+	
+
+	SetTimer(eTimerType_APIUpdate, 1, NULL);
+	SetTimer(eTimerType_Balance, 5000, NULL);
 	
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -267,6 +291,9 @@ HCURSOR CCoinDlg::OnQueryDragIcon()
 
 void CCoinDlg::OnBnClickedButtonBegin()
 {
+	UpdateData(TRUE);
+	if(m_bIsRun)
+		return;
 	int sel = m_cbMarketType.GetCurSel();
 	if(CB_ERR == sel)
 	{
@@ -279,20 +306,72 @@ void CCoinDlg::OnBnClickedButtonBegin()
 		AfxMessageBox("交易币对错误");
 		return;
 	}
-	if(pExchange->GetHttp())
-		pExchange->GetHttp()->API_Balance();
-	if(pExchange->GetWebSocket())
-		pExchange->GetWebSocket()->API_EntrustDepth((eMarketType)type, 5, true);
+	if(m_tradeVolume == 0)
+	{
+		AfxMessageBox("请填写单笔交易量");
+		return;
+	}
+	if(m_tradeFrequency == 0)
+	{
+		AfxMessageBox("请填写交易频率");
+		return;
+	}
+	if(m_btnHightSpeed.GetCheck() && !pExchange->GetWebSocket()->IsConnect())
+	{
+		AfxMessageBox("请等待与交易所服务器建立连接!");
+		return;
+	}
+	if(m_btnHightSpeed.GetCheck())
+	{
+		if(pExchange->GetWebSocket())
+			pExchange->GetWebSocket()->API_EntrustDepth((eMarketType)type, 5, true);
+	}
+	else
+	{
+		g_pCoinDlg->SetTimer(eTimerType_EntrustDepth, 500, NULL);
+	}
+	g_pCoinDlg->SetTimer(eTimerType_Trade, m_tradeFrequency, NULL);
+	m_bIsRun = true;
 	// TODO:  在此添加控件通知处理程序代码
 }
 
 void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	if(pExchange->GetWebSocket())
-		pExchange->GetWebSocket()->Update();
-	if(pExchange->GetHttp())
-		pExchange->GetHttp()->Update();
+	switch(nIDEvent)
+	{
+	case eTimerType_APIUpdate:
+		{
+			if(pExchange->GetWebSocket())
+				pExchange->GetWebSocket()->Update();
+			if(pExchange->GetHttp())
+				pExchange->GetHttp()->Update();
+		}
+		break;
+	case eTimerType_Balance:
+		{
+			if(pExchange->GetHttp())
+				pExchange->GetHttp()->API_Balance();
+			KillTimer(eTimerType_Balance);
+		}
+		break;
+	case eTimerType_EntrustDepth:
+		{
+			int sel = m_cbMarketType.GetCurSel();
+			DWORD type = m_cbMarketType.GetItemData(sel);
+			if(pExchange->GetHttp())
+				pExchange->GetHttp()->API_EntrustDepth((eMarketType)type);
+		}
+		break;
+	case eTimerType_Trade:
+		{
+			
+		}
+		break;
+	default:
+		break;
+	}
+	
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -383,5 +462,41 @@ void CCoinDlg::UpdateEntrustDepth()
 			szFormat.Format("%s", itB->second.c_str());
 			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 2, szFormat);
 		}
+	}
+	tm* pTM = localtime(&pDataCenter->m_updateEntrustDepthTime);
+	szFormat.Format("更新时间: %d:%d:%d", pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
+	m_staticUpdateTime.SetWindowTextA(szFormat.GetBuffer());
+}
+
+
+void CCoinDlg::OnBnClickedRadioHightSpeed()
+{
+	m_btnNormalSpeed.SetCheck(0);
+}
+
+
+void CCoinDlg::OnBnClickedRadioNormalSpeed()
+{
+	m_btnHightSpeed.SetCheck(0);
+}
+
+
+void CCoinDlg::OnBnClickedButtonStop()
+{
+	if(m_bIsRun)
+	{
+		int sel = m_cbMarketType.GetCurSel();
+		DWORD type = m_cbMarketType.GetItemData(sel);
+		if(m_btnHightSpeed.GetCheck())
+		{
+			if(pExchange->GetWebSocket())
+				pExchange->GetWebSocket()->API_EntrustDepth((eMarketType)type, 5, false);
+		}
+		else
+		{
+			g_pCoinDlg->KillTimer(eTimerType_EntrustDepth);
+		}
+		g_pCoinDlg->KillTimer(eTimerType_Trade);
+		m_bIsRun = false;
 	}
 }

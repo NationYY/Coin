@@ -16,7 +16,7 @@ void CExchange::Run()
 	if(m_pHttpAPI)
 	{
 		m_pHttpAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3));
-		m_pHttpAPI->Run(1);
+		m_pHttpAPI->Run(5);
 	}
 	
 	if(m_pWebSocketAPI)

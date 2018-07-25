@@ -8,5 +8,6 @@ public:
 public:
 	virtual void API_Balance();
 	virtual void API_Ticker(eMarketType type);
+	virtual void API_EntrustDepth(eMarketType type) {}
 };
 
