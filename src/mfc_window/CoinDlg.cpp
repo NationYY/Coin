@@ -312,7 +312,7 @@ void CCoinDlg::OnBnClickedButtonBegin()
 		return;
 	}
 	if(pExchange->GetTradeHttp())
-		pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), "0.01", true);
+		pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), "0.055", true);
 	return;
 	if(m_tradeFrequency == 0)
 	{

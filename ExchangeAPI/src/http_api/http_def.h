@@ -23,10 +23,10 @@ enum eHttpConfirmationType
 struct SHttpParam
 {
 	SHttpParam(){}
-	SHttpParam(eHttpParamType _type, std::string& _value) : type(type), value(_value)
+	SHttpParam(eHttpParamType _type, std::string& _value) : type(_type), value(_value)
 	{
 	}
-	SHttpParam(eHttpParamType _type, const char* _value) : type(type), value(_value)
+	SHttpParam(eHttpParamType _type, const char* _value) : type(_type), value(_value)
 	{
 	}
 	eHttpParamType type;
