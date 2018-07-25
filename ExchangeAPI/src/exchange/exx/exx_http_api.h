@@ -8,5 +8,8 @@ public:
 	virtual void API_Balance();
 	virtual void API_Ticker(eMarketType type);
 	virtual void API_EntrustDepth(eMarketType type);
+	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy);
+private:
+	const char* GetMarketString(eMarketType type);
 };
 

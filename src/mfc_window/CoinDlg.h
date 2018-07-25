@@ -47,7 +47,6 @@ public:
 	clib::config m_config;
 	CListCtrl m_listCtrlEntrustDepth;
 	CComboBox m_cbMarketType;
-	double m_tradeVolume;
 	int m_tradeFrequency;
 	CStatic m_staticUpdateTime;
 	CButton m_btnHightSpeed;
@@ -57,4 +56,5 @@ public:
 	int m_webSokectFailTimes;
 	afx_msg void OnBnClickedButtonStop();
 	bool m_bIsRun;
+	CString m_strTradeVolume;
 };

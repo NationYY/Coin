@@ -7,6 +7,7 @@ CExxHttpAPI::CExxHttpAPI(std::string strAPIKey, std::string strSecretKey, std::s
 	SetKey(strAPIKey, strSecretKey);
 	SetContentType(strContentType);
 	SetURL("https://trade.exxvip.com/api");
+	SetUTF8(true);
 }
 
 
@@ -28,6 +29,27 @@ void CExxHttpAPI::API_Balance()
 	RequestAsync(info);
 }
 
+void CExxHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_Trade;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "order";
+	info.confirmationType = eHttpConfirmationType_Exx;
+	info.mapParams["accesskey"] = SHttpParam(eHttpParamType_String, m_strAPIKey);
+	info.mapParams["amount"] = SHttpParam(eHttpParamType_String, strAmount);
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	char szBuffer[128];
+	_snprintf(szBuffer, 128, "%lld", time(NULL) * 1000);
+	info.mapParams["nonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
+	info.mapParams["price"] = SHttpParam(eHttpParamType_String, strPrice);
+	if(bBuy)
+		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "buy");
+	else
+		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "sell");
+	RequestAsync(info);
+}
+
 void CExxHttpAPI::API_Ticker(eMarketType type)
 {
 	SHttpReqInfo info;
@@ -35,20 +57,7 @@ void CExxHttpAPI::API_Ticker(eMarketType type)
 	info.apiType = eHttpAPIType_Ticker;
 	info.reqType = eHttpReqType_Get;
 	info.strMethod = "ticker";
-	switch(type)
-	{
-	case eMarketType_ETH_BTC:
-		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "eth_btc");
-		break;
-	case eMarketType_ETH_USDT:
-		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "eth_usdt");
-		break;
-	case eMarketType_BTC_USDT:
-		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "btc_usdt");
-		break;
-	default:
-		break;
-	}
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
 	RequestAsync(info);
 }
 
@@ -60,19 +69,20 @@ void CExxHttpAPI::API_EntrustDepth(eMarketType type)
 	info.apiType = eHttpAPIType_EntrustDepth;
 	info.reqType = eHttpReqType_Get;
 	info.strMethod = "depth";
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	RequestAsync(info);
+}
+
+const char* CExxHttpAPI::GetMarketString(eMarketType type)
+{
 	switch(type)
 	{
 	case eMarketType_ETH_BTC:
-		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "eth_btc");
-		break;
+		return "eth_btc";
 	case eMarketType_ETH_USDT:
-		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "eth_usdt");
-		break;
+		return "eth_usdt";
 	case eMarketType_BTC_USDT:
-		info.mapParams["currency"] = SHttpParam(eHttpParamType_String, "btc_usdt");
-		break;
-	default:
-		break;
+		return "btc_usdt";
 	}
-	RequestAsync(info);
+	return NULL;
 }

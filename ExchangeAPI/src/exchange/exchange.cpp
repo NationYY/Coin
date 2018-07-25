@@ -2,7 +2,7 @@
 #include "exchange.h"
 
 CExchange::CExchange(): m_httpCallbakMessage(NULL), m_webSocketCallbakOpen(NULL), m_webSocketCallbakClose(NULL),
- m_webSocketCallbakMessage(NULL), m_pWebSocketAPI(NULL), m_pHttpAPI(NULL)
+m_webSocketCallbakMessage(NULL), m_pWebSocketAPI(NULL), m_pHttpAPI(NULL), m_pHttpTradeAPI(NULL)
 {
 }
 
@@ -18,7 +18,13 @@ void CExchange::Run()
 		m_pHttpAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3));
 		m_pHttpAPI->Run(5);
 	}
-	
+
+	if(m_pHttpTradeAPI)
+	{
+		m_pHttpTradeAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3));
+		m_pHttpTradeAPI->Run(10);
+	}
+
 	if(m_pWebSocketAPI)
 	{
 		m_pWebSocketAPI->SetCallBackOpen(boost::bind(&CExchange::OnWebsocketConnect, this));
@@ -35,6 +41,8 @@ void CExchange::Update()
 		m_pHttpAPI->Update();
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->Update();
+	if(m_pHttpTradeAPI)
+		m_pHttpTradeAPI->Update();
 }
 
 void CExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)

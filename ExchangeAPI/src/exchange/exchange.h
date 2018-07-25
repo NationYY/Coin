@@ -31,7 +31,10 @@ public:
 	virtual void OnWebsocketResponse(Json::Value& retObj, const std::string& strRet);
 	CHttpAPI* GetHttp(){
 		return m_pHttpAPI;
-	} 
+	}
+	CHttpAPI* GetTradeHttp(){
+		return m_pHttpTradeAPI;
+	}
 	CWebSocketAPI* GetWebSocket(){
 		return m_pWebSocketAPI;
 	}
@@ -45,6 +48,7 @@ protected:
 	CDataCenter m_dataCenter;
 	CWebSocketAPI* m_pWebSocketAPI;
 	CHttpAPI* m_pHttpAPI;
+	CHttpAPI* m_pHttpTradeAPI;
 	http_callbak_message m_httpCallbakMessage;
 	websocketpp_callbak_open m_webSocketCallbakOpen;
 	websocketpp_callbak_close m_webSocketCallbakClose;

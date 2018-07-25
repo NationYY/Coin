@@ -5,6 +5,7 @@ enum eHttpAPIType
 	eHttpAPIType_Balance,		//余额
 	eHttpAPIType_Ticker,		//获取交易对行情
 	eHttpAPIType_EntrustDepth,	//交易深度
+	eHttpAPIType_Trade,			//交易
 	eHttpAPIType_Max,
 };
 

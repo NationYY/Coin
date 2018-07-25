@@ -28,6 +28,7 @@ public:
 	virtual void API_Balance() = 0;
 	virtual void API_Ticker(eMarketType type) = 0;
 	virtual void API_EntrustDepth(eMarketType type) = 0;
+	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy) = 0;
 private:
 	void _ProcessHttp();
 	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resInfo);

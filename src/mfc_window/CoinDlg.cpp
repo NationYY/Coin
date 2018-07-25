@@ -50,10 +50,10 @@ END_MESSAGE_MAP()
 
 CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CCoinDlg::IDD, pParent)
-	, m_tradeVolume(0)
 	, m_tradeFrequency(0)
 	, m_webSokectFailTimes(0)
 	, m_bIsRun(false)
+	, m_strTradeVolume(_T(""))
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -65,11 +65,11 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST1, m_listBalance);
 	DDX_Control(pDX, IDC_LIST2, m_listCtrlEntrustDepth);
 	DDX_Control(pDX, IDC_COMBO1, m_cbMarketType);
-	DDX_Text(pDX, IDC_EDIT1, m_tradeVolume);
 	DDX_Text(pDX, IDC_EDIT2, m_tradeFrequency);
 	DDX_Control(pDX, IDC_STATIC_UPDATE_TIME, m_staticUpdateTime);
 	DDX_Control(pDX, IDC_RADIO1, m_btnHightSpeed);
 	DDX_Control(pDX, IDC_RADIO2, m_btnNormalSpeed);
+	DDX_Text(pDX, IDC_EDIT1, m_strTradeVolume);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -233,7 +233,7 @@ BOOL CCoinDlg::OnInitDialog()
 	
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
-	SetTimer(eTimerType_Balance, 5000, NULL);
+	//SetTimer(eTimerType_Balance, 5000, NULL);
 	
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -306,11 +306,14 @@ void CCoinDlg::OnBnClickedButtonBegin()
 		AfxMessageBox("交易币对错误");
 		return;
 	}
-	if(m_tradeVolume == 0)
+	if(m_strTradeVolume == "")
 	{
 		AfxMessageBox("请填写单笔交易量");
 		return;
 	}
+	if(pExchange->GetTradeHttp())
+		pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), "0.01", true);
+	return;
 	if(m_tradeFrequency == 0)
 	{
 		AfxMessageBox("请填写交易频率");
@@ -365,6 +368,29 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case eTimerType_Trade:
 		{
+			int sel = m_cbMarketType.GetCurSel();
+			DWORD type = m_cbMarketType.GetItemData(sel);
+			CDataCenter* pDataCenter = pExchange->GetDataCenter();
+			if(pDataCenter && pDataCenter->m_mapBuyEntrustDepth.size() && pDataCenter->m_mapSellEntrustDepth.size())
+			{
+				double buyPrice, sellPrice;
+				sellPrice = atof(pDataCenter->m_mapSellEntrustDepth.begin()->first.c_str());
+				std::map<std::string, std::string>::iterator it = pDataCenter->m_mapBuyEntrustDepth.end();
+				it--;
+				buyPrice = atof(it->first.c_str());
+				if(buyPrice < sellPrice)
+				{
+					double offset = sellPrice - buyPrice;
+					buyPrice += offset*0.1;
+					CString szPrice;
+					szPrice.Format("%lf", buyPrice);
+					if(pExchange->GetTradeHttp())
+						pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true);
+					if(pExchange->GetTradeHttp())
+						pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false);
+				}
+				KillTimer(eTimerType_Trade);
+			}
 			
 		}
 		break;
