@@ -81,7 +81,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 	}
 }
 
-void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData)
+void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
 	switch(type)
 	{
@@ -108,7 +108,7 @@ void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const 
 	default:
 		break;
 	}
-	CExchange::OnHttpResponse(type, retObj, strRet, customData);
+	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
 }
 
 void CExxExchange::Parse_Balance(Json::Value& retObj, const std::string& strRet)

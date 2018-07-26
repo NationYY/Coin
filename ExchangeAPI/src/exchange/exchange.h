@@ -24,7 +24,7 @@ public:
 		m_webSocketCallbakMessage = callbakMessage;
 	}
 	virtual void Run();
-	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData);
+	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
 	virtual void OnWebsocketConnect();
 	virtual void OnWebsocketDisconnect();
 	virtual void OnWebsocketFailConnect();

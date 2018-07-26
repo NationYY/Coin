@@ -42,9 +42,10 @@ struct SHttpReqInfo
 	std::map<std::string, SHttpParam> mapParams;
 	eHttpConfirmationType confirmationType;
 	int customData;
+	std::string strCustomData;
 	SHttpReqInfo()
 	{
-		strMethod = strURL = "";
+		strMethod = strURL = strCustomData = "";
 		reqType = eHttpReqType_Max;
 		apiType = eHttpAPIType_Max;
 		confirmationType = eHttpConfirmationType_Max;
@@ -60,12 +61,13 @@ struct SHttpResponse
 	Json::Value retObj;
 	std::string strRet;
 	int customData;
+	std::string strCustomData;
 	SHttpResponse()
 	{
-		strRet = "";
+		strRet = strCustomData = "";
 		apiType = eHttpAPIType_Max;
 		customData = 0;
 	}
 };
 
-typedef void(*http_callbak_message)(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData);
+typedef void(*http_callbak_message)(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);

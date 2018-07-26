@@ -111,6 +111,23 @@ void CExxHttpAPI::API_GetTradeOrderState(eMarketType type, std::string strID)
 	RequestAsync(info);
 }
 
+void CExxHttpAPI::API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_CancelTrade;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "cancel";
+	info.strCustomData = strCustomData;
+	info.confirmationType = eHttpConfirmationType_Exx;
+	info.mapParams["accesskey"] = SHttpParam(eHttpParamType_String, m_strAPIKey);
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	char szBuffer[128];
+	_snprintf(szBuffer, 128, "%lld", time(NULL) * 1000);
+	info.mapParams["nonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
+	info.mapParams["id"] = SHttpParam(eHttpParamType_String, strID);
+	RequestAsync(info);
+}
+
 const char* CExxHttpAPI::GetMarketString(eMarketType type)
 {
 	switch(type)

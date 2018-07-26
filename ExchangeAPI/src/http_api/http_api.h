@@ -6,7 +6,7 @@
 #include <curl/curl.h>
 #include "http_def.h"
 #include <deque>
-typedef boost::function<void(eHttpAPIType, Json::Value&, const std::string&, int)> HTTP_CALLBACK_FUNCTION_TYPE;
+typedef boost::function<void(eHttpAPIType, Json::Value&, const std::string&, int, std::string)> HTTP_CALLBACK_FUNCTION_TYPE;
 class CHttpAPI
 {
 public:
@@ -28,13 +28,14 @@ public:
 	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData) = 0;
 	virtual void API_GetTradeOrderListState(eMarketType type, int page, bool bBuy) = 0;
 	virtual void API_GetTradeOrderState(eMarketType type, std::string strID) = 0;
+	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) = 0;
 private:
 	void _ProcessHttp();
 	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resInfo);
 	void _GetReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szGetParams, std::string& strResponse);
 	void _PostReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szPostParams, std::string& strResponse);
 protected:
-	virtual void OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData);
+	virtual void OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
 private:
 	HTTP_CALLBACK_FUNCTION_TYPE m_callBackFunc;
 	boost::thread_group m_workers;

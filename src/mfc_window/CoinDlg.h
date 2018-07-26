@@ -62,4 +62,18 @@ public:
 	CListCtrl m_listFinishOrder;
 	double m_tradePremiumPrice;
 	int m_tradePriceDecimal;
+	struct STradePair
+	{
+		std::string id1;
+		std::string id2;
+		time_t tSendTime;
+		time_t tLastCheckTime;
+		STradePair()
+		{
+			id1 = id2 = "NULL";
+			tSendTime = tLastCheckTime = 0;
+		}
+	};
+	std::map<int, STradePair> m_mapTradePairs;
+	eMarketType m_marketType;
 };

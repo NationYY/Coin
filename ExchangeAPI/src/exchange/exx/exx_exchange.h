@@ -5,7 +5,7 @@ class CExxExchange : public CExchange
 public:
 	CExxExchange(std::string strAPIKey, std::string strSecretKey);
 	~CExxExchange();
-	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData);
+	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
 	virtual void OnWebsocketResponse(Json::Value& retObj, const std::string& strRet);
 
 private:

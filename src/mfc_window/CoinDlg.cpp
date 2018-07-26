@@ -18,6 +18,7 @@
 CCoinDlg* g_pCoinDlg = NULL;
 const int CHECK_STATE_RATE = 3;
 int g_trade_pair_index = 1;
+CExchange* pExchange = NULL;
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -57,8 +58,8 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_webSokectFailTimes(0)
 	, m_bIsRun(false)
 	, m_strTradeVolume(_T(""))
-	, m_tradePremiumPrice(0)
 	, m_tradePriceDecimal(0)
+	, m_marketType(eMarketType_Max)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -76,7 +77,6 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_RADIO2, m_btnNormalSpeed);
 	DDX_Text(pDX, IDC_EDIT1, m_strTradeVolume);
 	DDX_Control(pDX, IDC_LIST3, m_listFinishOrder);
-	DDX_Text(pDX, IDC_EDIT3, m_tradePremiumPrice);
 	DDX_Text(pDX, IDC_EDIT4, m_tradePriceDecimal);
 }
 
@@ -121,7 +121,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& ret
 	OutputDebugString("\n");
 };
 
-void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData)
+void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
 	switch(apiType)
 	{
@@ -137,11 +137,75 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		return;
 		break;
 	case eHttpAPIType_Trade:
-		break;
-	case eHttpAPIType_Max:
+		{
+		    std::map<int, CCoinDlg::STradePair>::iterator it = g_pCoinDlg->m_mapTradePairs.find(customData);
+			if(it != g_pCoinDlg->m_mapTradePairs.end())
+			{
+				if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
+				{
+					std::string id = retObj["id"].asString();
+					if(it->second.id1 == "NULL")
+						it->second.id1 = id;
+					else if(it->second.id1 == "")
+					{
+						it->second.id2 = id;
+						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id2, it->second.id2);
+					}
+					else
+						g_pCoinDlg->m_mapTradePairs.erase(it);
+				}
+				else if(retObj["code"].isInt() && retObj["code"].asInt() == 135)
+				{
+					if(it->second.id1 == "NULL")
+						it->second.id1 = "NO COIN";
+					else
+						g_pCoinDlg->m_mapTradePairs.erase(it);
+				}
+				else
+				{
+					std::string id = retObj["id"].asString();
+					if(it->second.id1 == "NULL")
+						it->second.id1 = "";
+					else if(it->second.id1 == "")
+						g_pCoinDlg->m_mapTradePairs.erase(it);
+					else if(it->second.id1 == "NO COIN")
+						g_pCoinDlg->m_mapTradePairs.erase(it);
+					else
+					{
+						it->second.id2 = id;
+						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id1, it->second.id1);
+					}
+				}
+			}
+		}
+		
 		break;
 	case eHttpAPIType_TradeOrderState:
 		g_pCoinDlg->UpdateFinishOrder();
+		break;
+	case eHttpAPIType_CancelTrade:
+		{
+			if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
+			{
+				std::map<int, CCoinDlg::STradePair>::iterator itB = g_pCoinDlg->m_mapTradePairs.begin();
+				std::map<int, CCoinDlg::STradePair>::iterator itE = g_pCoinDlg->m_mapTradePairs.end();
+				while(itB != itE)
+				{
+					if(itB->second.id1 == "" && itB->second.id2 == strCustomData)
+					{
+						g_pCoinDlg->m_mapTradePairs.erase(itB);
+						break;
+					}
+					else if(itB->second.id2 == "" && itB->second.id1 == strCustomData)
+					{
+						g_pCoinDlg->m_mapTradePairs.erase(itB);
+						break;
+					}
+					++itB;
+				}
+			}
+
+		}
 		break;
 	default:
 		break;
@@ -150,7 +214,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	OutputDebugString("\n");
 };
 
-CExchange* pExchange = NULL;
+
 /*
 void CALLBACK UpdateFunc(UINT wTimerID, UINT msg, DWORD dwUser, DWORD dwl, DWORD dw2)
 {
@@ -253,7 +317,6 @@ BOOL CCoinDlg::OnInitDialog()
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 	SetTimer(eTimerType_Balance, 5000, NULL);
-	
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -325,6 +388,7 @@ void CCoinDlg::OnBnClickedButtonBegin()
 		AfxMessageBox("交易币对错误");
 		return;
 	}
+	m_marketType = (eMarketType)type;
 	if(m_strTradeVolume == "")
 	{
 		AfxMessageBox("请填写单笔交易量");
@@ -333,11 +397,6 @@ void CCoinDlg::OnBnClickedButtonBegin()
 	if(m_tradeFrequency == 0)
 	{
 		AfxMessageBox("请填写交易频率");
-		return;
-	}
-	if(m_tradePremiumPrice == 0)
-	{
-		AfxMessageBox("请填写下单溢价");
 		return;
 	}
 	if(m_tradePriceDecimal == 0)
@@ -383,16 +442,12 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case eTimerType_EntrustDepth:
 		{
-			int sel = m_cbMarketType.GetCurSel();
-			DWORD type = m_cbMarketType.GetItemData(sel);
 			if(pExchange->GetHttp())
-				pExchange->GetHttp()->API_EntrustDepth((eMarketType)type);
+				pExchange->GetHttp()->API_EntrustDepth(m_marketType);
 		}
 		break;
 	case eTimerType_Trade:
 		{
-			int sel = m_cbMarketType.GetCurSel();
-			DWORD type = m_cbMarketType.GetItemData(sel);
 			CDataCenter* pDataCenter = pExchange->GetDataCenter();
 			if(pDataCenter && pDataCenter->m_mapBuyEntrustDepth.size() && pDataCenter->m_mapSellEntrustDepth.size())
 			{
@@ -404,15 +459,20 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				if(buyPrice < sellPrice)
 				{
 					double offset = sellPrice - buyPrice;
-					int rate = (int)(offset / m_tradePremiumPrice);
+					double tradePremiumPrice = 1/double(pow(10, m_tradePriceDecimal));
+					int rate = (int)(offset / tradePremiumPrice);
 					rate /= 2;
 					rate = max(rate, 1);
-					buyPrice += (m_tradePremiumPrice*rate);
+					buyPrice += (tradePremiumPrice*rate);
 					CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
 					if(pExchange->GetTradeHttp())
-						pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index);
+						pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index);
 					if(pExchange->GetTradeHttp())
-						pExchange->GetTradeHttp()->API_Trade((eMarketType)type, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index);
+						pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index);
+					STradePair pair;
+					pair.tSendTime = time(NULL);
+					pair.tLastCheckTime = pair.tSendTime;
+					m_mapTradePairs[g_trade_pair_index] = pair;
 					g_trade_pair_index++;
 				}
 				KillTimer(eTimerType_Trade);
@@ -421,8 +481,6 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case eTimerType_TradeOrderState:
 		{
-			int sel = m_cbMarketType.GetCurSel();
-			DWORD type = m_cbMarketType.GetItemData(sel);
 			time_t tNow = time(NULL);
 			CDataCenter* pDataCenter = pExchange->GetDataCenter();
 			std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pDataCenter->m_mapTradeOrderID.begin();
@@ -438,7 +496,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 						bFound = true;
 						itB->second.checkIndex = pDataCenter->m_orderCheckIndex;
 						if(pExchange->GetHttp())
-							pExchange->GetHttp()->API_GetTradeOrderState((eMarketType)type, itB->first);
+							pExchange->GetHttp()->API_GetTradeOrderState(m_marketType, itB->first);
 						if(++sendCnt > CHECK_STATE_RATE)
 							break;;
 					}
@@ -566,12 +624,10 @@ void CCoinDlg::OnBnClickedButtonStop()
 {
 	if(m_bIsRun)
 	{
-		int sel = m_cbMarketType.GetCurSel();
-		DWORD type = m_cbMarketType.GetItemData(sel);
 		if(m_btnHightSpeed.GetCheck())
 		{
 			if(pExchange->GetWebSocket())
-				pExchange->GetWebSocket()->API_EntrustDepth((eMarketType)type, 5, false);
+				pExchange->GetWebSocket()->API_EntrustDepth(m_marketType, 5, false);
 		}
 		else
 		{
@@ -588,8 +644,8 @@ void CCoinDlg::UpdateFinishOrder()
 	CDataCenter* pDataCenter = pExchange->GetDataCenter();
 	if(pDataCenter->m_bJustUpdateFinishOrder)
 	{
-		if(m_listCtrlEntrustDepth.GetItemCount() > 500)
-			m_listCtrlEntrustDepth.DeleteAllItems();
+		if(m_listFinishOrder.GetItemCount() > 500)
+			m_listFinishOrder.DeleteAllItems();
 		pDataCenter->m_bJustUpdateFinishOrder = false;
 		std::list<CDataCenter::SFinishOrderInfo>::iterator itB = pDataCenter->m_listAllFinishOrder.begin();
 		std::list<CDataCenter::SFinishOrderInfo>::iterator itE = pDataCenter->m_listAllFinishOrder.end();
@@ -600,12 +656,12 @@ void CCoinDlg::UpdateFinishOrder()
 			time_t tTime = itB->time/1000;
 			tm* pTM = localtime(&tTime);
 			szTemp.Format("%02d-%02d %02d:%02d:%02d", pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
-			m_listCtrlEntrustDepth.SetItemText(0, 0, szTemp.GetBuffer());
+			m_listFinishOrder.SetItemText(0, 0, szTemp.GetBuffer());
 			szTemp.Format("%lf", itB->price);
-			m_listCtrlEntrustDepth.SetItemText(0, 1, szTemp.GetBuffer());
+			m_listFinishOrder.SetItemText(0, 1, szTemp.GetBuffer());
 			szTemp.Format("%lf", itB->amount);
-			m_listCtrlEntrustDepth.SetItemText(0, 2, szTemp.GetBuffer());
-			m_listCtrlEntrustDepth.SetItemText(0, 3, itB->type.c_str());
+			m_listFinishOrder.SetItemText(0, 2, szTemp.GetBuffer());
+			m_listFinishOrder.SetItemText(0, 3, itB->type.c_str());
 			++itB;
 		}
 		pDataCenter->m_listAllFinishOrder.clear();

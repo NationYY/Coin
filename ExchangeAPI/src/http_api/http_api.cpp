@@ -189,7 +189,7 @@ void CHttpAPI::Update()
 			m_queueResponseInfo.pop_front();
 		}
 		if(responseInfo.apiType != eHttpAPIType_Max)
-			OnResponse(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet, responseInfo.customData);
+			OnResponse(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet, responseInfo.customData, responseInfo.strCustomData);
 	}
 }
 
@@ -305,6 +305,7 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 	}
 	resInfo.apiType = reqInfo.apiType;
 	resInfo.customData = reqInfo.customData;
+	resInfo.strCustomData = resInfo.strCustomData;
 	if(reqInfo.bUTF8)
 	{
 		char szRet[4096] = {0};
@@ -321,8 +322,8 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 	}
 }
 
-void CHttpAPI::OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData)
+void CHttpAPI::OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
 	if(m_callBackFunc)
-		m_callBackFunc(type, retObj, strRet, customData);
+		m_callBackFunc(type, retObj, strRet, customData, strCustomData);
 }

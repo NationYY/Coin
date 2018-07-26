@@ -15,13 +15,13 @@ void CExchange::Run()
 {
 	if(m_pHttpAPI)
 	{
-		m_pHttpAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3, _4));
+		m_pHttpAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3, _4, _5));
 		m_pHttpAPI->Run(5);
 	}
 
 	if(m_pHttpTradeAPI)
 	{
-		m_pHttpTradeAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3, _4));
+		m_pHttpTradeAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3, _4, _5));
 		m_pHttpTradeAPI->Run(10);
 	}
 
@@ -45,10 +45,10 @@ void CExchange::Update()
 		m_pHttpTradeAPI->Update();
 }
 
-void CExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData)
+void CExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
 	if(m_httpCallbakMessage)
-		m_httpCallbakMessage(type, retObj, strRet, customData);
+		m_httpCallbakMessage(type, retObj, strRet, customData, strCustomData);
 }
 
 void CExchange::OnWebsocketConnect()
