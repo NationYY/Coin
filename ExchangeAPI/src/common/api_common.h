@@ -1,11 +1,13 @@
 #pragma once
 enum eHttpAPIType
 {
-	eHttpAPIType_MarketList,	//交易对列表
-	eHttpAPIType_Balance,		//余额
-	eHttpAPIType_Ticker,		//获取交易对行情
-	eHttpAPIType_EntrustDepth,	//交易深度
-	eHttpAPIType_Trade,			//交易
+	eHttpAPIType_MarketList,			//交易对列表
+	eHttpAPIType_Balance,				//余额
+	eHttpAPIType_Ticker,				//获取交易对行情
+	eHttpAPIType_EntrustDepth,			//交易深度
+	eHttpAPIType_Trade,					//交易
+	eHttpAPIType_TradeOrderListState,	//挂单列表状态
+	eHttpAPIType_TradeOrderState,		//挂单状态
 	eHttpAPIType_Max,
 };
 

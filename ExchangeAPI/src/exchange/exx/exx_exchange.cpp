@@ -81,7 +81,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 	}
 }
 
-void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)
+void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData)
 {
 	switch(type)
 	{
@@ -96,10 +96,19 @@ void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const 
 	case eHttpAPIType_EntrustDepth:
 		Parse_EntrustDepth(retObj, strRet);
 		break;
+	case eHttpAPIType_Trade:
+		Parse_Trade(retObj, strRet);
+		break;
+	case eHttpAPIType_TradeOrderListState:
+		Parse_TradeOrderListState(retObj, strRet);
+		break;
+	case eHttpAPIType_TradeOrderState:
+		Parse_TradeOrderState(retObj, strRet);
+		break;
 	default:
 		break;
 	}
-	CExchange::OnHttpResponse(type, retObj, strRet);
+	CExchange::OnHttpResponse(type, retObj, strRet, customData);
 }
 
 void CExxExchange::Parse_Balance(Json::Value& retObj, const std::string& strRet)
@@ -177,6 +186,40 @@ void CExxExchange::Parse_EntrustDepth(Json::Value& retObj, const std::string& st
 				std::string volume = bids[i][1].asString();
 				m_dataCenter.UpdateBuyEntrustDepth(price, volume, updateTime);
 			}
+		}
+	}
+}
+
+void CExxExchange::Parse_Trade(Json::Value& retObj, const std::string& strRet)
+{
+	if(retObj["code"].isInt() && retObj["code"].asInt() == 100 && retObj["id"].isString())
+		m_dataCenter.AddTradeOrders(retObj["id"].asString());
+}
+
+void CExxExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string& strRet)
+{
+	if(retObj["status"].isInt())
+	{
+		std::string id = retObj["id"].asString();
+		__int64 date = retObj["trade_date"].asInt64();
+		double price = retObj["price"].asDouble();
+		double amount = retObj["total_amount"].asDouble();
+		std::string type = retObj["type"].asString();
+		switch(retObj["status"].asInt())
+		{
+		case 0:
+			m_dataCenter.UpdateTradeOrder(id, date);
+			break;
+		case 1:
+			m_dataCenter.DeleteTradeOrder(id);
+			break;
+		case 2:
+			m_dataCenter.FinishTradeOrder(id, price, amount, date, type);
+			break;
+		case 3:
+			break;
+		default:
+			break;
 		}
 	}
 }

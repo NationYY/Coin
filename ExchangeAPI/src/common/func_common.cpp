@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "func_common.h"
 #include "iconv/iconv.h"
-
+#include <sstream>
+#include <iomanip>
 CFuncCommon::CFuncCommon()
 {
 }
@@ -24,4 +25,12 @@ int CFuncCommon::EncodeConvert(char *from_charset, char *to_charset, char *inbuf
 	if(iconv(cd, pin, &inlen, pout, &outlen) == -1) return -1;
 	iconv_close(cd);
 	return 0;
+}
+
+std::string CFuncCommon::Double2String(double value, int decimal)
+{
+	std::stringstream ss;
+	ss.setf(std::ios::fixed);
+	ss << std::setprecision(decimal) << value;
+	return ss.str();
 }

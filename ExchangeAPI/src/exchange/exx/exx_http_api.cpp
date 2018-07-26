@@ -7,7 +7,6 @@ CExxHttpAPI::CExxHttpAPI(std::string strAPIKey, std::string strSecretKey, std::s
 	SetKey(strAPIKey, strSecretKey);
 	SetContentType(strContentType);
 	SetURL("https://trade.exxvip.com/api");
-	SetUTF8(true);
 }
 
 
@@ -29,16 +28,18 @@ void CExxHttpAPI::API_Balance()
 	RequestAsync(info);
 }
 
-void CExxHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy)
+void CExxHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_Trade;
 	info.reqType = eHttpReqType_Get;
+	info.customData = customData;
 	info.strMethod = "order";
 	info.confirmationType = eHttpConfirmationType_Exx;
 	info.mapParams["accesskey"] = SHttpParam(eHttpParamType_String, m_strAPIKey);
 	info.mapParams["amount"] = SHttpParam(eHttpParamType_String, strAmount);
 	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	info.bUTF8 =  true;
 	char szBuffer[128];
 	_snprintf(szBuffer, 128, "%lld", time(NULL) * 1000);
 	info.mapParams["nonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
@@ -70,6 +71,43 @@ void CExxHttpAPI::API_EntrustDepth(eMarketType type)
 	info.reqType = eHttpReqType_Get;
 	info.strMethod = "depth";
 	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	RequestAsync(info);
+}
+
+void CExxHttpAPI::API_GetTradeOrderListState(eMarketType type, int page, bool bBuy)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_TradeOrderListState;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "getOpenOrders";
+	info.confirmationType = eHttpConfirmationType_Exx;
+	info.mapParams["accesskey"] = SHttpParam(eHttpParamType_String, m_strAPIKey);
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	char szBuffer[128];
+	_snprintf(szBuffer, 128, "%lld", time(NULL) * 1000);
+	info.mapParams["nonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
+	_snprintf(szBuffer, 128, "%d", page);
+	info.mapParams["pageIndex"] = SHttpParam(eHttpParamType_String, szBuffer);
+	if(bBuy)
+		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "buy");
+	else
+		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "sell");
+	RequestAsync(info);
+}
+
+void CExxHttpAPI::API_GetTradeOrderState(eMarketType type, std::string strID)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_TradeOrderState;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "getOrder";
+	info.confirmationType = eHttpConfirmationType_Exx;
+	info.mapParams["accesskey"] = SHttpParam(eHttpParamType_String, m_strAPIKey);
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, GetMarketString(type));
+	char szBuffer[128];
+	_snprintf(szBuffer, 128, "%lld", time(NULL) * 1000);
+	info.mapParams["nonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
+	info.mapParams["id"] = SHttpParam(eHttpParamType_String, strID);
 	RequestAsync(info);
 }
 

@@ -12,6 +12,7 @@ enum eTimerType
 	eTimerType_Balance,
 	eTimerType_EntrustDepth,
 	eTimerType_Trade,
+	eTimerType_TradeOrderState,
 };
 // CCoinDlg ¶Ô»°¿ò
 class CCoinDlg : public CDialogEx
@@ -43,6 +44,7 @@ public:
 public:
 	void UpdateBalance();
 	void UpdateEntrustDepth();
+	void UpdateFinishOrder();
 	CListCtrl m_listBalance;
 	clib::config m_config;
 	CListCtrl m_listCtrlEntrustDepth;
@@ -57,4 +59,7 @@ public:
 	afx_msg void OnBnClickedButtonStop();
 	bool m_bIsRun;
 	CString m_strTradeVolume;
+	CListCtrl m_listFinishOrder;
+	double m_tradePremiumPrice;
+	int m_tradePriceDecimal;
 };

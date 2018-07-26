@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "data_center.h"
+#include <time.h>
 
-
-CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0)
+CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0), m_orderCheckIndex(1), m_bJustUpdateFinishOrder(false)
 {
 }
 
@@ -49,4 +49,39 @@ void CDataCenter::DelSellEntrustDepth(std::string strPrice, int serverTime)
 {
 	m_mapSellEntrustDepth.erase(strPrice);
 	m_updateEntrustDepthTime = serverTime;
+}
+
+void CDataCenter::AddTradeOrders(std::string orderID)
+{
+	SOrderInfo info;
+	info.addTime = time(NULL);
+	m_mapTradeOrderID[orderID] = info;
+}
+
+void CDataCenter::DeleteTradeOrder(std::string orderID)
+{
+	m_mapTradeOrderID.erase(orderID);
+}
+
+void CDataCenter::FinishTradeOrder(std::string orderID, double price, double amount, __int64 date, std::string type)
+{
+	if(m_mapTradeOrderID.find(orderID) != m_mapTradeOrderID.end())
+	{
+		m_mapTradeOrderID.erase(orderID);
+		SFinishOrderInfo info;
+		info.id = orderID;
+		info.price = price;
+		info.amount = amount;
+		info.time = date/1000;
+		info.type = type;
+		m_listAllFinishOrder.push_back(info);
+		m_bJustUpdateFinishOrder = true;
+	}
+}
+
+void CDataCenter::UpdateTradeOrder(std::string orderID, __int64 date)
+{
+	std::map<std::string, SOrderInfo>::iterator it = m_mapTradeOrderID.find(orderID);
+	if(it != m_mapTradeOrderID.end())
+		it->second.serverCreatDate = date;
 }

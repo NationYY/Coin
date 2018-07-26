@@ -7,7 +7,6 @@ CZbgHttpAPI::CZbgHttpAPI(std::string strAPIKey, std::string strSecretKey, std::s
 	SetKey(strAPIKey, strSecretKey);
 	SetContentType(strContentType);
 	SetURL("https://www.zbg.com");
-	SetUTF8(true);
 }
 
 
@@ -24,6 +23,7 @@ void CZbgHttpAPI::API_Balance()
 	info.mapParams["pageSize"] = SHttpParam(eHttpParamType_Int, "100");
 	info.mapParams["pageNum"] = SHttpParam(eHttpParamType_Int, "1");
 	info.confirmationType = eHttpConfirmationType_Zbg;
+	info.bUTF8 = true;
 	RequestAsync(info);
 }
 

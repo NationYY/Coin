@@ -8,8 +8,8 @@ void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 	Json::Reader reader;
 	if(m_bUTF8)
 	{
-		char szRet[2048] = { 0 };
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)msg->get_payload().c_str(), msg->get_payload().length(), szRet, 2048);
+		char szRet[4096] = { 0 };
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)msg->get_payload().c_str(), msg->get_payload().length(), szRet, 4096);
 		reader.parse(szRet, retObj);
 		if(m_pWebSocketAPI)
 			m_pWebSocketAPI->PushRet(2, retObj, szRet);

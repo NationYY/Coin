@@ -16,9 +16,9 @@ CZbgExchange::~CZbgExchange()
 {
 }
 
-void CZbgExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)
+void CZbgExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData)
 {
-	CExchange::OnHttpResponse(type, retObj, strRet);
+	CExchange::OnHttpResponse(type, retObj, strRet, customData);
 }
 
 void CZbgExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)

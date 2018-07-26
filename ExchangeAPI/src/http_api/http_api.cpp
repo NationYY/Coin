@@ -17,7 +17,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 }
 
 
-CHttpAPI::CHttpAPI():m_bUTF8(false), m_pMainCurl(NULL)
+CHttpAPI::CHttpAPI():m_pMainCurl(NULL)
 {
 }
 
@@ -189,7 +189,7 @@ void CHttpAPI::Update()
 			m_queueResponseInfo.pop_front();
 		}
 		if(responseInfo.apiType != eHttpAPIType_Max)
-			OnResponse(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet);
+			OnResponse(responseInfo.apiType, responseInfo.retObj, responseInfo.strRet, responseInfo.customData);
 	}
 }
 
@@ -303,26 +303,26 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 			AssembleParams(true, strPostParams, reqInfo.mapParams);
 		_PostReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strPostParams.c_str(), strResponse);
 	}
-	if(m_bUTF8)
+	resInfo.apiType = reqInfo.apiType;
+	resInfo.customData = reqInfo.customData;
+	if(reqInfo.bUTF8)
 	{
-		char szRet[2048] = {0};
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 2048);
+		char szRet[4096] = {0};
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 4096);
 		Json::Reader reader;
 		reader.parse(szRet, resInfo.retObj);
-		resInfo.apiType = reqInfo.apiType;
 		resInfo.strRet = szRet;
 	}
 	else
 	{
 		Json::Reader reader;
 		reader.parse(strResponse.c_str(), resInfo.retObj);
-		resInfo.apiType = reqInfo.apiType;
 		resInfo.strRet = strResponse;
 	}
 }
 
-void CHttpAPI::OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet)
+void CHttpAPI::OnResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData)
 {
 	if(m_callBackFunc)
-		m_callBackFunc(type, retObj, strRet);
+		m_callBackFunc(type, retObj, strRet, customData);
 }
