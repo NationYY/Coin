@@ -234,6 +234,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		{
 			if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
 			{
+				g_pCoinDlg->AddLog("³·µ¥³É¹¦!");
 				std::map<int, CCoinDlg::STradePair>::iterator itB = g_pCoinDlg->m_mapTradePairs.begin();
 				std::map<int, CCoinDlg::STradePair>::iterator itE = g_pCoinDlg->m_mapTradePairs.end();
 				while(itB != itE)
