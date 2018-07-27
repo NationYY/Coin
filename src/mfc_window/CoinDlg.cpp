@@ -163,7 +163,6 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				}
 				else
 				{
-					std::string id = retObj["id"].asString();
 					if(it->second.id1 == "NULL")
 						it->second.id1 = "";
 					else if(it->second.id1 == "")
@@ -172,7 +171,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 						g_pCoinDlg->m_mapTradePairs.erase(it);
 					else
 					{
-						it->second.id2 = id;
+						it->second.id2 = "";
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id1, it->second.id1);
 					}
 				}
