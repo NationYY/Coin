@@ -46,3 +46,10 @@ void CCoinexWebSocketAPI::Ping()
 {
 	Request("{\"method\":\"server.ping\",\"params\":[],\"id\" : 11}");
 }
+
+void CCoinexWebSocketAPI::API_LatestExecutedOrder(eMarketType type)
+{
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"method\":\"deals.subscribe\",\"params\":[\"%s\"],\"id\":16}", GetMarketString(type));
+	Request(szBuffer);
+}

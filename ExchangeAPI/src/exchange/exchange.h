@@ -23,7 +23,7 @@ public:
 	void SetWebSocketCallBackMessage(websocketpp_callbak_message callbakMessage){
 		m_webSocketCallbakMessage = callbakMessage;
 	}
-	virtual void Run();
+	virtual void Run(bool openWebSokect = true, int normalHttpThreadCnt = 5, int tradeHttpThreadCnt = 10);
 	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
 	virtual void OnWebsocketConnect();
 	virtual void OnWebsocketDisconnect();

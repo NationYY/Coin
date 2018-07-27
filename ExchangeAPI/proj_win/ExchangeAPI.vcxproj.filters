@@ -83,6 +83,9 @@
     <ClCompile Include="..\src\common\func_common.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\exchange\coinex\coinex_exchange.cpp">
+      <Filter>exchange\coinex</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\stdafx.h" />
@@ -143,6 +146,9 @@
     </ClInclude>
     <ClInclude Include="..\src\common\func_common.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\coinex\coinex_exchange.h">
+      <Filter>exchange\coinex</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

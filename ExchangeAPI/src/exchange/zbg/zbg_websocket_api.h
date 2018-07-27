@@ -7,5 +7,7 @@ public:
 	~CZbgWebsocketAPI();
 public:
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
+	virtual void API_LatestExecutedOrder(eMarketType type) {};
+	virtual void Ping() {};
 };
 

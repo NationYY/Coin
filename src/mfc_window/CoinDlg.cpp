@@ -9,6 +9,7 @@
 #include <string>
 #include "exchange/zbg/zbg_exchange.h"
 #include "exchange/exx/exx_exchange.h"
+#include "exchange/coinex/coinex_exchange.h"
 #include <MMSystem.h>
 #include "common/func_common.h"
 #ifdef _DEBUG
@@ -19,6 +20,7 @@ CCoinDlg* g_pCoinDlg = NULL;
 const int CHECK_STATE_RATE = 3;
 int g_trade_pair_index = 1;
 CExchange* pExchange = NULL;
+CExchange* pReferenceExchange = NULL;
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -78,6 +80,7 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT1, m_strTradeVolume);
 	DDX_Control(pDX, IDC_LIST3, m_listFinishOrder);
 	DDX_Text(pDX, IDC_EDIT4, m_tradePriceDecimal);
+	DDX_Control(pDX, IDC_LIST4, m_listLog);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -93,20 +96,49 @@ END_MESSAGE_MAP()
 
 
 // CCoinDlg 消息处理程序
-void com_callbak_open()
+void reference_websocket_callbak_open()
+{
+	g_pCoinDlg->AddLog("第三方参考行情连接成功!");
+	if(g_pCoinDlg->m_bIsRun)
+	{
+		pReferenceExchange->GetWebSocket()->API_LatestExecutedOrder(g_pCoinDlg->m_marketType);
+	}
+}
+void reference_websocket_callbak_close()
+{
+	g_pCoinDlg->AddLog("第三方参考行情断开连接!");
+}
+void reference_websocket_callbak_fail()
+{
+	g_pCoinDlg->AddLog("第三方参考行情连接失败!");
+}
+
+void local_websocket_callbak_open()
 {
 	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA("高速行情(可用)");
-};
-void com_callbak_close()
+
+	if(g_pCoinDlg->m_bIsRun)
+	{
+		if(g_pCoinDlg->m_btnHightSpeed.GetCheck())
+		{
+			if(pExchange->GetWebSocket())
+				pExchange->GetWebSocket()->API_EntrustDepth(g_pCoinDlg->m_marketType, 5, true);
+		}
+	}
+	//g_pCoinDlg->AddLog("行情连接成功!");
+}
+void local_websocket_callbak_close()
 {
 	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA("高速行情(连接中断, 重连中)");
-};
-void com_callbak_Fail()
+	//g_pCoinDlg->AddLog("行情断开连接!");
+}
+void local_websocket_callbak_fail()
 {
 	g_pCoinDlg->m_webSokectFailTimes++;
 	CString temp;
 	temp.Format("高速行情(连接失败%d, 再次尝试中)", g_pCoinDlg->m_webSokectFailTimes);
 	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA(temp.GetBuffer());
+	//g_pCoinDlg->AddLog("行情连接失败!");
 }
 
 void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
@@ -117,9 +149,23 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& ret
 		g_pCoinDlg->UpdateEntrustDepth();
 		break;
 	}
+	OutputDebugString("[main exchange]");
 	OutputDebugString(strRet.c_str());
 	OutputDebugString("\n");
-};
+}
+
+void reference_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
+{
+	switch(apiType)
+	{
+	case eWebsocketAPIType_LatestExecutedOrder:
+		g_pCoinDlg->UpdateExecutedOrderPrice();
+		break;
+	}
+	OutputDebugString("[reference exchange]");
+	OutputDebugString(strRet.c_str());
+	OutputDebugString("\n");
+}
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
@@ -149,6 +195,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					else if(it->second.id1 == "")
 					{
 						it->second.id2 = id;
+						g_pCoinDlg->AddLog("组合下单失败,提交撤单!");
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id2, it->second.id2);
 					}
 					else
@@ -172,6 +219,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					else
 					{
 						it->second.id2 = "";
+						g_pCoinDlg->AddLog("组合下单失败,提交撤单!");
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id1, it->second.id1);
 					}
 				}
@@ -255,12 +303,18 @@ BOOL CCoinDlg::OnInitDialog()
 	// TODO:  在此添加额外的初始化代码
 	pExchange = new CExxExchange(id, key);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-	pExchange->SetWebSocketCallBackOpen(com_callbak_open);
-	pExchange->SetWebSocketCallBackClose(com_callbak_close);
-	pExchange->SetWebSocketCallBackFail(com_callbak_Fail);
+	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
+	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
+	pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
 	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 	pExchange->Run();
 
+	pReferenceExchange = new CCoinexExchange("", "");
+	pReferenceExchange->SetWebSocketCallBackOpen(reference_websocket_callbak_open);
+	pReferenceExchange->SetWebSocketCallBackClose(reference_websocket_callbak_close);
+	pReferenceExchange->SetWebSocketCallBackFail(reference_websocket_callbak_fail);
+	pReferenceExchange->SetWebSocketCallBackMessage(reference_websocket_callbak_message);
+	pReferenceExchange->Run(true, 0, 0);
 	/*TIMECAPS   tc;
 	UINT wTimerRes;
 	if(timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)//向机器申请一个多媒体定时器       
@@ -289,33 +343,37 @@ BOOL CCoinDlg::OnInitDialog()
 	m_listFinishOrder.InsertColumn(2, "量", LVCFMT_CENTER, 100);
 	m_listFinishOrder.InsertColumn(3, "类型", LVCFMT_CENTER, 50);
 	m_listFinishOrder.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
-	const std::list<eMarketType>& listMarket = pExchange->GetSupportMarket();
-	std::list<eMarketType>::const_iterator itB = listMarket.begin();
-	std::list<eMarketType>::const_iterator itE = listMarket.end();
-	int index = 0;
-	while(itB != itE)
+	if(pExchange)
 	{
-		switch(*itB)
+		const std::list<eMarketType>& listMarket = pExchange->GetSupportMarket();
+		std::list<eMarketType>::const_iterator itB = listMarket.begin();
+		std::list<eMarketType>::const_iterator itE = listMarket.end();
+		int index = 0;
+		while(itB != itE)
 		{
-		case eMarketType_ETH_BTC:
-			m_cbMarketType.InsertString(index, "ETH/BTC");
-			break;
-		case eMarketType_ETH_USDT:
-			m_cbMarketType.InsertString(index, "ETH/USDT");
-			break;
-		case eMarketType_BTC_USDT:
-			m_cbMarketType.InsertString(index, "BTC/USDT");
-			break;
-		default:
-			break;
+			switch(*itB)
+			{
+			case eMarketType_ETH_BTC:
+				m_cbMarketType.InsertString(index, "ETH/BTC");
+				break;
+			case eMarketType_ETH_USDT:
+				m_cbMarketType.InsertString(index, "ETH/USDT");
+				break;
+			case eMarketType_BTC_USDT:
+				m_cbMarketType.InsertString(index, "BTC/USDT");
+				break;
+			default:
+				break;
+			}
+			m_cbMarketType.SetItemData(index, *itB);
+			++itB;
 		}
-		m_cbMarketType.SetItemData(index, *itB);
-		++itB;
 	}
-	
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 	SetTimer(eTimerType_Balance, 5000, NULL);
+	SetTimer(eTimerType_Ping, 5000, NULL);
+	
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -417,6 +475,7 @@ void CCoinDlg::OnBnClickedButtonBegin()
 	{
 		SetTimer(eTimerType_EntrustDepth, 500, NULL);
 	}
+	pReferenceExchange->GetWebSocket()->API_LatestExecutedOrder((eMarketType)type);
 	SetTimer(eTimerType_Trade, m_tradeFrequency, NULL);
 	SetTimer(eTimerType_TradeOrderState, 1000, NULL);
 	m_bIsRun = true;
@@ -430,18 +489,34 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 	case eTimerType_APIUpdate:
 		{
-			pExchange->Update();
+			if(pExchange)
+				pExchange->Update();
+			if(pReferenceExchange)
+				pReferenceExchange->Update();
+			std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pExchange->GetDataCenter()->m_mapTradeOrderID.begin();
+			std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pExchange->GetDataCenter()->m_mapTradeOrderID.end();
+			time_t tNow = time(NULL);
+			while(itB != itE)
+			{
+				if(tNow - itB->second.addTime >= 30 && tNow - itB->second.lastCancelTime > 10)
+				{
+					itB->second.lastCancelTime = tNow;
+					g_pCoinDlg->AddLog("超时未成交,提交撤单!");
+					pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
+				}
+				++itB;
+			}
 		}
 		break;
 	case eTimerType_Balance:
 		{
-			if(pExchange->GetHttp())
+			if(pExchange && pExchange->GetHttp())
 				pExchange->GetHttp()->API_Balance();
 		}
 		break;
 	case eTimerType_EntrustDepth:
 		{
-			if(pExchange->GetHttp())
+			if(pExchange && pExchange->GetHttp())
 				pExchange->GetHttp()->API_EntrustDepth(m_marketType);
 		}
 		break;
@@ -455,26 +530,47 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				std::map<std::string, std::string>::iterator it = pDataCenter->m_mapBuyEntrustDepth.end();
 				it--;
 				buyPrice = atof(it->first.c_str());
-				if(buyPrice < sellPrice)
+				double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice;
+				if(buyPrice < sellPrice && pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice > 0)
 				{
-					double offset = sellPrice - buyPrice;
-					double tradePremiumPrice = 1/double(pow(10, m_tradePriceDecimal));
-					int rate = (int)(offset / tradePremiumPrice);
-					rate /= 2;
-					rate = max(rate, 1);
-					buyPrice += (tradePremiumPrice*rate);
-					CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
-					if(pExchange->GetTradeHttp())
-						pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index);
-					if(pExchange->GetTradeHttp())
-						pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index);
-					STradePair pair;
-					pair.tSendTime = time(NULL);
-					pair.tLastCheckTime = pair.tSendTime;
-					m_mapTradePairs[g_trade_pair_index] = pair;
-					g_trade_pair_index++;
+					bool bPass = true;
+					if(buyPrice < latestExecutedOrderPrice && sellPrice > latestExecutedOrderPrice)
+					{
+						double tempBuyPrice = (sellPrice - buyPrice)/2 + buyPrice;
+						if(tempBuyPrice > latestExecutedOrderPrice && (tempBuyPrice/latestExecutedOrderPrice) > 1.001)
+							buyPrice = latestExecutedOrderPrice;
+						else if(tempBuyPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/tempBuyPrice) >1.001)
+							buyPrice = latestExecutedOrderPrice;
+						else
+							buyPrice = tempBuyPrice;
+					}
+					else
+					{
+						if(buyPrice > latestExecutedOrderPrice && (buyPrice/latestExecutedOrderPrice) > 1.005)
+							bPass = false;
+						else if(buyPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/buyPrice) > 1.005)
+							bPass = false;
+						else if(sellPrice > latestExecutedOrderPrice && (sellPrice/latestExecutedOrderPrice) > 1.005)
+							bPass = false;
+						else if(sellPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/sellPrice) > 1.005)
+							bPass = false;
+						else
+							buyPrice = (sellPrice - buyPrice)/2 + buyPrice;
+					}
+					if(bPass)
+					{
+						CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index);
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index);
+						STradePair pair;
+						pair.tSendTime = time(NULL);
+						pair.tLastCheckTime = pair.tSendTime;
+						m_mapTradePairs[g_trade_pair_index] = pair;
+						g_trade_pair_index++;
+					}
 				}
-				KillTimer(eTimerType_Trade);
 			}
 		}
 		break;
@@ -504,6 +600,12 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 			if(!bFound)
 				pDataCenter->m_orderCheckIndex++;
+		}
+		break;
+	case eTimerType_Ping:
+		{
+			pExchange->GetWebSocket()->Ping();
+			pReferenceExchange->GetWebSocket()->Ping();
 		}
 		break;
 	default:
@@ -576,36 +678,46 @@ void CCoinDlg::UpdateEntrustDepth()
 	{
 		std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapBuyEntrustDepth.begin();
 		std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapBuyEntrustDepth.end();
-		CString szFormat;
+		CString _szFormat;
 		int count = 0;
 		itE--;
 		while(itB != itE)
 		{
-			szFormat.Format("%d", count + 1);
-			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 0, szFormat);
-			szFormat.Format("%s", itE->first.c_str());
-			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 1, szFormat);
-			szFormat.Format("%s", itE->second.c_str());
-			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 2, szFormat);
+			_szFormat.Format("%d", count + 1);
+			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 0, _szFormat);
+			_szFormat.Format("%s", itE->first.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 1, _szFormat);
+			_szFormat.Format("%s", itE->second.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine+1+count, 2, _szFormat);
 			if(++count >= buyLine)
 				break;
 			itE--;
 		}
 		if(count < buyLine)
 		{
-			szFormat.Format("%d", count + 1);
-			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 0, szFormat);
-			szFormat.Format("%s", itB->first.c_str());
-			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 1, szFormat);
-			szFormat.Format("%s", itB->second.c_str());
-			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 2, szFormat);
+			_szFormat.Format("%d", count + 1);
+			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 0, _szFormat);
+			_szFormat.Format("%s", itB->first.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 1, _szFormat);
+			_szFormat.Format("%s", itB->second.c_str());
+			m_listCtrlEntrustDepth.SetItemText(sellLine + 1 + count, 2, _szFormat);
 		}
 	}
 	tm* pTM = localtime(&pDataCenter->m_updateEntrustDepthTime);
-	szFormat.Format("更新时间: %d:%d:%d", pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
+	std::string price = CFuncCommon::Double2String(pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice, m_tradePriceDecimal);
+	szFormat.Format("更新时间: %d:%d:%d 最新价格:%s", pTM->tm_hour, pTM->tm_min, pTM->tm_sec, price.c_str());
 	m_staticUpdateTime.SetWindowTextA(szFormat.GetBuffer());
 }
 
+void CCoinDlg::UpdateExecutedOrderPrice()
+{
+	CString szFormat;
+	CDataCenter* pDataCenter = pExchange->GetDataCenter();
+	tm* pTM = localtime(&pDataCenter->m_updateEntrustDepthTime);
+	std::string price = CFuncCommon::Double2String(pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice, m_tradePriceDecimal);
+	szFormat.Format("更新时间: %d:%d:%d 最新价格:%s", pTM->tm_hour, pTM->tm_min, pTM->tm_sec, price.c_str());
+	m_staticUpdateTime.SetWindowTextA(szFormat.GetBuffer());
+}
 
 void CCoinDlg::OnBnClickedRadioHightSpeed()
 {
@@ -652,7 +764,7 @@ void CCoinDlg::UpdateFinishOrder()
 		while(itB != itE)
 		{
 			m_listFinishOrder.InsertItem(0, "");
-			time_t tTime = itB->time/1000;
+			time_t tTime = itB->time;
 			tm* pTM = localtime(&tTime);
 			szTemp.Format("%02d-%02d %02d:%02d:%02d", pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
 			m_listFinishOrder.SetItemText(0, 0, szTemp.GetBuffer());
@@ -666,3 +778,15 @@ void CCoinDlg::UpdateFinishOrder()
 		pDataCenter->m_listAllFinishOrder.clear();
 	}
 }
+
+void CCoinDlg::AddLog(char* szLog, ...)
+{
+	char context[1024] = {0};
+	va_list args;
+	int n;
+	va_start(args, szLog);
+	n = vsnprintf(context, sizeof(context), szLog, args);
+	va_end(args);
+	m_listLog.InsertString(0, context);
+}
+           

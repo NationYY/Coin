@@ -15,5 +15,6 @@ private:
 	void Parse_Trade(Json::Value& retObj, const std::string& strRet);
 	void Parse_TradeOrderListState(Json::Value& retObj, const std::string& strRet) {}
 	void Parse_TradeOrderState(Json::Value& retObj, const std::string& strRet);
+	void Parse_CancelTrade(Json::Value& retObj, const std::string& strRet, std::string strCustomData);
 };
 

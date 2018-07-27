@@ -22,6 +22,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 {
 	if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && retObj[0][0].asString() == "AE")
 	{
+		m_dataCenter.ClearAllEntrustDepth();
 		if(retObj[0].size() > 5)
 		{
 			int updateTime = 0;
@@ -30,7 +31,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 			Json::Value info = retObj[0][4];
 			if(info["asks"].isArray())
 			{
-				for(int i = 0; i < info["asks"].size(); ++i)
+				for(int i = 0; i < (int)info["asks"].size(); ++i)
 				{
 					std::string price = info["asks"][i][0].asString();
 					std::string volume = info["asks"][i][1].asString();
@@ -40,7 +41,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 			info = retObj[0][5];
 			if(info["bids"].isArray())
 			{
-				for(int i = 0; i < info["bids"].size(); ++i)
+				for(int i = 0; i < (int)info["bids"].size(); ++i)
 				{
 					std::string price = info["bids"][i][0].asString();
 					std::string volume = info["bids"][i][1].asString();
@@ -105,6 +106,9 @@ void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const 
 	case eHttpAPIType_TradeOrderState:
 		Parse_TradeOrderState(retObj, strRet);
 		break;
+	case eHttpAPIType_CancelTrade:
+		Parse_CancelTrade(retObj, strRet, strCustomData);
+		break;
 	default:
 		break;
 	}
@@ -158,14 +162,14 @@ void CExxExchange::Parse_Ticker(Json::Value& retObj, const std::string& strRet)
 
 void CExxExchange::Parse_EntrustDepth(Json::Value& retObj, const std::string& strRet)
 {
-	m_dataCenter.ClearAllBalance();
+	m_dataCenter.ClearAllEntrustDepth();
 	int updateTime = 0;
 	if(retObj["timestamp"].isInt())
 		updateTime = retObj["timestamp"].asInt();
 	if(retObj["asks"].isArray())
 	{
 		Json::Value& asks = retObj["asks"];
-		for(int i = 0; i<asks.size(); ++i)
+		for(int i = 0; i<(int)asks.size(); ++i)
 		{
 			if(asks[i].isArray() && asks[i].size() > 1)
 			{
@@ -178,7 +182,7 @@ void CExxExchange::Parse_EntrustDepth(Json::Value& retObj, const std::string& st
 	if(retObj["bids"].isArray())
 	{
 		Json::Value& bids = retObj["bids"];
-		for(int i = 0; i<bids.size(); ++i)
+		for(int i = 0; i<(int)bids.size(); ++i)
 		{
 			if(bids[i].isArray() && bids[i].size() > 1)
 			{
@@ -222,4 +226,10 @@ void CExxExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string&
 			break;
 		}
 	}
+}
+
+void CExxExchange::Parse_CancelTrade(Json::Value& retObj, const std::string& strRet, std::string strCustomData)
+{
+	if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
+		m_dataCenter.DelTradeOrders(strCustomData);
 }

@@ -15,9 +15,17 @@ public:
 	void UpdateSellEntrustDepth(std::string strPrice, std::string strVolume, int serverTime);
 	void DelSellEntrustDepth(std::string strPrice, int serverTime);
 	void AddTradeOrders(std::string orderID);
+	void DelTradeOrders(std::string orderID);
 	void DeleteTradeOrder(std::string orderID);
 	void UpdateTradeOrder(std::string orderID, __int64 date);
 	void FinishTradeOrder(std::string orderID, double price, double amount, __int64 date, std::string type);
+	void SetLatestExecutedOrderPrice(double price){
+		m_latestExecutedOrderPrice = price;
+	}
+	void ClearAllEntrustDepth(){
+		m_mapBuyEntrustDepth.clear();
+		m_mapSellEntrustDepth.clear();
+	}
 public:
 	std::map<std::string, SBalanceInfo> m_mapBalanceInfo;
 	std::map<std::string, std::string> m_mapBuyEntrustDepth;
@@ -25,6 +33,7 @@ public:
 	struct SOrderInfo
 	{
 		time_t addTime;
+		time_t lastCancelTime;
 		int checkIndex;
 		__int64 serverCreatDate;
 		SOrderInfo()
@@ -47,4 +56,5 @@ public:
 	double m_sellPrice;
 	time_t m_updateEntrustDepthTime;
 	int m_orderCheckIndex;
+	double m_latestExecutedOrderPrice;
 };

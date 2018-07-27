@@ -1,14 +1,11 @@
 #pragma once
 #include "exchange/exchange.h"
-class CZbgExchange : public CExchange
+class CCoinexExchange : public CExchange
 {
 public:
-	CZbgExchange(std::string strAPIKey, std::string strSecretKey);
-	~CZbgExchange();
+	CCoinexExchange(std::string strAPIKey, std::string strSecretKey);
+	~CCoinexExchange();
 	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
 	virtual void OnWebsocketResponse(Json::Value& retObj, const std::string& strRet);
-	virtual void Run(bool openWebSokect = true, int normalHttpThreadCnt = 5, int tradeHttpThreadCnt = 10);
-private:
-
 };
 

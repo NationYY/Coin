@@ -5,7 +5,7 @@
 #include "clib/lib/math/math_ex.h"
 #include "encrypt/hmac.h"
 #include "common/func_common.h"
-
+#include <time.h>
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	size_t realsize = size * nmemb;

@@ -26,9 +26,9 @@ void CZbgExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 	CExchange::OnWebsocketResponse(retObj, strRet);
 }
 
-void CZbgExchange::Run()
+void CZbgExchange::Run(bool openWebSokect, int normalHttpThreadCnt, int tradeHttpThreadCnt)
 {
-	CExchange::Run();
+	CExchange::Run(openWebSokect, normalHttpThreadCnt, tradeHttpThreadCnt);
 	SHttpReqInfo info;
 	info.reqType = eHttpReqType_Post;
 	info.strMethod = "exchange/config/controller/website/currencycontroller/getCurrencyList";

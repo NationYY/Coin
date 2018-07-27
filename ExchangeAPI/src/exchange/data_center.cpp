@@ -2,7 +2,8 @@
 #include "data_center.h"
 #include <time.h>
 
-CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0), m_orderCheckIndex(1), m_bJustUpdateFinishOrder(false)
+CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0), m_orderCheckIndex(1), m_bJustUpdateFinishOrder(false),
+m_latestExecutedOrderPrice(0)
 {
 }
 
@@ -56,6 +57,11 @@ void CDataCenter::AddTradeOrders(std::string orderID)
 	SOrderInfo info;
 	info.addTime = time(NULL);
 	m_mapTradeOrderID[orderID] = info;
+}
+
+void CDataCenter::DelTradeOrders(std::string orderID)
+{
+	m_mapTradeOrderID.erase(orderID);
 }
 
 void CDataCenter::DeleteTradeOrder(std::string orderID)

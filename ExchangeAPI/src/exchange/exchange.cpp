@@ -11,21 +11,21 @@ CExchange::~CExchange()
 {
 }
 
-void CExchange::Run()
+void CExchange::Run(bool openWebSokect, int normalHttpThreadCnt, int tradeHttpThreadCnt)
 {
-	if(m_pHttpAPI)
+	if(m_pHttpAPI && normalHttpThreadCnt > 0)
 	{
 		m_pHttpAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3, _4, _5));
-		m_pHttpAPI->Run(5);
+		m_pHttpAPI->Run(normalHttpThreadCnt);
 	}
 
-	if(m_pHttpTradeAPI)
+	if(m_pHttpTradeAPI && tradeHttpThreadCnt > 0)
 	{
 		m_pHttpTradeAPI->SetCallBakFunction(boost::bind(&CExchange::OnHttpResponse, this, _1, _2, _3, _4, _5));
-		m_pHttpTradeAPI->Run(10);
+		m_pHttpTradeAPI->Run(tradeHttpThreadCnt);
 	}
 
-	if(m_pWebSocketAPI)
+	if(m_pWebSocketAPI && openWebSokect)
 	{
 		m_pWebSocketAPI->SetCallBackOpen(boost::bind(&CExchange::OnWebsocketConnect, this));
 		m_pWebSocketAPI->SetCallBackClose(boost::bind(&CExchange::OnWebsocketDisconnect, this));

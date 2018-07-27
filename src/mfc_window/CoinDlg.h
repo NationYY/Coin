@@ -13,6 +13,7 @@ enum eTimerType
 	eTimerType_EntrustDepth,
 	eTimerType_Trade,
 	eTimerType_TradeOrderState,
+	eTimerType_Ping,
 };
 // CCoinDlg ¶Ô»°¿ò
 class CCoinDlg : public CDialogEx
@@ -43,8 +44,10 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 public:
 	void UpdateBalance();
+	void UpdateExecutedOrderPrice();
 	void UpdateEntrustDepth();
 	void UpdateFinishOrder();
+	void AddLog(char* szLog, ...);
 	CListCtrl m_listBalance;
 	clib::config m_config;
 	CListCtrl m_listCtrlEntrustDepth;
@@ -76,4 +79,5 @@ public:
 	};
 	std::map<int, STradePair> m_mapTradePairs;
 	eMarketType m_marketType;
+	CListBox m_listLog;
 };

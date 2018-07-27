@@ -15,6 +15,7 @@ enum eHttpAPIType
 enum eWebsocketAPIType
 {
 	eWebsocketAPIType_EntrustDepth,	//交易深度
+	eWebsocketAPIType_LatestExecutedOrder,//最新成交的订单
 	eWebsocketAPIType_Max,
 };
 
