@@ -80,4 +80,5 @@ public:
 	std::map<int, STradePair> m_mapTradePairs;
 	eMarketType m_marketType;
 	CListBox m_listLog;
+	time_t m_tLastGetEntrustDepth;
 };

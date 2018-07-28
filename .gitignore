@@ -43,3 +43,5 @@ proj_win/Release/
 ExchangeAPI/proj_win/Release/ExchangeAPI.tlog/cl.command.1.tlog
 ExchangeAPI/proj_win/Release/ExchangeAPI.tlog/
 ExchangeAPI/proj_win/Release/
+proj_win/HighDebug/
+ExchangeAPI/proj_win/HighDebug/

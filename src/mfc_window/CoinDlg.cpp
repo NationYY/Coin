@@ -62,6 +62,7 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_strTradeVolume(_T(""))
 	, m_tradePriceDecimal(0)
 	, m_marketType(eMarketType_Max)
+	, m_tLastGetEntrustDepth(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -146,6 +147,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& ret
 	switch(apiType)
 	{
 	case eWebsocketAPIType_EntrustDepth:
+		g_pCoinDlg->m_tLastGetEntrustDepth = time(NULL);
 		g_pCoinDlg->UpdateEntrustDepth();
 		break;
 	}
@@ -179,6 +181,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	case eHttpAPIType_Ticker:
 		break;
 	case eHttpAPIType_EntrustDepth:
+		g_pCoinDlg->m_tLastGetEntrustDepth = time(NULL);
 		g_pCoinDlg->UpdateEntrustDepth();
 		return;
 		break;
@@ -195,7 +198,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					else if(it->second.id1 == "")
 					{
 						it->second.id2 = id;
-						g_pCoinDlg->AddLog("组合下单失败,提交撤单!");
+						g_pCoinDlg->AddLog("组合下单失败,提交撤单2[%s]!", it->second.id2.c_str());
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id2, it->second.id2);
 					}
 					else
@@ -219,7 +222,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					else
 					{
 						it->second.id2 = "";
-						g_pCoinDlg->AddLog("组合下单失败,提交撤单!");
+						g_pCoinDlg->AddLog("组合下单失败,提交撤单3[%s]!", it->second.id1.c_str());
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id1, it->second.id1);
 					}
 				}
@@ -234,7 +237,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		{
 			if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
 			{
-				g_pCoinDlg->AddLog("撤单成功!");
+				g_pCoinDlg->AddLog("撤单成功[%s]!", strCustomData.c_str());
 				std::map<int, CCoinDlg::STradePair>::iterator itB = g_pCoinDlg->m_mapTradePairs.begin();
 				std::map<int, CCoinDlg::STradePair>::iterator itE = g_pCoinDlg->m_mapTradePairs.end();
 				while(itB != itE)
@@ -499,10 +502,10 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			time_t tNow = time(NULL);
 			while(itB != itE)
 			{
-				if(tNow - itB->second.addTime >= 30 && tNow - itB->second.lastCancelTime > 10)
+				if(tNow - itB->second.addTime >= 60 && tNow - itB->second.lastCancelTime > 20)
 				{
 					itB->second.lastCancelTime = tNow;
-					g_pCoinDlg->AddLog("超时未成交,提交撤单!");
+					g_pCoinDlg->AddLog("超时未成交,提交撤单1[%s]!", itB->first.c_str());
 					pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
 				}
 				++itB;
@@ -523,6 +526,10 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case eTimerType_Trade:
 		{
+			double offset = m_tradeFrequency/1000.0*2.5;
+			time_t tNow = time(NULL);
+			if(tNow - m_tLastGetEntrustDepth > offset)
+				return;
 			CDataCenter* pDataCenter = pExchange->GetDataCenter();
 			if(pDataCenter && pDataCenter->m_mapBuyEntrustDepth.size() && pDataCenter->m_mapSellEntrustDepth.size())
 			{
@@ -782,12 +789,17 @@ void CCoinDlg::UpdateFinishOrder()
 
 void CCoinDlg::AddLog(char* szLog, ...)
 {
-	char context[1024] = {0};
+	time_t tNow = time(NULL);
+	tm* pTM = localtime(&tNow);
+	char context[1100] = {0};
+	_snprintf(context, 1100, "%d:%d:%d ", pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
+	char _context[1024] = {0};
 	va_list args;
 	int n;
 	va_start(args, szLog);
-	n = vsnprintf(context, sizeof(context), szLog, args);
+	n = vsnprintf(_context, sizeof(_context), szLog, args);
 	va_end(args);
+	strcat(context, _context);
 	m_listLog.InsertString(0, context);
 }
            
