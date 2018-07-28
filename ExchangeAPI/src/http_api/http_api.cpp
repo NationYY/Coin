@@ -305,7 +305,7 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 	}
 	resInfo.apiType = reqInfo.apiType;
 	resInfo.customData = reqInfo.customData;
-	resInfo.strCustomData = resInfo.strCustomData;
+	resInfo.strCustomData = reqInfo.strCustomData;
 	if(reqInfo.bUTF8)
 	{
 		char szRet[4096] = {0};

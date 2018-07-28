@@ -47,6 +47,7 @@ public:
 	void UpdateExecutedOrderPrice();
 	void UpdateEntrustDepth();
 	void UpdateFinishOrder();
+	void UpdateTradeReport();
 	void AddLog(char* szLog, ...);
 	CListCtrl m_listBalance;
 	clib::config m_config;
@@ -81,4 +82,12 @@ public:
 	eMarketType m_marketType;
 	CListBox m_listLog;
 	time_t m_tLastGetEntrustDepth;
+	int m_successCreateTradeCnt;
+	int m_failCreateTradeCnt;
+	int m_succesCancelTradeCnt;
+	int m_allFinishTradeCnt;
+	CStatic m_staticSuccessCreateTradeCnt;
+	CStatic m_staticSuccesCancelTradeCnt;
+	CStatic m_staticAllFinishTradeCnt;
+	CStatic m_staticFailCreateTradeCnt;
 };

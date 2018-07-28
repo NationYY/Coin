@@ -63,6 +63,10 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_tradePriceDecimal(0)
 	, m_marketType(eMarketType_Max)
 	, m_tLastGetEntrustDepth(0)
+	, m_successCreateTradeCnt(0)
+	, m_succesCancelTradeCnt(0)
+	, m_allFinishTradeCnt(0)
+	, m_failCreateTradeCnt(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -82,6 +86,10 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST3, m_listFinishOrder);
 	DDX_Text(pDX, IDC_EDIT4, m_tradePriceDecimal);
 	DDX_Control(pDX, IDC_LIST4, m_listLog);
+	DDX_Control(pDX, IDC_STATIC9, m_staticSuccessCreateTradeCnt);
+	DDX_Control(pDX, IDC_STATIC11, m_staticSuccesCancelTradeCnt);
+	DDX_Control(pDX, IDC_STATIC13, m_staticAllFinishTradeCnt);
+	DDX_Control(pDX, IDC_STATIC15, m_staticFailCreateTradeCnt);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -192,6 +200,8 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 			{
 				if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
 				{
+					g_pCoinDlg->m_successCreateTradeCnt++;
+					g_pCoinDlg->UpdateTradeReport();
 					std::string id = retObj["id"].asString();
 					if(it->second.id1 == "NULL")
 						it->second.id1 = id;
@@ -213,6 +223,8 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				}
 				else
 				{
+					g_pCoinDlg->m_failCreateTradeCnt++;
+					g_pCoinDlg->UpdateTradeReport();
 					if(it->second.id1 == "NULL")
 						it->second.id1 = "";
 					else if(it->second.id1 == "")
@@ -231,12 +243,16 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		
 		break;
 	case eHttpAPIType_TradeOrderState:
+		g_pCoinDlg->m_allFinishTradeCnt += pExchange->GetDataCenter()->m_listAllFinishOrder.size();
+		g_pCoinDlg->UpdateTradeReport();
 		g_pCoinDlg->UpdateFinishOrder();
 		break;
 	case eHttpAPIType_CancelTrade:
 		{
 			if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
 			{
+				g_pCoinDlg->m_succesCancelTradeCnt++;
+				g_pCoinDlg->UpdateTradeReport();
 				g_pCoinDlg->AddLog("³·µ¥³É¹¦[%s]!", strCustomData.c_str());
 				std::map<int, CCoinDlg::STradePair>::iterator itB = g_pCoinDlg->m_mapTradePairs.begin();
 				std::map<int, CCoinDlg::STradePair>::iterator itE = g_pCoinDlg->m_mapTradePairs.end();
@@ -563,7 +579,10 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 						else if(sellPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/sellPrice) > 1.005)
 							bPass = false;
 						else
-							buyPrice = (sellPrice - buyPrice)/2 + buyPrice;
+						{
+							double tradePremiumPrice = 1/double(pow(10, m_tradePriceDecimal));
+							buyPrice = buyPrice + tradePremiumPrice*3;
+						}
 					}
 					if(bPass)
 					{
@@ -802,4 +821,17 @@ void CCoinDlg::AddLog(char* szLog, ...)
 	strcat(context, _context);
 	m_listLog.InsertString(0, context);
 }
-           
+
+void CCoinDlg::UpdateTradeReport()
+{
+	CString temp;
+	temp.Format("%d", m_successCreateTradeCnt);
+	m_staticSuccessCreateTradeCnt.SetWindowText(temp.GetBuffer());
+	temp.Format("%d", m_succesCancelTradeCnt);
+	m_staticSuccesCancelTradeCnt.SetWindowText(temp.GetBuffer());
+	temp.Format("%d", m_allFinishTradeCnt);
+	m_staticAllFinishTradeCnt.SetWindowText(temp.GetBuffer());
+	temp.Format("%d", m_failCreateTradeCnt);
+	m_staticFailCreateTradeCnt.SetWindowText(temp.GetBuffer());
+	
+}
