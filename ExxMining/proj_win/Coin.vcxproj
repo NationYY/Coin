@@ -18,6 +18,7 @@
     <ProjectGuid>{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}</ProjectGuid>
     <RootNamespace>Coin</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <ProjectName>ExxMining</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

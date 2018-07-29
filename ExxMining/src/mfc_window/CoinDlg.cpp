@@ -397,8 +397,8 @@ BOOL CCoinDlg::OnInitDialog()
 	SetTimer(eTimerType_Ping, 5000, NULL);
 	
 
-	clib::string log_path = "./log";
-	clib::file_util::mkfiledir(log_path.c_str(), true);
+	clib::string log_path = "log/";
+	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
 
 	LocalLogger& localLogger = LocalLogger::GetInstance();
 	localLogger.SetBatchMode(true);
