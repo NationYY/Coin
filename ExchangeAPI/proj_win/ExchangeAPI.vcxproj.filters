@@ -32,6 +32,9 @@
     <Filter Include="exchange\zbg">
       <UniqueIdentifier>{fec44168-f2a5-4786-8aba-9e5b3d02a29b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="log">
+      <UniqueIdentifier>{f9db6cb1-cf7f-4e30-bfef-ee00d131e0e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\stdafx.cpp" />
@@ -85,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="..\src\exchange\coinex\coinex_exchange.cpp">
       <Filter>exchange\coinex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\log\local_log.cpp">
+      <Filter>log</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +155,12 @@
     </ClInclude>
     <ClInclude Include="..\src\exchange\coinex\coinex_exchange.h">
       <Filter>exchange\coinex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\thread_safe_queue.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\log\local_log.h">
+      <Filter>log</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
