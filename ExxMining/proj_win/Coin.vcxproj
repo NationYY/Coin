@@ -75,7 +75,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ghoul_sdk_include);$(openssl_include);$(websocket_include);../src/mfc_window;../src;./;../ExchangeAPI/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ghoul_sdk_include);$(openssl_include);$(websocket_include);../src/mfc_window;../src;./;../../ExchangeAPI/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -83,7 +83,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);../ExchangeAPI/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);../../ExchangeAPI/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;ExchangeAPI_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>

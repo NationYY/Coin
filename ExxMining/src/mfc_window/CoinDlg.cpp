@@ -12,6 +12,8 @@
 #include "exchange/coinex/coinex_exchange.h"
 #include <MMSystem.h>
 #include "common/func_common.h"
+#include <clib/lib/file/file_util.h>
+#include "log/local_log.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -394,6 +396,15 @@ BOOL CCoinDlg::OnInitDialog()
 	SetTimer(eTimerType_Balance, 5000, NULL);
 	SetTimer(eTimerType_Ping, 5000, NULL);
 	
+
+	clib::string log_path = "./log";
+	clib::file_util::mkfiledir(log_path.c_str(), true);
+
+	LocalLogger& localLogger = LocalLogger::GetInstance();
+	localLogger.SetBatchMode(true);
+	localLogger.SetLogPath(log_path.c_str());
+	localLogger.Start();
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -509,6 +520,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 	case eTimerType_APIUpdate:
 		{
+			LocalLogger::GetInstancePt()->SwapFront2Middle();
 			if(pExchange)
 				pExchange->Update();
 			if(pReferenceExchange)
