@@ -23,7 +23,7 @@ public:
 	CCoinDlg(CWnd* pParent = NULL);	// 标准构造函数
 
 // 对话框数据
-	enum { IDD = IDD_COIN_DIALOG };
+	enum { IDD = IDD_EXXMINING_DIALOG };
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持

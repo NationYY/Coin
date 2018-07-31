@@ -46,3 +46,8 @@ ExchangeAPI/proj_win/Release/
 ExxMining/proj_win/HighDebug/
 ExchangeAPI/proj_win/HighDebug/
 ExxMining/proj_win/log/
+Coin.opensdf
+Coin.sdf
+*.exp
+*.ilk
+*.pdb

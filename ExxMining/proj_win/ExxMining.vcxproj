@@ -16,7 +16,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A1CD91CC-0D81-47E4-BC20-98630DC67EEB}</ProjectGuid>
-    <RootNamespace>Coin</RootNamespace>
+    <RootNamespace>ExxMining</RootNamespace>
     <Keyword>MFCProj</Keyword>
     <ProjectName>ExxMining</ProjectName>
   </PropertyGroup>
@@ -60,11 +60,15 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <OutDir>../../Environment/ExxMining</OutDir>
+    <TargetName>$(ProjectName)_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='HighDebug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <OutDir>../../Environment/ExxMining</OutDir>
+    <TargetName>$(ProjectName)_h</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -97,6 +101,10 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='HighDebug|Win32'">
     <ClCompile>
@@ -105,7 +113,7 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ghoul_sdk_include);$(openssl_include);$(websocket_include);../src/mfc_window;../src;./;../ExchangeAPI/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ghoul_sdk_include);$(openssl_include);$(websocket_include);../src/mfc_window;../src;./;../../ExchangeAPI/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -113,7 +121,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);../ExchangeAPI/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);../../ExchangeAPI/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;ExchangeAPI_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -175,13 +183,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Coin.rc" />
+    <ResourceCompile Include="ExxMining.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\Coin.rc2" />
+    <None Include="res\ExxMining.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\Coin.ico" />
+    <Image Include="res\ExxMining.ico" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\ReadMe.txt" />
@@ -191,7 +199,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="Coin.rc" />
+      <UserProperties RESOURCE_FILE="ExxMining.rc" />
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
