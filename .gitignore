@@ -14,7 +14,6 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -25,7 +24,7 @@
 *.la
 *.a
 *.lib
-
+*.txt
 # Executables
 *.exe
 *.out
@@ -51,3 +50,4 @@ Coin.sdf
 *.exp
 *.ilk
 *.pdb
+InterExchangeSpread/proj_win/Debug/
