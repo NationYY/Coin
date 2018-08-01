@@ -36,9 +36,13 @@
 
 
 
-
-
-
+#include <string>
+#include "common/api_common.h"
+#include "common/singleton.h"
+#include "common/func_common.h"
+#include <json/json.h>
+#include "log/local_log.h"
+#include <MMSystem.h>
 
 
 #ifdef _UNICODE

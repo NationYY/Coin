@@ -9,7 +9,7 @@ public:
 	void GetServerTime();
 public:
 	//订阅交易深度
-	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd) {};
+	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
 	//订阅最新成交的订单
 	virtual void API_LatestExecutedOrder(eMarketType type);
 	virtual void Ping();

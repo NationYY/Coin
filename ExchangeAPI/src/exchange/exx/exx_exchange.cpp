@@ -6,7 +6,9 @@
 CExxExchange::CExxExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CExxWebSocketAPI(strAPIKey, strSecretKey);
+	m_pWebSocketAPI->SetExchange(this);
 	m_pHttpAPI = new CExxHttpAPI(strAPIKey, strSecretKey, "");
+	m_pHttpAPI->SetExchange(this);
 	m_pHttpTradeAPI = new CExxHttpAPI(strAPIKey, strSecretKey, "");
 	m_listSupportMarket.push_back(eMarketType_ETH_BTC);
 	m_listSupportMarket.push_back(eMarketType_ETH_USDT);

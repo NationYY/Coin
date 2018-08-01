@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "exx_websocket_api.h"
-
+#include "exchange/exchange.h"
 
 CExxWebSocketAPI::CExxWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {

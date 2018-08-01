@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "websocket_api.h"
 
-
 CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false),
- m_bUTF8(false)
+ m_bUTF8(false), m_pExchange(NULL)
 {
 	m_strAPIKey = m_strURI = m_strSecretKey = "";
 }

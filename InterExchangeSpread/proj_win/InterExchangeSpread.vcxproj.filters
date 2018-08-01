@@ -26,15 +26,15 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="..\src\InterExchangeSpread.h" />
-    <ClInclude Include="..\src\InterExchangeSpreadDlg.h" />
-    <ClInclude Include="..\src\stdafx.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\src\InterExchangeSpread.cpp" />
     <ClCompile Include="..\src\InterExchangeSpreadDlg.cpp" />
     <ClCompile Include="..\src\stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\InterExchangeSpread.h" />
+    <ClInclude Include="..\src\InterExchangeSpreadDlg.h" />
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\websocket_callback_func.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
 </Project>

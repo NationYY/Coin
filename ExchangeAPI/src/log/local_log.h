@@ -2,7 +2,8 @@
 #include "common/thread_safe_queue.h"
 #include <fstream>
 #include <iostream>
-
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 #define LOCAL_ERROR		LocalLogger::GetInstancePt()->LogError
 #define LOCAL_WARNING	LocalLogger::GetInstancePt()->LogWarning
 #define LOCAL_INFO		LocalLogger::GetInstancePt()->LogInfo

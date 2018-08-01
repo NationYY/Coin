@@ -7,6 +7,7 @@ class CExchange
 public:
 	CExchange();
 	~CExchange();
+	virtual const char* GetName() = 0;
 	virtual void Update();
 	void SetHttpCallBackMessage(http_callbak_message callbakMessage){
 		m_httpCallbakMessage = callbakMessage;
@@ -43,6 +44,9 @@ public:
 	}
 	virtual const std::list<eMarketType>& GetSupportMarket(){
 		return m_listSupportMarket;
+	}
+	virtual const char* GetMarketString(eMarketType type, bool bHttp){
+		return "";
 	}
 protected:
 	CDataCenter m_dataCenter;

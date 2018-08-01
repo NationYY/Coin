@@ -3,6 +3,7 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include "websocket.h"
+#include "exchange/exchange.h"
 typedef boost::function<void()> WEBSOCKET_OPEN_FUNCTION_TYPE;
 typedef boost::function<void()> WEBSOCKET_CLOSE_FUNCTION_TYPE;
 typedef boost::function<void()> WEBSOCKET_FAIL_FUNCTION_TYPE;
@@ -14,6 +15,9 @@ public:
 	~CWebSocketAPI();
 	void SetKey(std::string strAPIKey, std::string strSecretKey);
 	void SetURI(std::string strURI);
+	void SetExchange(CExchange* pExchange){
+		m_pExchange = pExchange;
+	}
 	void Request(const char* szRequestInfo);
 	void SetUTF8(bool bValue){
 		m_bUTF8 = bValue;
@@ -64,6 +68,6 @@ protected:
 	WEBSOCKET_FAIL_FUNCTION_TYPE m_failFunc;
 	bool m_bConnect;
 	bool m_bUTF8;
-	
+	CExchange* m_pExchange;
 };
 

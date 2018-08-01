@@ -6,13 +6,27 @@
 #include "InterExchangeSpread.h"
 #include "InterExchangeSpreadDlg.h"
 #include "afxdialogex.h"
-
+#include "exchange/coinex/coinex_exchange.h"
+#include <clib/lib/file/file_util.h>
+#include "websocket_callback_func.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
+std::list<CExchange*> g_listExchange;
+CInterExchangeSpreadDlg* g_pDlg = NULL;
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
+void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
+{
+	switch(apiType)
+	{
+	case eWebsocketAPIType_EntrustDepth:
+
+		break;
+	default:
+		break;
+	}
+}
 
 class CAboutDlg : public CDialogEx
 {
@@ -51,11 +65,15 @@ CInterExchangeSpreadDlg::CInterExchangeSpreadDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CInterExchangeSpreadDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	g_pDlg = this;
 }
 
 void CInterExchangeSpreadDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST1, m_listCtrlLog);
+	DDX_Control(pDX, IDC_LIST2, m_listCtrlEntrustDepth);
+	
 }
 
 BEGIN_MESSAGE_MAP(CInterExchangeSpreadDlg, CDialogEx)
@@ -63,6 +81,7 @@ BEGIN_MESSAGE_MAP(CInterExchangeSpreadDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDOK, &CInterExchangeSpreadDlg::OnBnClickedBegin)
 END_MESSAGE_MAP()
 
 
@@ -96,10 +115,32 @@ BOOL CInterExchangeSpreadDlg::OnInitDialog()
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
+	if(!m_config.open("./config.ini"))
+		return FALSE;
+	const char* id = m_config.get("coinex", "id", "");
+	const char* key = m_config.get("coinex", "key", "");
+	CCoinexExchange* pCoinexExchange = new CCoinexExchange(id, key);
+	g_listExchange.push_back(pCoinexExchange);
+	pCoinexExchange->SetWebSocketCallBackOpen(coinex_websocket_callbak_open);
+	pCoinexExchange->SetWebSocketCallBackClose(coinex_websocket_callbak_close);
+	pCoinexExchange->SetWebSocketCallBackFail(coinex_websocket_callbak_fail);
+	pCoinexExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pCoinexExchange->Run(true, 8, 8);
 
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 	SetTimer(eTimerType_Ping, 5000, NULL);
+	clib::string log_path = "log/";
+	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
+	LocalLogger& localLogger = LocalLogger::GetInstance();
+	localLogger.SetBatchMode(true);
+	localLogger.SetLogPath(log_path.c_str());
+	localLogger.Start();
+
+	m_listCtrlEntrustDepth.InsertColumn(0, "交易所", LVCFMT_CENTER, 50);
+	m_listCtrlEntrustDepth.InsertColumn(1, "价", LVCFMT_CENTER, 100);
+	m_listCtrlEntrustDepth.InsertColumn(2, "量", LVCFMT_CENTER, 100);
+	m_listCtrlEntrustDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -160,9 +201,83 @@ void CInterExchangeSpreadDlg::OnTimer(UINT_PTR nIDEvent)
 	switch(nIDEvent)
 	{
 	case eTimerType_APIUpdate:
+		{
+			LocalLogger::GetInstancePt()->SwapFront2Middle();
+			std::list<CExchange*>::iterator itB = g_listExchange.begin();
+			std::list<CExchange*>::iterator itE = g_listExchange.end();
+			while(itB != itE)
+			{
+				(*itB)->Update();
+				++itB;
+			}
+		}
+		
 		break;
 	case eTimerType_Ping:
+		{
+			std::list<CExchange*>::iterator itB = g_listExchange.begin();
+			std::list<CExchange*>::iterator itE = g_listExchange.end();
+			while(itB != itE)
+			{
+				if((*itB)->GetWebSocket())
+					(*itB)->GetWebSocket()->Ping();
+				++itB;
+			}
+		}
 		break;
 	}
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void CInterExchangeSpreadDlg::AddLog(char* szLog, ...)
+{
+	time_t tNow = time(NULL);
+	tm* pTM = localtime(&tNow);
+	char context[1100] = { 0 };
+	_snprintf(context, 1100, "%d:%d:%d ", pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
+	char _context[1024] = { 0 };
+	va_list args;
+	int n;
+	va_start(args, szLog);
+	n = vsnprintf(_context, sizeof(_context), szLog, args);
+	va_end(args);
+	strcat(context, _context);
+	m_listCtrlLog.InsertString(0, context);
+}
+
+void CInterExchangeSpreadDlg::OnBnClickedBegin()
+{
+	std::list<CExchange*>::iterator itB = g_listExchange.begin();
+	std::list<CExchange*>::iterator itE = g_listExchange.end();
+	while(itB != itE)
+	{
+		(*itB)->GetWebSocket()->API_EntrustDepth(eMarketType_ETH_BTC, 5, true);
+		++itB;
+	}
+}
+
+
+void CInterExchangeSpreadDlg::UpdateShowEntrustDepth()
+{
+	m_listCtrlEntrustDepth.DeleteAllItems();
+	std::list<CExchange*>::iterator itB = g_listExchange.begin();
+	std::list<CExchange*>::iterator itE = g_listExchange.end();
+	int index = 0;
+	CString szFormat;
+	while(itB != itE)
+	{
+		m_listCtrlEntrustDepth.InsertItem(index, "");
+		szFormat.Format("%d", (*itB)->GetName());
+		m_listCtrlEntrustDepth.SetItemText(index, 0, szFormat);
+		std::map<std::string, std::string>& mapBuyEntrustDepth = (*itB)->GetDataCenter()->m_mapBuyEntrustDepth;
+		if(mapBuyEntrustDepth.size())
+		{
+			std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
+			it--;
+			//m_listCtrlEntrustDepth.SetItemText(index, 1, szFormat);
+		}
+		++itB;
+	}
+
 }

@@ -1,6 +1,4 @@
 #include "stdafx.h"
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
 #include "local_log.h"
 #include "string.h"
 #include <stdarg.h> 

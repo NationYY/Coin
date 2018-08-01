@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include "http_def.h"
 #include <deque>
+class CExchange;
 typedef boost::function<void(eHttpAPIType, Json::Value&, const std::string&, int, std::string)> HTTP_CALLBACK_FUNCTION_TYPE;
 class CHttpAPI
 {
@@ -14,6 +15,9 @@ public:
 	~CHttpAPI();
 	void SetKey(std::string strAPIKey, std::string strSecretKey);
 	void SetURL(std::string strURL);
+	void SetExchange(CExchange* pExchange){
+		m_pExchange = pExchange;
+	}
 	void SetContentType(std::string strContentType);
 	void Run(int threadNums);
 	void Update();
@@ -51,6 +55,7 @@ private:
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥
+	CExchange* m_pExchange;
 	
 };
 

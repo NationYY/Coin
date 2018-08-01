@@ -1,6 +1,8 @@
 
 // InterExchangeSpreadDlg.h : 头文件
 //
+#include "afxwin.h"
+#include <clib/lib/util/config.h>
 
 #pragma once
 enum eTimerType
@@ -11,6 +13,11 @@ enum eTimerType
 // CInterExchangeSpreadDlg 对话框
 class CInterExchangeSpreadDlg : public CDialogEx
 {
+public:
+	clib::config m_config;
+public:
+	void UpdateShowEntrustDepth();
+	void AddLog(char* szLog, ...);
 // 构造
 public:
 	CInterExchangeSpreadDlg(CWnd* pParent = NULL);	// 标准构造函数
@@ -34,4 +41,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	
+	
+	CListBox m_listCtrlLog;
+	CListCtrl m_listCtrlEntrustDepth;
+	afx_msg void OnBnClickedBegin();
 };

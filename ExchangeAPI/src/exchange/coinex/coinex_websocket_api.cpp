@@ -2,7 +2,7 @@
 #include "coinex_websocket_api.h"
 #include <json/json.h>
 #include <clib/lib/math/math_ex.h>
-
+#include "exchange/exchange.h"
 CCoinexWebSocketAPI::CCoinexWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -50,6 +50,14 @@ void CCoinexWebSocketAPI::Ping()
 void CCoinexWebSocketAPI::API_LatestExecutedOrder(eMarketType type)
 {
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"method\":\"deals.subscribe\",\"params\":[\"%s\"],\"id\":16}", GetMarketString(type));
+	_snprintf(szBuffer, 512, "{\"method\":\"deals.subscribe\",\"params\":[\"%s\"],\"id\":16}", m_pExchange->GetMarketString(type, false));
+	Request(szBuffer);
+}
+
+void CCoinexWebSocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
+{
+	char szBuffer[512] = {0};
+	if(bAdd)
+		_snprintf(szBuffer, 512, "{\"method\":\"depth.subscribe\",\"params\":[\"%s\", %d, \"0\"],\"id\":15}", m_pExchange->GetMarketString(type, false), depthSize);
 	Request(szBuffer);
 }
