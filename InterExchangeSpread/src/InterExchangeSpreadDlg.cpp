@@ -62,6 +62,7 @@ BEGIN_MESSAGE_MAP(CInterExchangeSpreadDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -97,7 +98,8 @@ BOOL CInterExchangeSpreadDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO:  在此添加额外的初始化代码
-
+	SetTimer(eTimerType_APIUpdate, 1, NULL);
+	SetTimer(eTimerType_Ping, 5000, NULL);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -150,3 +152,17 @@ HCURSOR CInterExchangeSpreadDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CInterExchangeSpreadDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+	switch(nIDEvent)
+	{
+	case eTimerType_APIUpdate:
+		break;
+	case eTimerType_Ping:
+		break;
+	}
+	CDialogEx::OnTimer(nIDEvent);
+}

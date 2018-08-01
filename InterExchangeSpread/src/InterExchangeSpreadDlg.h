@@ -3,8 +3,11 @@
 //
 
 #pragma once
-
-
+enum eTimerType
+{
+	eTimerType_APIUpdate,
+	eTimerType_Ping,
+};
 // CInterExchangeSpreadDlg ¶Ô»°¿ò
 class CInterExchangeSpreadDlg : public CDialogEx
 {
@@ -29,4 +32,6 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

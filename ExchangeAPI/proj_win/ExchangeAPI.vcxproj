@@ -58,7 +58,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='HighDebug|Win32'">
     <OutDir>../lib</OutDir>
-    <TargetName>ExchangeAPI_d</TargetName>
+    <TargetName>ExchangeAPI_h</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>ExchangeAPI_r</TargetName>

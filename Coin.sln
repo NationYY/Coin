@@ -13,6 +13,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExchangeAPI", "ExchangeAPI\proj_win\ExchangeAPI.vcxproj", "{60AA734A-980A-4265-B9C6-FF8FAC397ABA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InterExchangeSpread", "InterExchangeSpread\proj_win\InterExchangeSpread.vcxproj", "{8DB2033A-702B-4186-AF08-8E448F7625D5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{60AA734A-980A-4265-B9C6-FF8FAC397ABA} = {60AA734A-980A-4265-B9C6-FF8FAC397ABA}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,8 +38,8 @@ Global
 		{60AA734A-980A-4265-B9C6-FF8FAC397ABA}.Release|Win32.Build.0 = Release|Win32
 		{8DB2033A-702B-4186-AF08-8E448F7625D5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{8DB2033A-702B-4186-AF08-8E448F7625D5}.Debug|Win32.Build.0 = Debug|Win32
-		{8DB2033A-702B-4186-AF08-8E448F7625D5}.HighDebug|Win32.ActiveCfg = Debug|Win32
-		{8DB2033A-702B-4186-AF08-8E448F7625D5}.HighDebug|Win32.Build.0 = Debug|Win32
+		{8DB2033A-702B-4186-AF08-8E448F7625D5}.HighDebug|Win32.ActiveCfg = HighDebug|Win32
+		{8DB2033A-702B-4186-AF08-8E448F7625D5}.HighDebug|Win32.Build.0 = HighDebug|Win32
 		{8DB2033A-702B-4186-AF08-8E448F7625D5}.Release|Win32.ActiveCfg = Release|Win32
 		{8DB2033A-702B-4186-AF08-8E448F7625D5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
