@@ -56,6 +56,8 @@ void CCoinexWebSocketAPI::API_LatestExecutedOrder(eMarketType type)
 
 void CCoinexWebSocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
 {
+	if(m_pExchange)
+		m_pExchange->GetDataCenter()->ClearAllEntrustDepth();
 	char szBuffer[512] = {0};
 	if(bAdd)
 		_snprintf(szBuffer, 512, "{\"method\":\"depth.subscribe\",\"params\":[\"%s\", %d, \"0\"],\"id\":15}", m_pExchange->GetMarketString(type, false), depthSize);

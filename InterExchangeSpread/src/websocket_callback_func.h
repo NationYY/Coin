@@ -1,36 +1,20 @@
 #pragma once
 extern CInterExchangeSpreadDlg* g_pDlg;
-void coinex_websocket_callbak_open()
+void common_websocket_callbak_open(const char* szExchangeName)
 {
-	g_pDlg->AddLog("coinex websocket success connect!");
+	g_pDlg->AddLog("%s websocket success connect!", szExchangeName);
+	if(g_pDlg->m_bIsRun)
+		g_pDlg->OnWebsocketConnect(szExchangeName);
 }
 
-void coinex_websocket_callbak_close()
+void common_websocket_callbak_close(const char* szExchangeName)
 {
-	g_pDlg->AddLog("coinex websocket disconnect!");
+	g_pDlg->AddLog("%s websocket disconnect!", szExchangeName);
 }
 
-void coinex_websocket_callbak_fail()
+void common_websocket_callbak_fail(const char* szExchangeName)
 {
-	g_pDlg->AddLog("coinex websocket fail connect!");
+	g_pDlg->AddLog("%s websocket fail connect!", szExchangeName);
 }
-
-//-----------------------------------------------------------
-
-void huobi_pro_websocket_callbak_open()
-{
-	g_pDlg->AddLog("huobi_pro websocket success connect!");
-}
-
-void huobi_pro_websocket_callbak_close()
-{
-	g_pDlg->AddLog("huobi_pro websocket disconnect!");
-}
-
-void huobi_pro_websocket_callbak_fail()
-{
-	g_pDlg->AddLog("huobi_pro websocket fail connect!");
-}
-
 
 

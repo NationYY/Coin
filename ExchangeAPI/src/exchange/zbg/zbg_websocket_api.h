@@ -1,6 +1,6 @@
 #pragma once
 #include "websocket_api/websocket_api.h"
-class CZbgWebsocketAPI : public CWebSocketAPI
+class CZbgWebsocketAPI : public CWebsocketAPI
 {
 public:
 	CZbgWebsocketAPI(std::string strAPIKey, std::string strSecretKey);

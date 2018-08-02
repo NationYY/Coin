@@ -12,10 +12,10 @@
 #include <iostream>
 
 
-typedef void (*websocketpp_callbak_open)();
-typedef void (*websocketpp_callbak_close)();
-typedef void (*websocketpp_callbak_fail)();
-typedef void (*websocketpp_callbak_message)(eWebsocketAPIType type, Json::Value& retObj, const std::string& strRet);
+typedef void (*websocketpp_callbak_open)(const char* szExchangeName);
+typedef void(*websocketpp_callbak_close)(const char* szExchangeName);
+typedef void(*websocketpp_callbak_fail)(const char* szExchangeName);
+typedef void(*websocketpp_callbak_message)(eWebsocketAPIType type, const char* szExchangeName, Json::Value& retObj, const std::string& strRet);
 
 
 //typedef websocketpp::client<websocketpp::config::asio_client> client;
@@ -55,7 +55,7 @@ private:
 	websocketpp::connection_hdl m_hdl;
 	std::string m_uri;
 	CONNECTION_STATE m_con_state;
-	class CWebSocketAPI* m_pWebSocketAPI;
+	class CWebsocketAPI* m_pWebSocketAPI;
 	bool m_bUTF8;
 	bool m_bGZIP;
 public:
@@ -149,7 +149,7 @@ public:
 		//m_endpoint.send(hdl, "{'event':'addChannel','channel':'ok_btcusd_ticker'}", websocketpp::frame::opcode::text);
 		// m_endpoint.send(hdl, "{'event':'addChannel','channel':'ok_btcusd_depth'}", websocketpp::frame::opcode::text);
 	}
-	void set_websoket_api(class CWebSocketAPI* pAPI){
+	void set_websoket_api(class CWebsocketAPI* pAPI){
 		m_pWebSocketAPI = pAPI;
 	}
 

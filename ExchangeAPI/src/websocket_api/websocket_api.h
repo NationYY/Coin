@@ -8,11 +8,11 @@ typedef boost::function<void()> WEBSOCKET_OPEN_FUNCTION_TYPE;
 typedef boost::function<void()> WEBSOCKET_CLOSE_FUNCTION_TYPE;
 typedef boost::function<void()> WEBSOCKET_FAIL_FUNCTION_TYPE;
 typedef boost::function<void(Json::Value&, const std::string&)> WEBSOCKET_MESSAGE_FUNCTION_TYPE;
-class CWebSocketAPI
+class CWebsocketAPI
 {
 public:
-	CWebSocketAPI();
-	~CWebSocketAPI();
+	CWebsocketAPI();
+	~CWebsocketAPI();
 	void SetKey(std::string strAPIKey, std::string strSecretKey);
 	void SetURI(std::string strURI);
 	void SetExchange(CExchange* pExchange){
@@ -31,19 +31,19 @@ public:
 	bool GetGZIP(){
 		return m_bGZIP;
 	}
-	void CWebSocketAPI::SetCallBackOpen(WEBSOCKET_OPEN_FUNCTION_TYPE func){
+	void CWebsocketAPI::SetCallBackOpen(WEBSOCKET_OPEN_FUNCTION_TYPE func){
 		m_openFunc = func;
 	}
 
-	void CWebSocketAPI::SetCallBackClose(WEBSOCKET_CLOSE_FUNCTION_TYPE func){
+	void CWebsocketAPI::SetCallBackClose(WEBSOCKET_CLOSE_FUNCTION_TYPE func){
 		m_closeFunc = func;
 	}
 
-	void CWebSocketAPI::SetCallBackMessage(WEBSOCKET_MESSAGE_FUNCTION_TYPE func){
+	void CWebsocketAPI::SetCallBackMessage(WEBSOCKET_MESSAGE_FUNCTION_TYPE func){
 		m_messageFunc = func;
 	}
 
-	void CWebSocketAPI::SetCallBackFail(WEBSOCKET_FAIL_FUNCTION_TYPE func){
+	void CWebsocketAPI::SetCallBackFail(WEBSOCKET_FAIL_FUNCTION_TYPE func){
 		m_failFunc = func;
 	}
 	
@@ -54,7 +54,7 @@ public:
 	void Close();
 	void Update();
 	void PushRet(int type, Json::Value& retObj, const char* szRet);
-	static unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg);
+	static unsigned __stdcall CWebsocketAPI::RunThread(LPVOID arg);
 	//订阅交易深度
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd) = 0;
 	//订阅最新成交的订单
@@ -72,9 +72,10 @@ protected:
 	WEBSOCKET_CLOSE_FUNCTION_TYPE m_closeFunc;
 	WEBSOCKET_MESSAGE_FUNCTION_TYPE m_messageFunc;
 	WEBSOCKET_FAIL_FUNCTION_TYPE m_failFunc;
-	bool m_bConnect;
 	bool m_bUTF8;
 	bool m_bGZIP; 
 	CExchange* m_pExchange;
+public:
+	bool m_bConnect;
 };
 

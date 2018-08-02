@@ -53,3 +53,4 @@ Coin.sdf
 InterExchangeSpread/proj_win/Debug/
 InterExchangeSpread/proj_win/HighDebug/
 *.ipch
+*.suo

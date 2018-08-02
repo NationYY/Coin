@@ -20,7 +20,7 @@ CExxExchange::~CExxExchange()
 {
 }
 
-void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
+void CExxExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && retObj[0][0].asString() == "AE")
 	{
@@ -52,7 +52,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 			}
 		}
 		if(m_webSocketCallbakMessage)
-			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, retObj, strRet);
+			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
 	}
 	else if(retObj.isArray() && retObj[0].isString() && retObj[0].asString() == "E")
 	{
@@ -80,7 +80,7 @@ void CExxExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& s
 			}
 		}
 		if(m_webSocketCallbakMessage)
-			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, retObj, strRet);
+			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
 	}
 }
 

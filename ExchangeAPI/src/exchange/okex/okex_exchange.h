@@ -1,15 +1,15 @@
 #pragma once
 #include "exchange/exchange.h"
-class CCoinexExchange : public CExchange
+class COkexExchange : public CExchange
 {
 public:
-	CCoinexExchange(std::string strAPIKey, std::string strSecretKey);
-	~CCoinexExchange();
+	COkexExchange(std::string strAPIKey, std::string strSecretKey);
+	~COkexExchange();
 	virtual const char* GetName(){
-		return "Coinex";
+		return "Okex";
 	}
 	virtual double GetTakerRate(){
-		return 0.001;
+		return 0.002;
 	}
 	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
 	virtual void OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet);
@@ -17,15 +17,14 @@ public:
 	{
 		switch(type)
 		{
-			case eMarketType_ETH_BTC:
-				return "ETHBTC";
-			case eMarketType_ETH_USDT:
-				return "ETHUSDT";
-			case eMarketType_BTC_USDT:
-				return "BTCUSDT";
+		case eMarketType_ETH_BTC:
+			return "eth_btc";
+		case eMarketType_ETH_USDT:
+			return "eth_usdt";
+		case eMarketType_BTC_USDT:
+			return "btc_usdt";
 		}
 		return NULL;
 	}
-private:
 };
 

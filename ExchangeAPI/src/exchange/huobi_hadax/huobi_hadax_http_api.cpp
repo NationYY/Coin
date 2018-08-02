@@ -2,11 +2,13 @@
 #include "huobi_hadax_http_api.h"
 
 
-huobi_hadax_http_api::huobi_hadax_http_api()
+CHuobiHadaxHttpAPI::CHuobiHadaxHttpAPI(std::string strAPIKey, std::string strSecretKey)
 {
+	SetKey(strAPIKey, strSecretKey);
+	SetURL("https://api.hadax.com/v1");
 }
 
 
-huobi_hadax_http_api::~huobi_hadax_http_api()
+CHuobiHadaxHttpAPI::~CHuobiHadaxHttpAPI()
 {
 }

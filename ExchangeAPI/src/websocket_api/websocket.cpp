@@ -7,13 +7,13 @@ void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 {
 	Json::Value retObj;
 	Json::Reader reader;
-	char szRet[8192] = { 0 };
+	char szRet[10240] = { 0 };
 	int __size = msg->get_payload().size();
 	memcpy(szRet, msg->get_payload().c_str(), __size);
 	if(m_bGZIP)
 	{
-		unsigned char szOut[8192] = {0};
-		int outSize = 8192;
+		unsigned char szOut[10240] = {0};
+		int outSize = 10240;
 		if(GZlibDecompress((unsigned char*)szRet, __size, szOut, &outSize))
 		{
 			memset(szRet, 0, sizeof(szRet));
@@ -22,8 +22,8 @@ void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 	}
 	if(m_bUTF8)
 	{
-		char _szRet[4096] = { 0 };
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", szRet, strlen(szRet), _szRet, 4096);
+		char _szRet[10240] = {0};
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", szRet, strlen(szRet), _szRet, 10240);
 		strcpy(szRet, _szRet);
 	}
 	reader.parse(szRet, retObj);
@@ -43,6 +43,8 @@ void WebSocket::on_open(websocketpp::connection_hdl hdl)
 void WebSocket::on_close(websocketpp::connection_hdl hdl)
 {
 	Json::Value retObj;
+	if(m_pWebSocketAPI)
+		m_pWebSocketAPI->m_bConnect = false;
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->PushRet(0, retObj, "");
 }
@@ -90,6 +92,8 @@ void WebSocket::on_fail(websocketpp::connection_hdl hdl)
 	//CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 2048);
 
 	std::cout << con->get_ec() << " - " << szBuffer << std::endl;
+	if(m_pWebSocketAPI)
+		m_pWebSocketAPI->m_bConnect = false;
 	Json::Value retObj;
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->PushRet(3, retObj, "");

@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include "exchange/coinex/coinex_exchange.h"
 #include "exchange/huobi_pro/huobi_pro_exchange.h"
+#include "exchange/okex/okex_exchange.h"
 #include <clib/lib/file/file_util.h>
 #include "websocket_callback_func.h"
 #ifdef _DEBUG
@@ -17,7 +18,7 @@
 std::list<CExchange*> g_listExchange;
 CInterExchangeSpreadDlg* g_pDlg = NULL;
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
+void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	switch(apiType)
 	{
@@ -63,7 +64,7 @@ END_MESSAGE_MAP()
 
 
 CInterExchangeSpreadDlg::CInterExchangeSpreadDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(CInterExchangeSpreadDlg::IDD, pParent)
+: CDialogEx(CInterExchangeSpreadDlg::IDD, pParent), m_bIsRun(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	g_pDlg = this;
@@ -83,6 +84,8 @@ BEGIN_MESSAGE_MAP(CInterExchangeSpreadDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDOK, &CInterExchangeSpreadDlg::OnBnClickedBegin)
+	ON_WM_CLOSE()
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -122,20 +125,28 @@ BOOL CInterExchangeSpreadDlg::OnInitDialog()
 	const char* key = m_config.get("coinex", "key", "");
 	CCoinexExchange* pCoinexExchange = new CCoinexExchange(id, key);
 	g_listExchange.push_back(pCoinexExchange);
-	pCoinexExchange->SetWebSocketCallBackOpen(coinex_websocket_callbak_open);
-	pCoinexExchange->SetWebSocketCallBackClose(coinex_websocket_callbak_close);
-	pCoinexExchange->SetWebSocketCallBackFail(coinex_websocket_callbak_fail);
+	pCoinexExchange->SetWebSocketCallBackOpen(common_websocket_callbak_open);
+	pCoinexExchange->SetWebSocketCallBackClose(common_websocket_callbak_close);
+	pCoinexExchange->SetWebSocketCallBackFail(common_websocket_callbak_fail);
 	pCoinexExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 	pCoinexExchange->Run(true, 5, 5);
 
 	CHuobiProExchange* pHuobiProExchange = new CHuobiProExchange(id, key);
 	g_listExchange.push_back(pHuobiProExchange);
-	pHuobiProExchange->SetWebSocketCallBackOpen(huobi_pro_websocket_callbak_open);
-	pHuobiProExchange->SetWebSocketCallBackClose(huobi_pro_websocket_callbak_close);
-	pHuobiProExchange->SetWebSocketCallBackFail(huobi_pro_websocket_callbak_fail);
+	pHuobiProExchange->SetWebSocketCallBackOpen(common_websocket_callbak_open);
+	pHuobiProExchange->SetWebSocketCallBackClose(common_websocket_callbak_close);
+	pHuobiProExchange->SetWebSocketCallBackFail(common_websocket_callbak_fail);
 	pHuobiProExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 	pHuobiProExchange->Run(true, 5, 5);
 
+	COkexExchange* pOkexExchange = new COkexExchange(id, key);
+	g_listExchange.push_back(pOkexExchange);
+	pOkexExchange->SetWebSocketCallBackOpen(common_websocket_callbak_open);
+	pOkexExchange->SetWebSocketCallBackClose(common_websocket_callbak_close);
+	pOkexExchange->SetWebSocketCallBackFail(common_websocket_callbak_fail);
+	pOkexExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pOkexExchange->Run(true, 5, 5);
+	
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 	SetTimer(eTimerType_Ping, 5000, NULL);
@@ -147,11 +158,11 @@ BOOL CInterExchangeSpreadDlg::OnInitDialog()
 	localLogger.Start();
 	m_listCtrlEntrustDepth.InsertColumn(0, "保留", LVCFMT_CENTER, 0);
 	m_listCtrlEntrustDepth.InsertColumn(1, "交易所", LVCFMT_CENTER, 70);
-	m_listCtrlEntrustDepth.InsertColumn(2, "买一量", LVCFMT_CENTER, 105);
-	m_listCtrlEntrustDepth.InsertColumn(3, "买一价", LVCFMT_CENTER, 105);
-	m_listCtrlEntrustDepth.InsertColumn(4, "卖一价", LVCFMT_CENTER, 105);
-	m_listCtrlEntrustDepth.InsertColumn(5, "卖一量", LVCFMT_CENTER, 105);
-	m_listCtrlEntrustDepth.InsertColumn(6, "take费率", LVCFMT_CENTER, 65);
+	m_listCtrlEntrustDepth.InsertColumn(2, "买一量", LVCFMT_CENTER, 104);
+	m_listCtrlEntrustDepth.InsertColumn(3, "买一价", LVCFMT_CENTER, 104);
+	m_listCtrlEntrustDepth.InsertColumn(4, "卖一价", LVCFMT_CENTER, 104);
+	m_listCtrlEntrustDepth.InsertColumn(5, "卖一量", LVCFMT_CENTER, 104);
+	m_listCtrlEntrustDepth.InsertColumn(6, "taker费率", LVCFMT_CENTER, 69);
 	m_listCtrlEntrustDepth.DeleteColumn(0);
 	m_listCtrlEntrustDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
@@ -268,6 +279,7 @@ void CInterExchangeSpreadDlg::OnBnClickedBegin()
 		(*itB)->GetWebSocket()->API_EntrustDepth(eMarketType_ETH_BTC, 5, true);
 		++itB;
 	}
+	m_bIsRun = true;
 }
 
 
@@ -308,4 +320,30 @@ void CInterExchangeSpreadDlg::UpdateShowEntrustDepth()
 		++itB;
 	}
 
+}
+
+void CInterExchangeSpreadDlg::OnWebsocketConnect(const char* szExchangeName)
+{
+	std::list<CExchange*>::iterator itB = g_listExchange.begin();
+	std::list<CExchange*>::iterator itE = g_listExchange.end();
+	while(itB != itE)
+	{
+		if(strcmp((*itB)->GetName(), szExchangeName) == 0)
+			(*itB)->GetWebSocket()->API_EntrustDepth(eMarketType_ETH_BTC, 5, true);
+		++itB;
+	}
+}
+
+void CInterExchangeSpreadDlg::OnClose()
+{
+	std::list<CExchange*>::iterator itB = g_listExchange.begin();
+	std::list<CExchange*>::iterator itE = g_listExchange.end();
+	while(itB != itE)
+	{
+		delete (*itB);
+		++itB;
+	}
+	g_listExchange.clear();
+	LocalLogger::ReleaseInstance();
+	CDialogEx::OnClose();
 }

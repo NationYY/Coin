@@ -1,29 +1,29 @@
 #include "stdafx.h"
 #include "websocket_api.h"
 
-CWebSocketAPI::CWebSocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false),
+CWebsocketAPI::CWebsocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false),
  m_bUTF8(false), m_pExchange(NULL), m_bGZIP(false)
 {
 	m_strAPIKey = m_strURI = m_strSecretKey = "";
 }
 
 
-CWebSocketAPI::~CWebSocketAPI()
+CWebsocketAPI::~CWebsocketAPI()
 {
 }
 
-void CWebSocketAPI::SetKey(std::string strAPIKey, std::string strSecretKey)
+void CWebsocketAPI::SetKey(std::string strAPIKey, std::string strSecretKey)
 {
 	m_strAPIKey = strAPIKey;
 	m_strSecretKey = strSecretKey;
 }
 
-void CWebSocketAPI::SetURI(std::string strURI)
+void CWebsocketAPI::SetURI(std::string strURI)
 {
 	m_strURI = strURI;
 }
 
-void CWebSocketAPI::Request(const char* szRequestInfo)
+void CWebsocketAPI::Request(const char* szRequestInfo)
 {
 	if(!m_bConnect)
 		return;
@@ -31,7 +31,7 @@ void CWebSocketAPI::Request(const char* szRequestInfo)
 		m_pWebsocket->request(szRequestInfo);
 }
 
-void CWebSocketAPI::Close()
+void CWebsocketAPI::Close()
 {
 	if(m_pWebsocket)
 	{
@@ -42,11 +42,11 @@ void CWebSocketAPI::Close()
 	}
 }
 
-unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
+unsigned __stdcall CWebsocketAPI::RunThread(LPVOID arg)
 {
 	if(arg != 0)
 	{
-		CWebSocketAPI *api = (CWebSocketAPI *)arg;
+		CWebsocketAPI *api = (CWebsocketAPI *)arg;
 
 		for(int i = 0; i < MAX_RETRY_COUNT; i++)
 		{
@@ -81,13 +81,13 @@ unsigned __stdcall CWebSocketAPI::RunThread(LPVOID arg)
 	return 0;
 }
 
-void CWebSocketAPI::Run()
+void CWebsocketAPI::Run()
 {
 	unsigned int threadId = 0;
-	m_hThread = (HANDLE)_beginthreadex(NULL, 0, CWebSocketAPI::RunThread, this, 0, &threadId);
+	m_hThread = (HANDLE)_beginthreadex(NULL, 0, CWebsocketAPI::RunThread, this, 0, &threadId);
 }
 
-void CWebSocketAPI::PushRet(int type, Json::Value& retObj, const char* szRet)
+void CWebsocketAPI::PushRet(int type, Json::Value& retObj, const char* szRet)
 {
 	SWebSocketResponse info;
 	info.retObj = retObj;
@@ -97,7 +97,7 @@ void CWebSocketAPI::PushRet(int type, Json::Value& retObj, const char* szRet)
 	m_queueResponseInfo.push_back(info);
 }
 
-void CWebSocketAPI::Update()
+void CWebsocketAPI::Update()
 {
 	if(m_queueResponseInfo.size())
 	{
@@ -126,6 +126,7 @@ void CWebSocketAPI::Update()
 				m_messageFunc(responseInfo.retObj, responseInfo.strRet);
 			break;
 		case 3:
+			m_bConnect = false;
 			if(m_failFunc)
 				m_failFunc();
 		default:

@@ -1,10 +1,13 @@
 #pragma once
 #include "websocket_api/websocket_api.h"
-class COkexWebSocketAPI : public CWebSocketAPI
+class COkexWebsocketAPI : public CWebsocketAPI
 {
 public:
-	COkexWebSocketAPI(std::string strAPIKey, std::string strSecretKey);
-	~COkexWebSocketAPI();
-	void API_sub_spot_ticker(const char* szTransactionType);
+	COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey);
+	~COkexWebsocketAPI();
+public:
+	virtual void Ping();
+	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
+	virtual void API_LatestExecutedOrder(eMarketType type){}
 };
 

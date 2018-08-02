@@ -2,7 +2,6 @@
 #include "huobi_pro_exchange.h"
 #include "exchange/huobi_pro/huobi_pro_http_api.h"
 #include "exchange/huobi_pro/huobi_pro_websocket_api.h"
-#include "common/func_common.h"
 CHuobiProExchange::CHuobiProExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CHuobiProWebsocketAPI(strAPIKey, strSecretKey);
@@ -20,7 +19,7 @@ CHuobiProExchange::~CHuobiProExchange()
 {
 }
 
-void CHuobiProExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
+void CHuobiProExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	if(retObj["pong"].isString() || retObj["ping"].isString())
 	{
@@ -31,7 +30,7 @@ void CHuobiProExchange::OnWebsocketResponse(Json::Value& retObj, const std::stri
 		Json::Value& ticks = retObj["tick"];
 		if(ticks["bids"].isArray())
 		{
-			for(int i=0; i<ticks["bids"].size(); ++i)
+			for(int i=0; i<(int)ticks["bids"].size(); ++i)
 			{
 				double price = ticks["bids"][i][0].asDouble();
 				double volume = ticks["bids"][i][1].asDouble();
@@ -40,7 +39,7 @@ void CHuobiProExchange::OnWebsocketResponse(Json::Value& retObj, const std::stri
 		}
 		if(ticks["asks"].isArray())
 		{
-			for(int i = 0; i < ticks["asks"].size(); ++i)
+			for(int i=0; i<(int)ticks["asks"].size(); ++i)
 			{
 				double price = ticks["asks"][i][0].asDouble();
 				double volume = ticks["asks"][i][1].asDouble();
@@ -48,7 +47,7 @@ void CHuobiProExchange::OnWebsocketResponse(Json::Value& retObj, const std::stri
 			}
 		}
 		if(m_webSocketCallbakMessage)
-			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, retObj, strRet);
+			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
 	}
 	
 }

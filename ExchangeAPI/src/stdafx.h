@@ -13,8 +13,9 @@
 #include <set>
 #include <list>
 #include <map>
+#include "common/singleton.h"
 #include <json/json.h>
 #include "common/api_common.h"
 #include "common/singleton.h"
-
+#include "common/func_common.h"
 // TODO:  在此处引用程序需要的其他头文件

@@ -17,13 +17,18 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 }
 
 
-CHttpAPI::CHttpAPI():m_pMainCurl(NULL)
+CHttpAPI::CHttpAPI() :m_pMainCurl(NULL), m_bClose(false), m_nCloseThreadCnt(0)
 {
 }
 
 
 CHttpAPI::~CHttpAPI()
 {
+	if(m_pMainCurl)
+	{
+		curl_easy_cleanup(m_pMainCurl);
+		m_pMainCurl = NULL;
+	}
 }
 
 void CHttpAPI::SetKey(std::string strAPIKey, std::string strSecretKey)
@@ -68,6 +73,16 @@ void CHttpAPI::Run(int threadNums)
 	for(int i = 0; i < threadNums; ++i)
 	{
 		m_workers.create_thread(boost::bind(&CHttpAPI::_ProcessHttp, this));
+	}
+}
+
+void CHttpAPI::Close()
+{
+	m_bClose = true;
+	m_condReqInfo.notify_all();
+	while(m_nCloseThreadCnt != m_threadNum)
+	{
+
 	}
 }
 
@@ -126,7 +141,7 @@ void CHttpAPI::_ProcessHttp()
 		pHeaders = curl_slist_append(pHeaders, szBuffer);
 	}
 	curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
-	while(true)
+	while(!m_bClose)
 	{
 		SHttpReqInfo reqInfo;
 		{
@@ -147,6 +162,7 @@ void CHttpAPI::_ProcessHttp()
 			m_queueResponseInfo.push_back(resInfo);
 		}
 	}
+	m_nCloseThreadCnt++;
 	curl_easy_cleanup(pCurl);
 }
 void CHttpAPI::_GetReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szGetParams, std::string& strResponse)

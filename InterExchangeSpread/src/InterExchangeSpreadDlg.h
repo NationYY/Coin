@@ -15,7 +15,9 @@ class CInterExchangeSpreadDlg : public CDialogEx
 {
 public:
 	clib::config m_config;
+	bool m_bIsRun;
 public:
+	void OnWebsocketConnect(const char* szExchangeName);
 	void UpdateShowEntrustDepth();
 	void AddLog(char* szLog, ...);
 // ππ‘Ï
@@ -46,4 +48,5 @@ public:
 	CListBox m_listCtrlLog;
 	CListCtrl m_listCtrlEntrustDepth;
 	afx_msg void OnBnClickedBegin();
+	afx_msg void OnClose();
 };

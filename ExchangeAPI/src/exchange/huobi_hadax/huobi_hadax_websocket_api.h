@@ -1,8 +1,13 @@
 #pragma once
-class huobi_hadax_websocket_api
+#include "websocket_api/websocket_api.h"
+class CHuobiHadaxWebsocketAPI : public CWebsocketAPI
 {
 public:
-	huobi_hadax_websocket_api();
-	~huobi_hadax_websocket_api();
+	CHuobiHadaxWebsocketAPI(std::string strAPIKey, std::string strSecretKey);
+	~CHuobiHadaxWebsocketAPI();
+public:
+	virtual void Ping();
+	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
+	virtual void API_LatestExecutedOrder(eMarketType type){}
 };
 

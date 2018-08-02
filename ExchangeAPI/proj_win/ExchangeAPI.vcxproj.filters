@@ -43,7 +43,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\stdafx.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp">
       <Filter>exchange\coinex</Filter>
     </ClCompile>
@@ -118,6 +117,13 @@
     </ClCompile>
     <ClCompile Include="..\src\algorithm\hmac.cpp">
       <Filter>algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\stdafx.cpp" />
+    <ClCompile Include="..\src\exchange\okex\okex_exchange.cpp">
+      <Filter>exchange\okex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\okex\okex_http_api.cpp">
+      <Filter>exchange\okex</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -209,6 +215,12 @@
     </ClInclude>
     <ClInclude Include="..\src\algorithm\hmac.h">
       <Filter>algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\okex\okex_exchange.h">
+      <Filter>exchange\okex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\okex\okex_http_api.h">
+      <Filter>exchange\okex</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

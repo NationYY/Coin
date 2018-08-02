@@ -1,10 +1,10 @@
 #pragma once
 #include "http_api/http_api.h"
-class CHuobiHadaxHttpAPI : public CHttpAPI
+class COkexHttpAPI : public CHttpAPI
 {
 public:
-	CHuobiHadaxHttpAPI(std::string strAPIKey, std::string strSecretKey);
-	~CHuobiHadaxHttpAPI();
+	COkexHttpAPI(std::string strAPIKey, std::string strSecretKey);
+	~COkexHttpAPI();
 	virtual void API_Balance() {};
 	virtual void API_Ticker(eMarketType type) {};
 	virtual void API_EntrustDepth(eMarketType type) {};

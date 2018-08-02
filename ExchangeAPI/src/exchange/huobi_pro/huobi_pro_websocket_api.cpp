@@ -22,6 +22,8 @@ void CHuobiProWebsocketAPI::Ping()
 
 void CHuobiProWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
 {
+	if(m_pExchange)
+		m_pExchange->GetDataCenter()->ClearAllEntrustDepth();
 	char szBuffer[512] = { 0 };
 	if(bAdd)
 		_snprintf(szBuffer, 512, "{\"sub\": \"market.%s.depth.step0\",\"id\" : \"id1\"}", m_pExchange->GetMarketString(type, false));

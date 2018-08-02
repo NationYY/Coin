@@ -107,7 +107,7 @@ END_MESSAGE_MAP()
 
 
 // CCoinDlg 消息处理程序
-void reference_websocket_callbak_open()
+void reference_websocket_callbak_open(const char* szExchangeName)
 {
 	g_pCoinDlg->AddLog("第三方参考行情连接成功!");
 	if(g_pCoinDlg->m_bIsRun)
@@ -115,16 +115,16 @@ void reference_websocket_callbak_open()
 		pReferenceExchange->GetWebSocket()->API_LatestExecutedOrder(g_pCoinDlg->m_marketType);
 	}
 }
-void reference_websocket_callbak_close()
+void reference_websocket_callbak_close(const char* szExchangeName)
 {
 	g_pCoinDlg->AddLog("第三方参考行情断开连接!");
 }
-void reference_websocket_callbak_fail()
+void reference_websocket_callbak_fail(const char* szExchangeName)
 {
 	g_pCoinDlg->AddLog("第三方参考行情连接失败!");
 }
 
-void local_websocket_callbak_open()
+void local_websocket_callbak_open(const char* szExchangeName)
 {
 	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA("高速行情(可用)");
 
@@ -138,12 +138,12 @@ void local_websocket_callbak_open()
 	}
 	//g_pCoinDlg->AddLog("行情连接成功!");
 }
-void local_websocket_callbak_close()
+void local_websocket_callbak_close(const char* szExchangeName)
 {
 	g_pCoinDlg->m_btnHightSpeed.SetWindowTextA("高速行情(连接中断, 重连中)");
 	//g_pCoinDlg->AddLog("行情断开连接!");
 }
-void local_websocket_callbak_fail()
+void local_websocket_callbak_fail(const char* szExchangeName)
 {
 	g_pCoinDlg->m_webSokectFailTimes++;
 	CString temp;
@@ -152,7 +152,7 @@ void local_websocket_callbak_fail()
 	//g_pCoinDlg->AddLog("行情连接失败!");
 }
 
-void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
+void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	switch(apiType)
 	{
@@ -166,7 +166,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& ret
 	OutputDebugString("\n");
 }
 
-void reference_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& retObj, const std::string& strRet)
+void reference_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	switch(apiType)
 	{

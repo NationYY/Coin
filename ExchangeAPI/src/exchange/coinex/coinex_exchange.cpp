@@ -19,7 +19,7 @@ CCoinexExchange::~CCoinexExchange()
 {
 }
 
-void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
+void CCoinexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	if(retObj["method"].isString() && retObj["method"].asString() == "deals.update")
 	{
@@ -28,7 +28,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 			double price = atof(retObj["params"][1][0]["price"].asString().c_str());
 			m_dataCenter.SetLatestExecutedOrderPrice(price);
 			if(m_webSocketCallbakMessage)
-				m_webSocketCallbakMessage(eWebsocketAPIType_LatestExecutedOrder, retObj, strRet);
+				m_webSocketCallbakMessage(eWebsocketAPIType_LatestExecutedOrder, szExchangeName, retObj, strRet);
 		}
 	}
 	else if(retObj["method"].isString() && retObj["method"].asString() == "depth.update")
@@ -41,7 +41,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 			m_dataCenter.ClearAllEntrustDepth();
 			if(price["bids"].isArray())
 			{
-				for(int i=0; i<price["bids"].size(); ++i)
+				for(int i=0; i<(int)price["bids"].size(); ++i)
 				{
 					std::string _price = price["bids"][i][0].asString();
 					std::string _volume = price["bids"][i][1].asString();
@@ -50,7 +50,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 			}
 			if(price["asks"].isArray())
 			{
-				for(int i = 0; i < price["asks"].size(); ++i)
+				for(int i=0; i <(int)price["asks"].size(); ++i)
 				{
 					std::string _price = price["asks"][i][0].asString();
 					std::string _volume = price["asks"][i][1].asString();
@@ -62,7 +62,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 		{
 			if(price["bids"].isArray())
 			{
-				for(int i = 0; i < price["bids"].size(); ++i)
+				for(int i=0; i<(int)price["bids"].size(); ++i)
 				{
 					std::string _price = price["bids"][i][0].asString();
 					std::string _volume = price["bids"][i][1].asString();
@@ -74,7 +74,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 			}
 			if(price["asks"].isArray())
 			{
-				for(int i = 0; i < price["asks"].size(); ++i)
+				for(int i=0; i<(int)price["asks"].size(); ++i)
 				{
 					std::string _price = price["asks"][i][0].asString();
 					std::string _volume = price["asks"][i][1].asString();
@@ -86,7 +86,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 			}
 		}
 		if(m_webSocketCallbakMessage)
-			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, retObj, strRet);
+			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
 	}
 }
 

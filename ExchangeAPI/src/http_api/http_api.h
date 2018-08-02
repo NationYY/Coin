@@ -20,6 +20,7 @@ public:
 	}
 	void SetContentType(std::string strContentType);
 	void Run(int threadNums);
+	void Close();
 	void Update();
 	void SetCallBakFunction(HTTP_CALLBACK_FUNCTION_TYPE func){
 		m_callBackFunc = func;
@@ -52,6 +53,8 @@ private:
 	std::string m_strContentType;
 	int m_threadNum;
 	CURL* m_pMainCurl;
+	bool m_bClose;
+	int m_nCloseThreadCnt;
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥

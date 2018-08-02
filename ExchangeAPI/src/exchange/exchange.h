@@ -26,17 +26,17 @@ public:
 	}
 	virtual void Run(bool openWebSokect = true, int normalHttpThreadCnt = 5, int tradeHttpThreadCnt = 10);
 	virtual void OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData);
-	virtual void OnWebsocketConnect();
-	virtual void OnWebsocketDisconnect();
-	virtual void OnWebsocketFailConnect();
-	virtual void OnWebsocketResponse(Json::Value& retObj, const std::string& strRet);
+	virtual void OnWebsocketConnect(const char* szExchangeName);
+	virtual void OnWebsocketDisconnect(const char* szExchangeName);
+	virtual void OnWebsocketFailConnect(const char* szExchangeName);
+	virtual void OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet);
 	CHttpAPI* GetHttp(){
 		return m_pHttpAPI;
 	}
 	CHttpAPI* GetTradeHttp(){
 		return m_pHttpTradeAPI;
 	}
-	CWebSocketAPI* GetWebSocket(){
+	CWebsocketAPI* GetWebSocket(){
 		return m_pWebSocketAPI;
 	}
 	CDataCenter* GetDataCenter(){
@@ -53,7 +53,7 @@ public:
 	}
 protected:
 	CDataCenter m_dataCenter;
-	CWebSocketAPI* m_pWebSocketAPI;
+	CWebsocketAPI* m_pWebSocketAPI;
 	CHttpAPI* m_pHttpAPI;
 	CHttpAPI* m_pHttpTradeAPI;
 	http_callbak_message m_httpCallbakMessage;

@@ -21,9 +21,9 @@ void CZbgExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const 
 	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
 }
 
-void CZbgExchange::OnWebsocketResponse(Json::Value& retObj, const std::string& strRet)
+void CZbgExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
-	CExchange::OnWebsocketResponse(retObj, strRet);
+	CExchange::OnWebsocketResponse(szExchangeName, retObj, strRet);
 }
 
 void CZbgExchange::Run(bool openWebSokect, int normalHttpThreadCnt, int tradeHttpThreadCnt)

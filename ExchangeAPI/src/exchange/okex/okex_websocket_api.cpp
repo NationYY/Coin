@@ -2,20 +2,27 @@
 #include "okex_websocket_api.h"
 
 
-COkexWebSocketAPI::COkexWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
+COkexWebsocketAPI::COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
 	SetURI("wss://real.okex.com:10441/websocket");
 }
 
 
-COkexWebSocketAPI::~COkexWebSocketAPI()
+COkexWebsocketAPI::~COkexWebsocketAPI()
 {
 }
 
-void COkexWebSocketAPI::API_sub_spot_ticker(const char* szTransactionType)
+void COkexWebsocketAPI::Ping()
 {
-	char szBuffer[128] = {0};
-	_snprintf(szBuffer, 128, "{'event':'addChannel','channel':'ok_sub_spot_%s_ticker'}", szTransactionType);
+	Request("{\"event\":\"ping\"}");
+}
+
+void COkexWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
+{
+	if(m_pExchange)
+		m_pExchange->GetDataCenter()->ClearAllEntrustDepth();
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"event\":\"%s\",\"channel\":\"ok_sub_spot_%s_depth\"}", (bAdd ? "addChannel" : "removeChannel"), m_pExchange->GetMarketString(type, false));
 	Request(szBuffer);
 }
