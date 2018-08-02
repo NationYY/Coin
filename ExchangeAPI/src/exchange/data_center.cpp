@@ -28,48 +28,48 @@ void CDataCenter::SetBuyAndSellPrice(double buyPrice, double sellPrice)
 	m_sellPrice = sellPrice;
 }
 
-void CDataCenter::UpdateBuyEntrustDepth(std::string strPrice, std::string strVolume, int serverTime)
+void CDataCenter::UpdateBuyEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime)
 {
 	m_mapBuyEntrustDepth[strPrice] = strVolume;
 	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::DelBuyEntrustDepth(std::string strPrice, int serverTime)
+void CDataCenter::DelBuyEntrustDepth(std::string& strPrice, int serverTime)
 {
 	m_mapBuyEntrustDepth.erase(strPrice);
 	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::UpdateSellEntrustDepth(std::string strPrice, std::string strVolume, int serverTime)
+void CDataCenter::UpdateSellEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime)
 {
 	m_mapSellEntrustDepth[strPrice] = strVolume;
 	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::DelSellEntrustDepth(std::string strPrice, int serverTime)
+void CDataCenter::DelSellEntrustDepth(std::string& strPrice, int serverTime)
 {
 	m_mapSellEntrustDepth.erase(strPrice);
 	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::AddTradeOrders(std::string orderID)
+void CDataCenter::AddTradeOrders(std::string& orderID)
 {
 	SOrderInfo info;
 	info.addTime = time(NULL);
 	m_mapTradeOrderID[orderID] = info;
 }
 
-void CDataCenter::DelTradeOrders(std::string orderID)
+void CDataCenter::DelTradeOrders(std::string& orderID)
 {
 	m_mapTradeOrderID.erase(orderID);
 }
 
-void CDataCenter::DeleteTradeOrder(std::string orderID)
+void CDataCenter::DeleteTradeOrder(std::string& orderID)
 {
 	m_mapTradeOrderID.erase(orderID);
 }
 
-void CDataCenter::FinishTradeOrder(std::string orderID, double price, double amount, __int64 date, std::string type)
+void CDataCenter::FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, std::string& type)
 {
 	if(m_mapTradeOrderID.find(orderID) != m_mapTradeOrderID.end())
 	{
@@ -85,7 +85,7 @@ void CDataCenter::FinishTradeOrder(std::string orderID, double price, double amo
 	}
 }
 
-void CDataCenter::UpdateTradeOrder(std::string orderID, __int64 date)
+void CDataCenter::UpdateTradeOrder(std::string& orderID, __int64 date)
 {
 	std::map<std::string, SOrderInfo>::iterator it = m_mapTradeOrderID.find(orderID);
 	if(it != m_mapTradeOrderID.end())

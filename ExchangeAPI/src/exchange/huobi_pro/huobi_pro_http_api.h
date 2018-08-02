@@ -1,13 +1,11 @@
 #pragma once
 #include "http_api/http_api.h"
-class CCoinexHttpAPI : public CHttpAPI
+class CHuobiProHttpAPI : public CHttpAPI
 {
 public:
-	CCoinexHttpAPI(std::string strAPIKey, std::string strSecretKey);
-	~CCoinexHttpAPI();
-	void API_market_list();
-	virtual void API_Balance();
-
+	CHuobiProHttpAPI(std::string strAPIKey, std::string strSecretKey);
+	~CHuobiProHttpAPI();
+	virtual void API_Balance() {};
 	virtual void API_Ticker(eMarketType type) {};
 	virtual void API_EntrustDepth(eMarketType type) {};
 	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData) {};

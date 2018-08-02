@@ -13,19 +13,5 @@ public:
 	//订阅最新成交的订单
 	virtual void API_LatestExecutedOrder(eMarketType type);
 	virtual void Ping();
-private:
-	const char* GetMarketString(eMarketType type)
-	{
-		switch(type)
-		{
-		case eMarketType_ETH_BTC:
-			return "ETHBTC";
-		case eMarketType_ETH_USDT:
-			return "ETHUSDT";
-		case eMarketType_BTC_USDT:
-			return "BTCUSDT";
-		}
-		return NULL;
-	}
 };
 

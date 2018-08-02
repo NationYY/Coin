@@ -7,6 +7,7 @@
 #include "InterExchangeSpreadDlg.h"
 #include "afxdialogex.h"
 #include "exchange/coinex/coinex_exchange.h"
+#include "exchange/huobi_pro/huobi_pro_exchange.h"
 #include <clib/lib/file/file_util.h>
 #include "websocket_callback_func.h"
 #ifdef _DEBUG
@@ -21,7 +22,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, Json::Value& ret
 	switch(apiType)
 	{
 	case eWebsocketAPIType_EntrustDepth:
-
+		g_pDlg->UpdateShowEntrustDepth();
 		break;
 	default:
 		break;
@@ -125,7 +126,15 @@ BOOL CInterExchangeSpreadDlg::OnInitDialog()
 	pCoinexExchange->SetWebSocketCallBackClose(coinex_websocket_callbak_close);
 	pCoinexExchange->SetWebSocketCallBackFail(coinex_websocket_callbak_fail);
 	pCoinexExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
-	pCoinexExchange->Run(true, 8, 8);
+	pCoinexExchange->Run(true, 5, 5);
+
+	CHuobiProExchange* pHuobiProExchange = new CHuobiProExchange(id, key);
+	g_listExchange.push_back(pHuobiProExchange);
+	pHuobiProExchange->SetWebSocketCallBackOpen(huobi_pro_websocket_callbak_open);
+	pHuobiProExchange->SetWebSocketCallBackClose(huobi_pro_websocket_callbak_close);
+	pHuobiProExchange->SetWebSocketCallBackFail(huobi_pro_websocket_callbak_fail);
+	pHuobiProExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pHuobiProExchange->Run(true, 5, 5);
 
 	// TODO:  在此添加额外的初始化代码
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
@@ -136,10 +145,14 @@ BOOL CInterExchangeSpreadDlg::OnInitDialog()
 	localLogger.SetBatchMode(true);
 	localLogger.SetLogPath(log_path.c_str());
 	localLogger.Start();
-
-	m_listCtrlEntrustDepth.InsertColumn(0, "交易所", LVCFMT_CENTER, 50);
-	m_listCtrlEntrustDepth.InsertColumn(1, "价", LVCFMT_CENTER, 100);
-	m_listCtrlEntrustDepth.InsertColumn(2, "量", LVCFMT_CENTER, 100);
+	m_listCtrlEntrustDepth.InsertColumn(0, "保留", LVCFMT_CENTER, 0);
+	m_listCtrlEntrustDepth.InsertColumn(1, "交易所", LVCFMT_CENTER, 70);
+	m_listCtrlEntrustDepth.InsertColumn(2, "买一量", LVCFMT_CENTER, 105);
+	m_listCtrlEntrustDepth.InsertColumn(3, "买一价", LVCFMT_CENTER, 105);
+	m_listCtrlEntrustDepth.InsertColumn(4, "卖一价", LVCFMT_CENTER, 105);
+	m_listCtrlEntrustDepth.InsertColumn(5, "卖一量", LVCFMT_CENTER, 105);
+	m_listCtrlEntrustDepth.InsertColumn(6, "take费率", LVCFMT_CENTER, 65);
+	m_listCtrlEntrustDepth.DeleteColumn(0);
 	m_listCtrlEntrustDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -235,7 +248,7 @@ void CInterExchangeSpreadDlg::AddLog(char* szLog, ...)
 	time_t tNow = time(NULL);
 	tm* pTM = localtime(&tNow);
 	char context[1100] = { 0 };
-	_snprintf(context, 1100, "%d:%d:%d ", pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
+	_snprintf(context, 1100, "%02d:%02d:%02d ", pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
 	char _context[1024] = { 0 };
 	va_list args;
 	int n;
@@ -268,15 +281,30 @@ void CInterExchangeSpreadDlg::UpdateShowEntrustDepth()
 	while(itB != itE)
 	{
 		m_listCtrlEntrustDepth.InsertItem(index, "");
-		szFormat.Format("%d", (*itB)->GetName());
+		szFormat.Format("%s", (*itB)->GetName());
 		m_listCtrlEntrustDepth.SetItemText(index, 0, szFormat);
 		std::map<std::string, std::string>& mapBuyEntrustDepth = (*itB)->GetDataCenter()->m_mapBuyEntrustDepth;
+		std::map<std::string, std::string>& mapSellEntrustDepth = (*itB)->GetDataCenter()->m_mapSellEntrustDepth;
 		if(mapBuyEntrustDepth.size())
 		{
 			std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
 			it--;
-			//m_listCtrlEntrustDepth.SetItemText(index, 1, szFormat);
+			szFormat.Format("%s", it->second.c_str());
+			m_listCtrlEntrustDepth.SetItemText(index, 1, szFormat);
+			szFormat.Format("%s", it->first.c_str());
+			m_listCtrlEntrustDepth.SetItemText(index, 2, szFormat);
 		}
+		if(mapSellEntrustDepth.size())
+		{
+			std::map<std::string, std::string>::iterator it = mapSellEntrustDepth.begin();
+			szFormat.Format("%s", it->first.c_str());
+			m_listCtrlEntrustDepth.SetItemText(index, 3, szFormat);
+			szFormat.Format("%s", it->second.c_str());
+			m_listCtrlEntrustDepth.SetItemText(index, 4, szFormat);
+		}
+		
+		szFormat.Format("%s%%", CFuncCommon::Double2String((*itB)->GetTakerRate()*100, 2).c_str());
+		m_listCtrlEntrustDepth.SetItemText(index, 5, szFormat);
 		++itB;
 	}
 

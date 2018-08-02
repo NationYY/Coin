@@ -23,9 +23,6 @@
     <Filter Include="exchange\okex">
       <UniqueIdentifier>{f1bb609e-ed24-4363-b253-cc3d8bb91e77}</UniqueIdentifier>
     </Filter>
-    <Filter Include="encrypt">
-      <UniqueIdentifier>{a17f2f8f-86ab-4f39-9673-2da911fde129}</UniqueIdentifier>
-    </Filter>
     <Filter Include="exchange\exx">
       <UniqueIdentifier>{4cf93577-4003-48b6-9830-8d7789acdf1d}</UniqueIdentifier>
     </Filter>
@@ -34,6 +31,15 @@
     </Filter>
     <Filter Include="log">
       <UniqueIdentifier>{f9db6cb1-cf7f-4e30-bfef-ee00d131e0e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exchange\huobi_pro">
+      <UniqueIdentifier>{d24443db-b835-4ab6-95d0-de8a4b712491}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exchange\huobi_hadax">
+      <UniqueIdentifier>{b0016cbc-7345-40fd-bbd1-7f9a5d404cb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="algorithm">
+      <UniqueIdentifier>{a17f2f8f-86ab-4f39-9673-2da911fde129}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -52,9 +58,6 @@
     </ClCompile>
     <ClCompile Include="..\src\websocket_api\websocket.cpp">
       <Filter>websocket_api</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\encrypt\hmac.cpp">
-      <Filter>encrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\src\exchange\data_center.cpp">
       <Filter>exchange</Filter>
@@ -92,6 +95,30 @@
     <ClCompile Include="..\src\log\local_log.cpp">
       <Filter>log</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\exchange\huobi_pro\huobi_pro_exchange.cpp">
+      <Filter>exchange\huobi_pro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\huobi_pro\huobi_pro_http_api.cpp">
+      <Filter>exchange\huobi_pro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\huobi_pro\huobi_pro_websocket_api.cpp">
+      <Filter>exchange\huobi_pro</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\huobi_hadax\huobi_hadax_exchange.cpp">
+      <Filter>exchange\huobi_hadax</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\huobi_hadax\huobi_hadax_http_api.cpp">
+      <Filter>exchange\huobi_hadax</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\huobi_hadax\huobi_hadax_websocket_api.cpp">
+      <Filter>exchange\huobi_hadax</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\algorithm\compress.cpp">
+      <Filter>algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\algorithm\hmac.cpp">
+      <Filter>algorithm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\stdafx.h" />
@@ -116,9 +143,6 @@
     </ClInclude>
     <ClInclude Include="..\src\exchange\exx\exx_http_api.h">
       <Filter>exchange\exx</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\encrypt\hmac.h">
-      <Filter>encrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\common\singleton.h">
       <Filter>common</Filter>
@@ -161,6 +185,30 @@
     </ClInclude>
     <ClInclude Include="..\src\log\local_log.h">
       <Filter>log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\huobi_pro\huobi_pro_exchange.h">
+      <Filter>exchange\huobi_pro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\huobi_pro\huobi_pro_http_api.h">
+      <Filter>exchange\huobi_pro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\huobi_pro\huobi_pro_websocket_api.h">
+      <Filter>exchange\huobi_pro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\huobi_hadax\huobi_hadax_exchange.h">
+      <Filter>exchange\huobi_hadax</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\huobi_hadax\huobi_hadax_http_api.h">
+      <Filter>exchange\huobi_hadax</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\huobi_hadax\huobi_hadax_websocket_api.h">
+      <Filter>exchange\huobi_hadax</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\algorithm\compress.h">
+      <Filter>algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\algorithm\hmac.h">
+      <Filter>algorithm</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

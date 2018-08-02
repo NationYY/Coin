@@ -82,10 +82,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;iconv.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;iconv.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='HighDebug|Win32'">
@@ -136,8 +138,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\algorithm\compress.cpp" />
+    <ClCompile Include="..\src\algorithm\hmac.cpp" />
     <ClCompile Include="..\src\common\func_common.cpp" />
-    <ClCompile Include="..\src\encrypt\hmac.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_exchange.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_websocket_api.cpp" />
@@ -146,6 +149,12 @@
     <ClCompile Include="..\src\exchange\exx\exx_exchange.cpp" />
     <ClCompile Include="..\src\exchange\exx\exx_http_api.cpp" />
     <ClCompile Include="..\src\exchange\exx\exx_websocket_api.cpp" />
+    <ClCompile Include="..\src\exchange\huobi_hadax\huobi_hadax_exchange.cpp" />
+    <ClCompile Include="..\src\exchange\huobi_hadax\huobi_hadax_http_api.cpp" />
+    <ClCompile Include="..\src\exchange\huobi_hadax\huobi_hadax_websocket_api.cpp" />
+    <ClCompile Include="..\src\exchange\huobi_pro\huobi_pro_exchange.cpp" />
+    <ClCompile Include="..\src\exchange\huobi_pro\huobi_pro_http_api.cpp" />
+    <ClCompile Include="..\src\exchange\huobi_pro\huobi_pro_websocket_api.cpp" />
     <ClCompile Include="..\src\exchange\okex\okex_websocket_api.cpp" />
     <ClCompile Include="..\src\exchange\zbg\zbg_exchange.cpp" />
     <ClCompile Include="..\src\exchange\zbg\zbg_http_api.cpp" />
@@ -161,11 +170,12 @@
     <ClCompile Include="..\src\websocket_api\websocket_api.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\algorithm\compress.h" />
+    <ClInclude Include="..\src\algorithm\hmac.h" />
     <ClInclude Include="..\src\common\api_common.h" />
     <ClInclude Include="..\src\common\func_common.h" />
     <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\common\thread_safe_queue.h" />
-    <ClInclude Include="..\src\encrypt\hmac.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_exchange.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_http_api.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_websocket_api.h" />
@@ -174,6 +184,12 @@
     <ClInclude Include="..\src\exchange\exx\exx_exchange.h" />
     <ClInclude Include="..\src\exchange\exx\exx_http_api.h" />
     <ClInclude Include="..\src\exchange\exx\exx_websocket_api.h" />
+    <ClInclude Include="..\src\exchange\huobi_hadax\huobi_hadax_exchange.h" />
+    <ClInclude Include="..\src\exchange\huobi_hadax\huobi_hadax_http_api.h" />
+    <ClInclude Include="..\src\exchange\huobi_hadax\huobi_hadax_websocket_api.h" />
+    <ClInclude Include="..\src\exchange\huobi_pro\huobi_pro_exchange.h" />
+    <ClInclude Include="..\src\exchange\huobi_pro\huobi_pro_http_api.h" />
+    <ClInclude Include="..\src\exchange\huobi_pro\huobi_pro_websocket_api.h" />
     <ClInclude Include="..\src\exchange\okex\okex_websocket_api.h" />
     <ClInclude Include="..\src\exchange\zbg\zbg_exchange.h" />
     <ClInclude Include="..\src\exchange\zbg\zbg_http_api.h" />

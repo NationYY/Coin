@@ -57,6 +57,7 @@ private:
 	CONNECTION_STATE m_con_state;
 	class CWebSocketAPI* m_pWebSocketAPI;
 	bool m_bUTF8;
+	bool m_bGZIP;
 public:
 	bool m_manual_close;//是否为主动关闭连接，如果不是用户主动关闭，当接到断开联接回调时则自动执行重新连接机制。
     typedef WebSocket type;
@@ -65,7 +66,8 @@ public:
 	m_manual_close(false),
 	m_con_state(CONNECTION_STATE_UNKONWN),
 	m_pWebSocketAPI(NULL),
-	m_bUTF8(false)
+	m_bUTF8(false),
+	m_bGZIP(false)
 	{
 		
         m_endpoint.set_access_channels(websocketpp::log::alevel::all);
@@ -153,6 +155,10 @@ public:
 
 	void set_utf8(bool bValue){
 		m_bUTF8 = bValue;
+	}
+
+	void set_gzip(bool bValue){
+		m_bGZIP = bValue;
 	}
 };
 

@@ -7,7 +7,7 @@ CCoinexExchange::CCoinexExchange(std::string strAPIKey, std::string strSecretKey
 {
 	m_pWebSocketAPI = new CCoinexWebSocketAPI(strAPIKey, strSecretKey);
 	m_pWebSocketAPI->SetExchange(this);
-	m_pHttpAPI = new CCoinexHttpAPI(strAPIKey, strSecretKey, "");
+	m_pHttpAPI = new CCoinexHttpAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI->SetExchange(this);
 	m_listSupportMarket.push_back(eMarketType_ETH_BTC);
 	m_listSupportMarket.push_back(eMarketType_ETH_USDT);
@@ -45,7 +45,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 				{
 					std::string _price = price["bids"][i][0].asString();
 					std::string _volume = price["bids"][i][1].asString();
-					m_dataCenter.UpdateBuyEntrustDepth(_price, _volume, time(NULL));
+					m_dataCenter.UpdateBuyEntrustDepth(_price, _volume, (int)time(NULL));
 				}
 			}
 			if(price["asks"].isArray())
@@ -54,7 +54,7 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 				{
 					std::string _price = price["asks"][i][0].asString();
 					std::string _volume = price["asks"][i][1].asString();
-					m_dataCenter.UpdateSellEntrustDepth(_price, _volume, time(NULL));
+					m_dataCenter.UpdateSellEntrustDepth(_price, _volume, (int)time(NULL));
 				}
 			}
 		}
@@ -66,7 +66,10 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 				{
 					std::string _price = price["bids"][i][0].asString();
 					std::string _volume = price["bids"][i][1].asString();
-					m_dataCenter.UpdateBuyEntrustDepth(_price, _volume, time(NULL));
+					if(_volume == "0")
+						m_dataCenter.DelBuyEntrustDepth(_price, (int)time(NULL));
+					else
+						m_dataCenter.UpdateBuyEntrustDepth(_price, _volume, (int)time(NULL));
 				}
 			}
 			if(price["asks"].isArray())
@@ -75,7 +78,10 @@ void CCoinexExchange::OnWebsocketResponse(Json::Value& retObj, const std::string
 				{
 					std::string _price = price["asks"][i][0].asString();
 					std::string _volume = price["asks"][i][1].asString();
-					m_dataCenter.UpdateSellEntrustDepth(_price, _volume, time(NULL));
+					if(_volume == "0")
+						m_dataCenter.DelSellEntrustDepth(_price, (int)time(NULL));
+					else
+						m_dataCenter.UpdateSellEntrustDepth(_price, _volume, (int)time(NULL));
 				}
 			}
 		}

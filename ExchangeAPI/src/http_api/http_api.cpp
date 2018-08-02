@@ -3,7 +3,7 @@
 #include "clib/lib/clib.h"
 #include "clib/lib/memory_manager/memory_allocator.h"
 #include "clib/lib/math/math_ex.h"
-#include "encrypt/hmac.h"
+#include "algorithm/hmac.h"
 #include "common/func_common.h"
 #include <time.h>
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)

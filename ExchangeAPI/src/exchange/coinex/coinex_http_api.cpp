@@ -2,10 +2,9 @@
 #include "coinex_http_api.h"
 #include "exchange/exchange.h"
 
-CCoinexHttpAPI::CCoinexHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strContentType)
+CCoinexHttpAPI::CCoinexHttpAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
-	SetContentType(strContentType);
 	SetURL("https://api.coinex.com/v1");
 }
 

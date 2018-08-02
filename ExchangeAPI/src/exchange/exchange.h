@@ -48,6 +48,9 @@ public:
 	virtual const char* GetMarketString(eMarketType type, bool bHttp){
 		return "";
 	}
+	virtual double GetTakerRate(){
+		return 0;
+	}
 protected:
 	CDataCenter m_dataCenter;
 	CWebSocketAPI* m_pWebSocketAPI;

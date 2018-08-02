@@ -2,24 +2,33 @@
 #include "websocket.h"
 #include "websocket_api.h"
 #include "common/func_common.h"
+#include "algorithm/compress.h"
 void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 {
 	Json::Value retObj;
 	Json::Reader reader;
+	char szRet[8192] = { 0 };
+	int __size = msg->get_payload().size();
+	memcpy(szRet, msg->get_payload().c_str(), __size);
+	if(m_bGZIP)
+	{
+		unsigned char szOut[8192] = {0};
+		int outSize = 8192;
+		if(GZlibDecompress((unsigned char*)szRet, __size, szOut, &outSize))
+		{
+			memset(szRet, 0, sizeof(szRet));
+			strcpy(szRet, (const char*)szOut);
+		}
+	}
 	if(m_bUTF8)
 	{
-		char szRet[4096] = { 0 };
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)msg->get_payload().c_str(), msg->get_payload().length(), szRet, 4096);
-		reader.parse(szRet, retObj);
-		if(m_pWebSocketAPI)
-			m_pWebSocketAPI->PushRet(2, retObj, szRet);
+		char _szRet[4096] = { 0 };
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", szRet, strlen(szRet), _szRet, 4096);
+		strcpy(szRet, _szRet);
 	}
-	else
-	{
-		reader.parse(msg->get_payload().c_str(), retObj);
-		if(m_pWebSocketAPI)
-			m_pWebSocketAPI->PushRet(2, retObj, msg->get_payload().c_str());
-	}
+	reader.parse(szRet, retObj);
+	if(m_pWebSocketAPI)
+		m_pWebSocketAPI->PushRet(2, retObj, szRet);
 }
 
 void WebSocket::on_open(websocketpp::connection_hdl hdl)

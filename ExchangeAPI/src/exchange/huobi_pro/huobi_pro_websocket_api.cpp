@@ -1,0 +1,29 @@
+#include "stdafx.h"
+#include "huobi_pro_websocket_api.h"
+
+
+CHuobiProWebsocketAPI::CHuobiProWebsocketAPI(std::string strAPIKey, std::string strSecretKey)
+{
+	SetKey(strAPIKey, strSecretKey);
+	SetURI("wss://api.huobi.com/ws");
+}
+
+
+CHuobiProWebsocketAPI::~CHuobiProWebsocketAPI()
+{
+}
+
+void CHuobiProWebsocketAPI::Ping()
+{
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"ping\": %lld}", time(NULL)*1000);
+	Request(szBuffer);
+}
+
+void CHuobiProWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
+{
+	char szBuffer[512] = { 0 };
+	if(bAdd)
+		_snprintf(szBuffer, 512, "{\"sub\": \"market.%s.depth.step0\",\"id\" : \"id1\"}", m_pExchange->GetMarketString(type, false));
+	Request(szBuffer);
+}

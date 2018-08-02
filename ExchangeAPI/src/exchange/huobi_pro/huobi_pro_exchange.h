@@ -1,12 +1,12 @@
 #pragma once
 #include "exchange/exchange.h"
-class CCoinexExchange : public CExchange
+class CHuobiProExchange : public CExchange
 {
 public:
-	CCoinexExchange(std::string strAPIKey, std::string strSecretKey);
-	~CCoinexExchange();
+	CHuobiProExchange(std::string strAPIKey, std::string strSecretKey);
+	~CHuobiProExchange();
 	virtual const char* GetName(){
-		return "Coinex";
+		return "HuobiPro";
 	}
 	virtual double GetTakerRate(){
 		return 0.001;
@@ -18,14 +18,13 @@ public:
 		switch(type)
 		{
 			case eMarketType_ETH_BTC:
-				return "ETHBTC";
+				return "ethbtc";
 			case eMarketType_ETH_USDT:
-				return "ETHUSDT";
+				return "ethusdt";
 			case eMarketType_BTC_USDT:
-				return "BTCUSDT";
+				return "btcusdt";
 		}
 		return NULL;
 	}
-private:
 };
 

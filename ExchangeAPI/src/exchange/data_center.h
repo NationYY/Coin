@@ -10,15 +10,15 @@ public:
 	}
 	void SetBalance(const char* szCoinName, double total, double freeze, double balance);
 	void SetBuyAndSellPrice(double buyPrice, double sellPrice);
-	void UpdateBuyEntrustDepth(std::string strPrice, std::string strVolume, int serverTime);
-	void DelBuyEntrustDepth(std::string strPrice, int serverTime);
-	void UpdateSellEntrustDepth(std::string strPrice, std::string strVolume, int serverTime);
-	void DelSellEntrustDepth(std::string strPrice, int serverTime);
-	void AddTradeOrders(std::string orderID);
-	void DelTradeOrders(std::string orderID);
-	void DeleteTradeOrder(std::string orderID);
-	void UpdateTradeOrder(std::string orderID, __int64 date);
-	void FinishTradeOrder(std::string orderID, double price, double amount, __int64 date, std::string type);
+	void UpdateBuyEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime);
+	void DelBuyEntrustDepth(std::string& strPrice, int serverTime);
+	void UpdateSellEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime);
+	void DelSellEntrustDepth(std::string& strPrice, int serverTime);
+	void AddTradeOrders(std::string& orderID);
+	void DelTradeOrders(std::string& orderID);
+	void DeleteTradeOrder(std::string& orderID);
+	void UpdateTradeOrder(std::string& orderID, __int64 date);
+	void FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, std::string& type);
 	void SetLatestExecutedOrderPrice(double price){
 		m_latestExecutedOrderPrice = price;
 	}

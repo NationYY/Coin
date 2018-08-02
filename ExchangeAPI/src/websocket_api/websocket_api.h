@@ -25,6 +25,12 @@ public:
 	bool GetIsUTF8(){
 		return m_bUTF8;
 	}
+	void SetGZIP(bool bValue){
+		m_bGZIP = bValue;
+	}
+	bool GetGZIP(){
+		return m_bGZIP;
+	}
 	void CWebSocketAPI::SetCallBackOpen(WEBSOCKET_OPEN_FUNCTION_TYPE func){
 		m_openFunc = func;
 	}
@@ -68,6 +74,7 @@ protected:
 	WEBSOCKET_FAIL_FUNCTION_TYPE m_failFunc;
 	bool m_bConnect;
 	bool m_bUTF8;
+	bool m_bGZIP; 
 	CExchange* m_pExchange;
 };
 
