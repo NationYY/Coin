@@ -54,3 +54,6 @@ InterExchangeSpread/proj_win/Debug/
 InterExchangeSpread/proj_win/HighDebug/
 *.ipch
 *.suo
+proj_win/Debug/
+proj_win/Release/
+proj_win/HighDebug/
