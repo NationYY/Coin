@@ -559,11 +559,13 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			if(tNow - m_tLastGetEntrustDepth > offset)
 				return;
 			CDataCenter* pDataCenter = pExchange->GetDataCenter();
-			if(pDataCenter && pDataCenter->m_mapBuyEntrustDepth.size() && pDataCenter->m_mapSellEntrustDepth.size())
+			std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth[""].mapBuyEntrustDepth;
+			std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth[""].mapSellEntrustDepth;
+			if(pDataCenter && mapBuyEntrustDepth.size() && mapSellEntrustDepth.size())
 			{
 				double buyPrice, sellPrice;
-				sellPrice = atof(pDataCenter->m_mapSellEntrustDepth.begin()->first.c_str());
-				std::map<std::string, std::string>::iterator it = pDataCenter->m_mapBuyEntrustDepth.end();
+				sellPrice = atof(mapSellEntrustDepth.begin()->first.c_str());
+				std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
 				it--;
 				buyPrice = atof(it->first.c_str());
 				double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice;
@@ -683,13 +685,16 @@ void CCoinDlg::UpdateEntrustDepth()
 	const int showLines = 5;
 	m_listCtrlEntrustDepth.DeleteAllItems();
 	CDataCenter* pDataCenter = pExchange->GetDataCenter();
-	int sellLine = min(pDataCenter->m_mapSellEntrustDepth.size(), showLines);
+	std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth[""].mapBuyEntrustDepth;
+	std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth[""].mapSellEntrustDepth;
+
+	int sellLine = min(mapSellEntrustDepth.size(), showLines);
 	for(int i = 0; i < sellLine; ++i)
 	{
 		m_listCtrlEntrustDepth.InsertItem(i, "");
 	}
-	std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapSellEntrustDepth.begin();
-	std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapSellEntrustDepth.end();
+	std::map<std::string, std::string>::iterator itB = mapSellEntrustDepth.begin();
+	std::map<std::string, std::string>::iterator itE = mapSellEntrustDepth.end();
 	CString szFormat;
 	int count = 0;
 	while(itB != itE)
@@ -708,15 +713,15 @@ void CCoinDlg::UpdateEntrustDepth()
 	m_listCtrlEntrustDepth.SetItemText(sellLine, 0, "---");
 	m_listCtrlEntrustDepth.SetItemText(sellLine, 1, "-------------");
 	m_listCtrlEntrustDepth.SetItemText(sellLine, 2, "-------------");
-	int buyLine = min(pDataCenter->m_mapBuyEntrustDepth.size(), showLines);
+	int buyLine = min(mapBuyEntrustDepth.size(), showLines);
 	for(int i = 0; i < sellLine; ++i)
 	{
 		m_listCtrlEntrustDepth.InsertItem(sellLine+1+i, "");
 	}
 	if(buyLine > 0)
 	{
-		std::map<std::string, std::string>::iterator itB = pDataCenter->m_mapBuyEntrustDepth.begin();
-		std::map<std::string, std::string>::iterator itE = pDataCenter->m_mapBuyEntrustDepth.end();
+		std::map<std::string, std::string>::iterator itB = mapBuyEntrustDepth.begin();
+		std::map<std::string, std::string>::iterator itE = mapBuyEntrustDepth.end();
 		CString _szFormat;
 		int count = 0;
 		itE--;

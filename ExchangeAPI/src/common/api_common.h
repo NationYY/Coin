@@ -24,6 +24,8 @@ enum eMarketType
 	eMarketType_ETH_BTC,
 	eMarketType_ETH_USDT,
 	eMarketType_BTC_USDT,
+	eMarketType_BWB_USDT,
+	eMarketType_BWB_BTC,
 	eMarketType_Max,
 };
 

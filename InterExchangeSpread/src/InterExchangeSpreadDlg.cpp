@@ -295,8 +295,8 @@ void CInterExchangeSpreadDlg::UpdateShowEntrustDepth()
 		m_listCtrlEntrustDepth.InsertItem(index, "");
 		szFormat.Format("%s", (*itB)->GetName());
 		m_listCtrlEntrustDepth.SetItemText(index, 0, szFormat);
-		std::map<std::string, std::string>& mapBuyEntrustDepth = (*itB)->GetDataCenter()->m_mapBuyEntrustDepth;
-		std::map<std::string, std::string>& mapSellEntrustDepth = (*itB)->GetDataCenter()->m_mapSellEntrustDepth;
+		std::map<std::string, std::string>& mapBuyEntrustDepth = (*itB)->GetDataCenter()->m_mapEntrustDepth[""].mapBuyEntrustDepth;
+		std::map<std::string, std::string>& mapSellEntrustDepth = (*itB)->GetDataCenter()->m_mapEntrustDepth[""].mapSellEntrustDepth;
 		if(mapBuyEntrustDepth.size())
 		{
 			std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();

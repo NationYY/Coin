@@ -10,10 +10,10 @@ public:
 	}
 	void SetBalance(const char* szCoinName, double total, double freeze, double balance);
 	void SetBuyAndSellPrice(double buyPrice, double sellPrice);
-	void UpdateBuyEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime);
-	void DelBuyEntrustDepth(std::string& strPrice, int serverTime);
-	void UpdateSellEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime);
-	void DelSellEntrustDepth(std::string& strPrice, int serverTime);
+	void UpdateBuyEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime, std::string marketName = "");
+	void DelBuyEntrustDepth(std::string& strPrice, int serverTime, std::string marketName = "");
+	void UpdateSellEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime, std::string marketName = "");
+	void DelSellEntrustDepth(std::string& strPrice, int serverTime, std::string marketName = "");
 	void AddTradeOrders(std::string& orderID);
 	void DelTradeOrders(std::string& orderID);
 	void DeleteTradeOrder(std::string& orderID);
@@ -22,14 +22,18 @@ public:
 	void SetLatestExecutedOrderPrice(double price){
 		m_latestExecutedOrderPrice = price;
 	}
-	void ClearAllEntrustDepth(){
-		m_mapBuyEntrustDepth.clear();
-		m_mapSellEntrustDepth.clear();
+	void ClearAllEntrustDepth(std::string marketName = ""){
+		m_mapEntrustDepth[marketName].mapBuyEntrustDepth.clear();
+		m_mapEntrustDepth[marketName].mapSellEntrustDepth.clear();
 	}
 public:
+	struct SEntrustDepthInfo
+	{
+		std::map<std::string, std::string> mapBuyEntrustDepth;
+		std::map<std::string, std::string> mapSellEntrustDepth;
+	};
 	std::map<std::string, SBalanceInfo> m_mapBalanceInfo;
-	std::map<std::string, std::string> m_mapBuyEntrustDepth;
-	std::map<std::string, std::string> m_mapSellEntrustDepth;
+	std::map<std::string, SEntrustDepthInfo> m_mapEntrustDepth;
 	struct SOrderInfo
 	{
 		time_t addTime;

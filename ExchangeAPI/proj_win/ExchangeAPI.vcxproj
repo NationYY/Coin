@@ -141,6 +141,9 @@
     <ClCompile Include="..\src\algorithm\compress.cpp" />
     <ClCompile Include="..\src\algorithm\hmac.cpp" />
     <ClCompile Include="..\src\common\func_common.cpp" />
+    <ClCompile Include="..\src\exchange\bw\bw_exchange.cpp" />
+    <ClCompile Include="..\src\exchange\bw\bw_http_api.cpp" />
+    <ClCompile Include="..\src\exchange\bw\bw_websocket_api.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_exchange.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp" />
     <ClCompile Include="..\src\exchange\coinex\coinex_websocket_api.cpp" />
@@ -176,6 +179,9 @@
     <ClInclude Include="..\src\common\func_common.h" />
     <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\common\thread_safe_queue.h" />
+    <ClInclude Include="..\src\exchange\bw\bw_exchange.h" />
+    <ClInclude Include="..\src\exchange\bw\bw_http_api.h" />
+    <ClInclude Include="..\src\exchange\bw\bw_websocket_api.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_exchange.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_http_api.h" />
     <ClInclude Include="..\src\exchange\coinex\coinex_websocket_api.h" />

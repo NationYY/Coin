@@ -41,6 +41,9 @@
     <Filter Include="algorithm">
       <UniqueIdentifier>{a17f2f8f-86ab-4f39-9673-2da911fde129}</UniqueIdentifier>
     </Filter>
+    <Filter Include="exchange\bw">
+      <UniqueIdentifier>{274023c2-f157-4391-a95e-eaea89da8c43}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\exchange\coinex\coinex_http_api.cpp">
@@ -124,6 +127,15 @@
     </ClCompile>
     <ClCompile Include="..\src\exchange\okex\okex_http_api.cpp">
       <Filter>exchange\okex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\bw\bw_exchange.cpp">
+      <Filter>exchange\bw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\bw\bw_http_api.cpp">
+      <Filter>exchange\bw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\bw\bw_websocket_api.cpp">
+      <Filter>exchange\bw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +233,15 @@
     </ClInclude>
     <ClInclude Include="..\src\exchange\okex\okex_http_api.h">
       <Filter>exchange\okex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\bw\bw_exchange.h">
+      <Filter>exchange\bw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\bw\bw_http_api.h">
+      <Filter>exchange\bw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\bw\bw_websocket_api.h">
+      <Filter>exchange\bw</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
