@@ -568,8 +568,8 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
 				it--;
 				buyPrice = atof(it->first.c_str());
-				double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice;
-				if(buyPrice < sellPrice && pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice > 0)
+				double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_mapLatestExecutedOrderPrice[""];
+				if(buyPrice < sellPrice && latestExecutedOrderPrice > 0)
 				{
 					bool bPass = true;
 					if(buyPrice < latestExecutedOrderPrice && sellPrice > latestExecutedOrderPrice)
@@ -748,7 +748,7 @@ void CCoinDlg::UpdateEntrustDepth()
 		}
 	}
 	tm* pTM = localtime(&pDataCenter->m_updateEntrustDepthTime);
-	std::string price = CFuncCommon::Double2String(pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice, m_tradePriceDecimal);
+	std::string price = CFuncCommon::Double2String(pReferenceExchange->GetDataCenter()->m_mapLatestExecutedOrderPrice[""], m_tradePriceDecimal);
 	szFormat.Format("更新时间: %d:%d:%d 最新价格:%s", pTM->tm_hour, pTM->tm_min, pTM->tm_sec, price.c_str());
 	m_staticUpdateTime.SetWindowTextA(szFormat.GetBuffer());
 }
@@ -758,7 +758,7 @@ void CCoinDlg::UpdateExecutedOrderPrice()
 	CString szFormat;
 	CDataCenter* pDataCenter = pExchange->GetDataCenter();
 	tm* pTM = localtime(&pDataCenter->m_updateEntrustDepthTime);
-	std::string price = CFuncCommon::Double2String(pReferenceExchange->GetDataCenter()->m_latestExecutedOrderPrice, m_tradePriceDecimal);
+	std::string price = CFuncCommon::Double2String(pReferenceExchange->GetDataCenter()->m_mapLatestExecutedOrderPrice[""], m_tradePriceDecimal);
 	szFormat.Format("更新时间: %d:%d:%d 最新价格:%s", pTM->tm_hour, pTM->tm_min, pTM->tm_sec, price.c_str());
 	m_staticUpdateTime.SetWindowTextA(szFormat.GetBuffer());
 }

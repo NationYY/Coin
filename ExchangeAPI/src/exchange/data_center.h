@@ -19,8 +19,8 @@ public:
 	void DeleteTradeOrder(std::string& orderID);
 	void UpdateTradeOrder(std::string& orderID, __int64 date);
 	void FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, std::string& type);
-	void SetLatestExecutedOrderPrice(double price){
-		m_latestExecutedOrderPrice = price;
+	void SetLatestExecutedOrderPrice(double price, std::string marketName = ""){
+		m_mapLatestExecutedOrderPrice[marketName] = price;
 	}
 	void ClearAllEntrustDepth(std::string marketName = ""){
 		m_mapEntrustDepth[marketName].mapBuyEntrustDepth.clear();
@@ -60,5 +60,5 @@ public:
 	double m_sellPrice;
 	time_t m_updateEntrustDepthTime;
 	int m_orderCheckIndex;
-	double m_latestExecutedOrderPrice;
+	std::map<std::string, double> m_mapLatestExecutedOrderPrice;
 };

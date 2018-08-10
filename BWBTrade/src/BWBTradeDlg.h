@@ -49,4 +49,12 @@ public:
 	afx_msg void OnBnClickedBegin();
 	CListCtrl m_listCtrlBwbUsdt;
 	CListCtrl m_listCtrlBwbBtc;
+	double m_bwbUsdtBuyPrice;
+	double m_bwbUsdtSellPrice;
+	double m_bwbUsdtWatchBuyPrice;
+	double m_bwbUsdtWatchSellPrice;
+	double m_bwbBtcWatchBuyPrice;
+	double m_bwbBtcWatchSellPrice;
+	double m_bwbBtcBuyPrice;
+	double m_bwbBtcSellPrice;
 };

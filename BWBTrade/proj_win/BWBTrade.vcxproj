@@ -139,4 +139,7 @@
       <UserProperties RESOURCE_FILE="BWBTrade.rc" />
     </VisualStudio>
   </ProjectExtensions>
+  <PropertyGroup>
+    <TrackFileAccess>false</TrackFileAccess>
+  </PropertyGroup>
 </Project>

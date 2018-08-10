@@ -89,6 +89,26 @@ void CBWExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& r
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
 	}
+	else if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && retObj[0][0].asString() == "T")
+	{
+		std::string marketName = "";
+		if(retObj[0][3].isString())
+			marketName = retObj[0][3].asString();
+		double price = atof(retObj[0][5].asString().c_str());
+		m_dataCenter.SetLatestExecutedOrderPrice(price, marketName);
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_LatestExecutedOrder, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isArray() && retObj[0].isString() && retObj[0].asString() == "T")
+	{
+		std::string marketName = "";
+		if(retObj[3].isString())
+			marketName = retObj[3].asString();
+		double price = atof(retObj[5].asString().c_str());
+		m_dataCenter.SetLatestExecutedOrderPrice(price, marketName);
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_LatestExecutedOrder, szExchangeName, retObj, strRet);
+	}
 }
 
 void CBWExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)

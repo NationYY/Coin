@@ -26,6 +26,10 @@ void local_websocket_callbak_open(const char* szExchangeName)
 			g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_BTC, 5, true);
 		if(g_pExchange->GetWebSocket())
 			g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_USDT, 5, true);
+		if(g_pExchange->GetWebSocket())
+			g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_BTC);
+		if(g_pExchange->GetWebSocket())
+			g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_USDT);
 	}
 	g_pBWBTradeDlg->AddLog("行情连接成功!");
 }
@@ -43,6 +47,9 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 	switch(apiType)
 	{
 	case eWebsocketAPIType_EntrustDepth:
+		g_pBWBTradeDlg->UpdateEntrustDepth();
+		break;
+	case eWebsocketAPIType_LatestExecutedOrder:
 		g_pBWBTradeDlg->UpdateEntrustDepth();
 		break;
 	}
@@ -86,6 +93,14 @@ END_MESSAGE_MAP()
 
 CBWBTradeDlg::CBWBTradeDlg(CWnd* pParent /*=NULL*/)
 : CDialogEx(CBWBTradeDlg::IDD, pParent), m_bIsRun(false)
+, m_bwbUsdtBuyPrice(0)
+, m_bwbUsdtSellPrice(0)
+, m_bwbUsdtWatchSellPrice(0)
+, m_bwbBtcWatchBuyPrice(0)
+, m_bwbBtcWatchSellPrice(0)
+, m_bwbBtcBuyPrice(0)
+, m_bwbBtcSellPrice(0)
+, m_bwbUsdtWatchBuyPrice(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	g_pBWBTradeDlg = this;
@@ -97,6 +112,14 @@ void CBWBTradeDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST1, m_listLog);
 	DDX_Control(pDX, IDC_LIST3, m_listCtrlBwbUsdt);
 	DDX_Control(pDX, IDC_LIST2, m_listCtrlBwbBtc);
+	DDX_Text(pDX, IDC_EDIT1, m_bwbUsdtBuyPrice);
+	DDX_Text(pDX, IDC_EDIT2, m_bwbUsdtSellPrice);
+	DDX_Text(pDX, IDC_EDIT3, m_bwbUsdtWatchBuyPrice);
+	DDX_Text(pDX, IDC_EDIT4, m_bwbUsdtWatchSellPrice);
+	DDX_Text(pDX, IDC_EDIT7, m_bwbBtcWatchBuyPrice);
+	DDX_Text(pDX, IDC_EDIT8, m_bwbBtcWatchSellPrice);
+	DDX_Text(pDX, IDC_EDIT5, m_bwbBtcBuyPrice);
+	DDX_Text(pDX, IDC_EDIT6, m_bwbBtcSellPrice);
 }
 
 BEGIN_MESSAGE_MAP(CBWBTradeDlg, CDialogEx)
@@ -292,9 +315,10 @@ void CBWBTradeDlg::UpdateEntrustDepth()
 				break;
 			++itB;
 		}
+		double lastPrice = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_USDT"];
 		m_listCtrlBwbUsdt.InsertItem(sellLine, "");
 		m_listCtrlBwbUsdt.SetItemText(sellLine, 0, "---");
-		m_listCtrlBwbUsdt.SetItemText(sellLine, 1, "-------------");
+		m_listCtrlBwbUsdt.SetItemText(sellLine, 1, CFuncCommon::Double2String(lastPrice, 4).c_str());
 		m_listCtrlBwbUsdt.SetItemText(sellLine, 2, "-------------");
 		int buyLine = min(mapBuyEntrustDepth.size(), showLines);
 		for(int i = 0; i < sellLine; ++i)
@@ -356,9 +380,10 @@ void CBWBTradeDlg::UpdateEntrustDepth()
 				break;
 			++itB;
 		}
+		double lastPrice = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_BTC"];
 		m_listCtrlBwbBtc.InsertItem(sellLine, "");
 		m_listCtrlBwbBtc.SetItemText(sellLine, 0, "---");
-		m_listCtrlBwbBtc.SetItemText(sellLine, 1, "-------------");
+		m_listCtrlBwbBtc.SetItemText(sellLine, 1, CFuncCommon::Double2String(lastPrice, 4).c_str());
 		m_listCtrlBwbBtc.SetItemText(sellLine, 2, "-------------");
 		int buyLine = min(mapBuyEntrustDepth.size(), showLines);
 		for(int i = 0; i < sellLine; ++i)
@@ -399,9 +424,34 @@ void CBWBTradeDlg::UpdateEntrustDepth()
 
 void CBWBTradeDlg::OnBnClickedBegin()
 {
+	UpdateData(TRUE);
+	if(CFuncCommon::CheckEqual(m_bwbUsdtBuyPrice, 0))
+	{
+		AfxMessageBox("请输入BWB/USDT购买价格");
+		return;
+	}
+	if(CFuncCommon::CheckEqual(m_bwbUsdtSellPrice, 0))
+	{
+		AfxMessageBox("请输入BWB/USDT出售价格");
+		return;
+	}
+	if(CFuncCommon::CheckEqual(m_bwbBtcBuyPrice, 0))
+	{
+		AfxMessageBox("请输入BWB/BTC购买价格");
+		return;
+	}
+	if(CFuncCommon::CheckEqual(m_bwbBtcSellPrice, 0))
+	{
+		AfxMessageBox("请输入BWB/BTC出售价格");
+		return;
+	}
 	m_bIsRun = true;
 	if(g_pExchange->GetWebSocket())
 		g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_BTC, 5, true);
 	if(g_pExchange->GetWebSocket())
 		g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_USDT, 5, true);
+	if(g_pExchange->GetWebSocket())
+		g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_BTC);
+	if(g_pExchange->GetWebSocket())
+		g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_USDT);
 }

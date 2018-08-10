@@ -2,8 +2,7 @@
 #include "data_center.h"
 #include <time.h>
 
-CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0), m_orderCheckIndex(1), m_bJustUpdateFinishOrder(false),
-m_latestExecutedOrderPrice(0)
+CDataCenter::CDataCenter() : m_updateEntrustDepthTime(0), m_orderCheckIndex(1), m_bJustUpdateFinishOrder(false)
 {
 }
 

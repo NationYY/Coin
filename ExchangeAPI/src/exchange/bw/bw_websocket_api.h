@@ -8,7 +8,7 @@ public:
 public:
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
 	//订阅最新成交的订单
-	virtual void API_LatestExecutedOrder(eMarketType type){};
+	virtual void API_LatestExecutedOrder(eMarketType type);
 	virtual void Ping(){};
 };
 

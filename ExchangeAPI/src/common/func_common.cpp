@@ -34,3 +34,8 @@ std::string CFuncCommon::Double2String(double value, int decimal)
 	ss << std::setprecision(decimal) << value;
 	return ss.str();
 }
+
+bool CFuncCommon::CheckEqual(double a, double b)
+{
+	return (fabs(a - b) < 0.000001) ? true : false;
+}
