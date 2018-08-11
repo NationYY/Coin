@@ -18,7 +18,7 @@ public:
 	void DelTradeOrders(std::string& orderID);
 	void DeleteTradeOrder(std::string& orderID);
 	void UpdateTradeOrder(std::string& orderID, __int64 date);
-	void FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, std::string& type);
+	void FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, eTradeType type);
 	void SetLatestExecutedOrderPrice(double price, std::string marketName = ""){
 		m_mapLatestExecutedOrderPrice[marketName] = price;
 	}
@@ -48,7 +48,7 @@ public:
 	struct SFinishOrderInfo
 	{
 		std::string id;
-		std::string type;
+		eTradeType type;
 		double price;
 		double amount;
 		time_t time;

@@ -9,6 +9,8 @@ CBWExchange::CBWExchange(std::string strAPIKey, std::string strSecretKey)
 	m_pWebSocketAPI->SetExchange(this);
 	m_pHttpAPI = new CBWHttpAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI->SetExchange(this);
+	m_pHttpTradeAPI = new CBWHttpAPI(strAPIKey, strSecretKey);
+	m_pHttpTradeAPI->SetExchange(this);
 	m_listSupportMarket.push_back(eMarketType_ETH_BTC);
 	m_listSupportMarket.push_back(eMarketType_ETH_USDT);
 	m_listSupportMarket.push_back(eMarketType_BTC_USDT);
@@ -25,7 +27,6 @@ void CBWExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& r
 {
 	if(retObj.isArray() && retObj[0].isArray() && retObj[0][0].isString() && retObj[0][0].asString() == "AE")
 	{
-		m_dataCenter.ClearAllEntrustDepth();
 		if(retObj[0].size() > 5)
 		{
 			int updateTime = 0;
@@ -34,6 +35,7 @@ void CBWExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& r
 				updateTime = atoi(retObj[0][3].asString().c_str());
 			if(retObj[0][2].isString())
 				marketName = retObj[0][2].asString();
+			m_dataCenter.ClearAllEntrustDepth(marketName);
 			Json::Value info = retObj[0][4];
 			if(info["asks"].isArray())
 			{
@@ -113,5 +115,119 @@ void CBWExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& r
 
 void CBWExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
+	switch(type)
+	{
+	case eHttpAPIType_Balance:
+		Parse_Balance(retObj, strRet);
+		break;
+	case eHttpAPIType_TradeOrderState:
+		Parse_TradeOrderState(retObj, strRet);
+		break;
+	case eHttpAPIType_Trade:
+		Parse_Trade(retObj, strRet);
+		break;
+	case eHttpAPIType_CancelTrade:
+		Parse_CancelTrade(retObj, strRet, strCustomData);
+		break;
+	}
 	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
+}
+
+
+void CBWExchange::Parse_Balance(Json::Value& retObj, const std::string& strRet)
+{
+	m_dataCenter.ClearAllBalance();
+	Json::Value& fundsList = retObj["datas"]["list"];
+	for(int i = 0; i<fundsList.size(); ++i)
+	{
+		switch(fundsList[i]["currencyTypeId"].asInt())
+		{
+		case USDT_ID:
+			{
+				std::string strFreeze = fundsList[i]["freeze"].asString();
+				std::string strBalance = fundsList[i]["amount"].asString();
+				double freeze = atof(strFreeze.c_str());
+				double balance = atof(strBalance.c_str());
+				m_dataCenter.SetBalance("usdt", freeze+balance, freeze, balance);
+			}
+			break;
+		case BTC_ID:
+			{
+				std::string strFreeze = fundsList[i]["freeze"].asString();
+				std::string strBalance = fundsList[i]["amount"].asString();
+				double freeze = atof(strFreeze.c_str());
+				double balance = atof(strBalance.c_str());
+				m_dataCenter.SetBalance("btc", freeze+balance, freeze, balance);
+			}
+			break;
+		case BWB_ID:
+			{
+				std::string strFreeze = fundsList[i]["freeze"].asString();
+				std::string strBalance = fundsList[i]["amount"].asString();
+				double freeze = atof(strFreeze.c_str());
+				double balance = atof(strBalance.c_str());
+				m_dataCenter.SetBalance("bwb", freeze+balance, freeze, balance);
+			}
+			break;
+		case ETH_ID:
+			{
+				std::string strFreeze = fundsList[i]["freeze"].asString();
+				std::string strBalance = fundsList[i]["amount"].asString();
+				double freeze = atof(strFreeze.c_str());
+				double balance = atof(strBalance.c_str());
+				m_dataCenter.SetBalance("eth", freeze+balance, freeze, balance);
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void CBWExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string& strRet)
+{
+	if(retObj["datas"].isObject() && retObj["datas"]["status"].isInt())
+	{
+		std::string id = retObj["datas"]["entrustId"].asString();
+		__int64 date = retObj["datas"]["createTime"].asInt64();
+		double price = atof(retObj["datas"]["price"].asString().c_str());
+		double amount = atof(retObj["datas"]["amount"].asString().c_str());
+		int type = retObj["datas"]["type"].asInt();
+		eTradeType eType = eTradeType_buy;
+		if(type == 0)
+			eType = eTradeType_sell;
+		else if(type == 1)
+			eType = eTradeType_buy;
+		switch(retObj["datas"]["status"].asInt())
+		{
+		case 0:
+			m_dataCenter.UpdateTradeOrder(id, date);
+			break;
+		case 1:
+			m_dataCenter.DeleteTradeOrder(id);
+			break;
+		case 2:
+			m_dataCenter.FinishTradeOrder(id, price, amount, date, eType);
+			break;
+		case -1:
+			m_dataCenter.DeleteTradeOrder(id);
+			break;
+		case 3:
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void CBWExchange::Parse_Trade(Json::Value& retObj, const std::string& strRet)
+{
+	if(retObj["resMsg"]["code"].isString() && retObj["resMsg"]["code"].asString() == "1" && retObj["datas"]["entrustId"].isString())
+		m_dataCenter.AddTradeOrders(retObj["datas"]["entrustId"].asString());
+}
+
+void CBWExchange::Parse_CancelTrade(Json::Value& retObj, const std::string& strRet, std::string strCustomData)
+{
+	if(retObj["resMsg"]["code"].isString() && retObj["resMsg"]["code"].asString() == "1")
+		m_dataCenter.DelTradeOrders(strCustomData);
 }

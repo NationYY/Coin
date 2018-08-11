@@ -29,8 +29,18 @@ enum eMarketType
 	eMarketType_Max,
 };
 
+enum eTradeType
+{
+	eTradeType_buy,
+	eTradeType_sell,
+};
 struct SBalanceInfo
 {
+	SBalanceInfo()
+	{
+		name = "";
+		total = freeze = balance = 0;
+	}
 	std::string name;
 	double total;
 	double freeze;

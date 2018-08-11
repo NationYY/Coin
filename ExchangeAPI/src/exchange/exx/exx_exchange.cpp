@@ -136,13 +136,6 @@ void CExxExchange::Parse_Balance(Json::Value& retObj, const std::string& strRet)
 					std::string strFreeze = funds[strKey]["freeze"].asString();
 					std::string strBalance = funds[strKey]["balance"].asString();
 					m_dataCenter.SetBalance(strKey.c_str(), total, atof(strFreeze.c_str()), atof(strBalance.c_str()));
-					SBalanceInfo info;
-					info.name = strKey;
-					info.total = total;
-
-					info.freeze = atof(strFreeze.c_str());
-
-					info.balance = atof(strBalance.c_str());
 				}
 			}
 		}
@@ -211,6 +204,11 @@ void CExxExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string&
 		double price = retObj["price"].asDouble();
 		double amount = retObj["total_amount"].asDouble();
 		std::string type = retObj["type"].asString();
+		eTradeType eType = eTradeType_buy;
+		if(type == "sell")
+			eType = eTradeType_sell;
+		else if(type == "buy")
+			eType = eTradeType_buy;
 		switch(retObj["status"].asInt())
 		{
 		case 0:
@@ -220,7 +218,7 @@ void CExxExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string&
 			m_dataCenter.DeleteTradeOrder(id);
 			break;
 		case 2:
-			m_dataCenter.FinishTradeOrder(id, price, amount, date, type);
+			m_dataCenter.FinishTradeOrder(id, price, amount, date, eType);
 			break;
 		case 3:
 			break;

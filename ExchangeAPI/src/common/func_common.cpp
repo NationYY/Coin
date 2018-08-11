@@ -39,3 +39,33 @@ bool CFuncCommon::CheckEqual(double a, double b)
 {
 	return (fabs(a - b) < 0.000001) ? true : false;
 }
+
+
+
+char* CFuncCommon::ToString(unsigned __int64 number)
+{
+	static __declspec(thread) char szBuff[64] = "";
+	sprintf(szBuff, "%llu", number);
+	return szBuff;
+}
+
+char* CFuncCommon::ToString(__int64 number)
+{
+	static __declspec(thread) char szBuff[64] = "";
+	sprintf(szBuff, "%lld", number);
+	return szBuff;
+}
+
+char* CFuncCommon::ToString(int number)
+{
+	static __declspec(thread) char szBuff[32] = "";
+	sprintf(szBuff, "%d", number);
+	return szBuff;
+}
+
+char* CFuncCommon::ToString(unsigned int number)
+{
+	static __declspec(thread) char szBuff[32] = "";
+	sprintf(szBuff, "%u", number);
+	return szBuff;
+}

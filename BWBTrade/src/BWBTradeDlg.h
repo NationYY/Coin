@@ -20,8 +20,10 @@ public:
 	clib::config m_config;
 	bool m_bIsRun;
 public:
+	void CheckPrice();
 	void AddLog(char* szLog, ...);
 	void UpdateEntrustDepth();
+	void UpdateBalance();
 // 构造
 public:
 	CBWBTradeDlg(CWnd* pParent = NULL);	// 标准构造函数
@@ -57,4 +59,15 @@ public:
 	double m_bwbBtcWatchSellPrice;
 	double m_bwbBtcBuyPrice;
 	double m_bwbBtcSellPrice;
+	CListCtrl m_listCtrlBalance;
+	std::map<std::string, time_t> m_mapSellOrders;
+	CEdit m_editBwbUdstBuyPrice;
+	CEdit m_editBwbUdstSellPrice;
+	CEdit m_editBwbUdstWatchBuyPrice;
+	CEdit m_editBwbUdstWatchSellPrice;
+
+	CEdit m_editBwbBtcBuyPrice;
+	CEdit m_editBwbBtcSellPrice;
+	CEdit m_editBwbBtcWatchBuyPrice;
+	CEdit m_editBwbBtcWatchSellPrice;
 };

@@ -68,7 +68,7 @@ void CDataCenter::DeleteTradeOrder(std::string& orderID)
 	m_mapTradeOrderID.erase(orderID);
 }
 
-void CDataCenter::FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, std::string& type)
+void CDataCenter::FinishTradeOrder(std::string& orderID, double price, double amount, __int64 date, eTradeType type)
 {
 	if(m_mapTradeOrderID.find(orderID) != m_mapTradeOrderID.end())
 	{

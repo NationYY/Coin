@@ -80,8 +80,10 @@ public:
 	};
 	std::map<int, STradePair> m_mapTradePairs;
 	eMarketType m_marketType;
+	std::string m_strMarketType;
 	CListBox m_listLog;
 	time_t m_tLastGetEntrustDepth;
+	time_t m_tLastGetReferenceExecutedOrder;
 	int m_successCreateTradeCnt;
 	int m_failCreateTradeCnt;
 	int m_succesCancelTradeCnt;
@@ -90,4 +92,7 @@ public:
 	CStatic m_staticSuccesCancelTradeCnt;
 	CStatic m_staticAllFinishTradeCnt;
 	CStatic m_staticFailCreateTradeCnt;
+	double m_priceCheckValue;
+	std::string m_accessKey;
+	std::string m_secretKey;
 };

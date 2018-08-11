@@ -16,21 +16,48 @@ CBWExchange* g_pExchange = NULL;
 CBWBTradeDlg* g_pBWBTradeDlg = NULL;
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
+	switch(apiType)
+	{
+	case eHttpAPIType_Balance:
+		{
+			g_pBWBTradeDlg->UpdateBalance();
+			g_pBWBTradeDlg->SetTimer(eTimerType_Balance, 5000, NULL);
+		}
+		break;
+	case eHttpAPIType_Trade:
+		{
+			if(retObj.isObject() && retObj["resMsg"].isObject() && retObj["resMsg"]["code"].isString() && retObj["resMsg"]["code"].asString() == "1")
+			{
+				if(customData == 0)
+				{
+					g_pBWBTradeDlg->AddLog("卖单挂单成功~");
+					std::string orderID = retObj["datas"]["entrustId"].asString();
+					g_pBWBTradeDlg->m_mapSellOrders[orderID] = time(NULL);
+				}
+				else
+				{
+					g_pBWBTradeDlg->AddLog("买单挂单成功~");
+				}
+			}
+		}
+		break;
+	case eHttpAPIType_CancelTrade:
+		{
+		}
+		break;
+	}
 }
 
 void local_websocket_callbak_open(const char* szExchangeName)
 {
-	if(g_pBWBTradeDlg->m_bIsRun)
-	{
-		if(g_pExchange->GetWebSocket())
-			g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_BTC, 5, true);
-		if(g_pExchange->GetWebSocket())
-			g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_USDT, 5, true);
-		if(g_pExchange->GetWebSocket())
-			g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_BTC);
-		if(g_pExchange->GetWebSocket())
-			g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_USDT);
-	}
+	if(g_pExchange->GetWebSocket())
+		g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_BTC, 5, true);
+	if(g_pExchange->GetWebSocket())
+		g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_USDT, 5, true);
+	if(g_pExchange->GetWebSocket())
+		g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_BTC);
+	if(g_pExchange->GetWebSocket())
+		g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_USDT);
 	g_pBWBTradeDlg->AddLog("行情连接成功!");
 }
 void local_websocket_callbak_close(const char* szExchangeName)
@@ -51,6 +78,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 		break;
 	case eWebsocketAPIType_LatestExecutedOrder:
 		g_pBWBTradeDlg->UpdateEntrustDepth();
+		g_pBWBTradeDlg->CheckPrice();
 		break;
 	}
 	OutputDebugString(strRet.c_str());
@@ -120,6 +148,15 @@ void CBWBTradeDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT8, m_bwbBtcWatchSellPrice);
 	DDX_Text(pDX, IDC_EDIT5, m_bwbBtcBuyPrice);
 	DDX_Text(pDX, IDC_EDIT6, m_bwbBtcSellPrice);
+	DDX_Control(pDX, IDC_LIST4, m_listCtrlBalance);
+	DDX_Control(pDX, IDC_EDIT1, m_editBwbUdstBuyPrice);
+	DDX_Control(pDX, IDC_EDIT2, m_editBwbUdstSellPrice);
+	DDX_Control(pDX, IDC_EDIT3, m_editBwbUdstWatchBuyPrice);
+	DDX_Control(pDX, IDC_EDIT4, m_editBwbUdstWatchSellPrice);
+	DDX_Control(pDX, IDC_EDIT5, m_editBwbBtcBuyPrice);
+	DDX_Control(pDX, IDC_EDIT6, m_editBwbBtcSellPrice);
+	DDX_Control(pDX, IDC_EDIT7, m_editBwbBtcWatchBuyPrice);
+	DDX_Control(pDX, IDC_EDIT8, m_editBwbBtcWatchSellPrice);
 }
 
 BEGIN_MESSAGE_MAP(CBWBTradeDlg, CDialogEx)
@@ -128,6 +165,7 @@ BEGIN_MESSAGE_MAP(CBWBTradeDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDOK, &CBWBTradeDlg::OnBnClickedBegin)
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 
@@ -165,6 +203,24 @@ BOOL CBWBTradeDlg::OnInitDialog()
 		return FALSE;
 	const char* id = m_config.get("bw", "id", "");
 	const char* key = m_config.get("bw", "key", "");
+	const char* bwb_usdt_buy_price = m_config.get("bw", "bwb_usdt_buy", "");
+	m_editBwbUdstBuyPrice.SetWindowTextA(bwb_usdt_buy_price);
+	const char* bwb_usdt_sell_price = m_config.get("bw", "bwb_usdt_sell", "");
+	m_editBwbUdstSellPrice.SetWindowTextA(bwb_usdt_sell_price);
+	const char* bwb_usdt_watch_buy_price = m_config.get("bw", "bwb_usdt_watch_buy", "");
+	m_editBwbUdstWatchBuyPrice.SetWindowTextA(bwb_usdt_watch_buy_price);
+	const char* bwb_usdt_watch_sell_price = m_config.get("bw", "bwb_usdt_watch_sell", "");
+	m_editBwbUdstWatchSellPrice.SetWindowTextA(bwb_usdt_watch_sell_price);
+
+	const char* bwb_btc_buy_price = m_config.get("bw", "bwb_btc_buy", "");
+	m_editBwbBtcBuyPrice.SetWindowTextA(bwb_btc_buy_price);
+	const char* bwb_btc_sell_price = m_config.get("bw", "bwb_btc_sell", "");
+	m_editBwbBtcSellPrice.SetWindowTextA(bwb_btc_sell_price);
+	const char* bwb_btc_watch_buy_price = m_config.get("bw", "bwb_btc_watch_buy", "");
+	m_editBwbBtcWatchBuyPrice.SetWindowTextA(bwb_btc_watch_buy_price);
+	const char* bwb_btc_watch_sell_price = m_config.get("bw", "bwb_btc_watch_sell", "");
+	m_editBwbBtcWatchSellPrice.SetWindowTextA(bwb_btc_watch_sell_price);
+
 	// TODO:  在此添加额外的初始化代码
 	g_pExchange = new CBWExchange(id, key);
 	g_pExchange->SetHttpCallBackMessage(local_http_callbak_message);
@@ -192,6 +248,11 @@ BOOL CBWBTradeDlg::OnInitDialog()
 	m_listCtrlBwbBtc.InsertColumn(2, "量", LVCFMT_CENTER, 100);
 	m_listCtrlBwbBtc.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
+	m_listCtrlBalance.InsertColumn(0, "币种", LVCFMT_CENTER, 40);
+	m_listCtrlBalance.InsertColumn(1, "余额", LVCFMT_CENTER, 100);
+	m_listCtrlBalance.InsertColumn(2, "可用", LVCFMT_CENTER, 100);
+	m_listCtrlBalance.InsertColumn(3, "冻结", LVCFMT_CENTER, 100);
+	m_listCtrlBalance.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 	SetTimer(eTimerType_Balance, 5000, NULL);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
@@ -272,12 +333,28 @@ void CBWBTradeDlg::OnTimer(UINT_PTR nIDEvent)
 			LocalLogger::GetInstancePt()->SwapFront2Middle();
 			if(g_pExchange)
 				g_pExchange->Update();
+			std::map<std::string, time_t>::iterator itB = m_mapSellOrders.begin();
+			std::map<std::string, time_t>::iterator itE = m_mapSellOrders.end();
+			time_t tNow = time(NULL);
+			while(itB != itE)
+			{
+				if(tNow - itB->second > 60*10)
+				{
+					g_pExchange->GetHttp()->API_CancelTrade(eMarketType_BWB_USDT, itB->first, "");
+					itB = m_mapSellOrders.erase(itB);
+				}
+				else
+					++itB;
+			}
 		}
 		break;
 	case eTimerType_Balance:
 		{
 			if(g_pExchange && g_pExchange->GetHttp())
+			{
+				KillTimer(eTimerType_Balance);
 				g_pExchange->GetHttp()->API_Balance();
+			}
 		}
 		break;
 	}
@@ -445,13 +522,162 @@ void CBWBTradeDlg::OnBnClickedBegin()
 		AfxMessageBox("请输入BWB/BTC出售价格");
 		return;
 	}
+	CString strTemp;
+	m_editBwbUdstBuyPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_usdt_buy", strTemp.GetBuffer());
+	m_editBwbUdstSellPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_usdt_sell", strTemp.GetBuffer());
+	m_editBwbUdstWatchBuyPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_usdt_watch_buy", strTemp.GetBuffer());
+	m_editBwbUdstWatchSellPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_usdt_watch_sell", strTemp.GetBuffer());
+	m_editBwbBtcBuyPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_btc_buy", strTemp.GetBuffer());
+	m_editBwbBtcSellPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_btc_sell", strTemp.GetBuffer());
+	m_editBwbBtcWatchBuyPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_btc_watch_buy", strTemp.GetBuffer());
+	m_editBwbBtcWatchSellPrice.GetWindowTextA(strTemp);
+	m_config.set_value("bw", "bwb_btc_watch_sell", strTemp.GetBuffer());
+	m_config.save("./config.ini");
 	m_bIsRun = true;
-	if(g_pExchange->GetWebSocket())
-		g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_BTC, 5, true);
-	if(g_pExchange->GetWebSocket())
-		g_pExchange->GetWebSocket()->API_EntrustDepth(eMarketType_BWB_USDT, 5, true);
-	if(g_pExchange->GetWebSocket())
-		g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_BTC);
-	if(g_pExchange->GetWebSocket())
-		g_pExchange->GetWebSocket()->API_LatestExecutedOrder(eMarketType_BWB_USDT);
+}
+
+void CBWBTradeDlg::UpdateBalance()
+{
+	m_listCtrlBalance.DeleteAllItems();
+	CDataCenter* pDataCenter = g_pExchange->GetDataCenter();
+	std::map<std::string, SBalanceInfo>::iterator itB = pDataCenter->m_mapBalanceInfo.begin();
+	std::map<std::string, SBalanceInfo>::iterator itE = pDataCenter->m_mapBalanceInfo.end();
+	int index = 0;
+	CString szFormat;
+	while(itB != itE)
+	{
+		m_listCtrlBalance.InsertItem(index, "");
+		szFormat.Format("%s", itB->first.c_str());
+		m_listCtrlBalance.SetItemText(index, 0, szFormat);
+		szFormat.Format("%lf", itB->second.total);
+		m_listCtrlBalance.SetItemText(index, 1, szFormat);
+		szFormat.Format("%lf", itB->second.balance);
+		m_listCtrlBalance.SetItemText(index, 2, szFormat);
+		szFormat.Format("%lf", itB->second.freeze);
+		m_listCtrlBalance.SetItemText(index, 3, szFormat);
+		index++;
+		++itB;
+	}
+
+}
+
+void CBWBTradeDlg::CheckPrice()
+{
+	if(m_bIsRun)
+	{
+		CDataCenter* pDataCenter = g_pExchange->GetDataCenter();
+		//BWB/USDT
+		{
+			if(!CFuncCommon::CheckEqual(m_bwbUsdtWatchSellPrice, 0))
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_USDT"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price > m_bwbUsdtWatchSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
+					{
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0);
+						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
+					}
+				}
+			}
+			else
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_USDT"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price > m_bwbUsdtSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
+					{
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0);
+						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
+					}
+				}
+			}
+			if(!CFuncCommon::CheckEqual(m_bwbUsdtWatchBuyPrice, 0))
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_USDT"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price < m_bwbUsdtWatchBuyPrice && pDataCenter->m_mapBalanceInfo["usdt"].balance >= 1)
+					{
+						int cnt = int(pDataCenter->m_mapBalanceInfo["usdt"].balance / m_bwbUsdtBuyPrice) - 2;
+						pDataCenter->m_mapBalanceInfo["usdt"].balance = 0;
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbUsdtBuyPrice, 4), true, 1);
+					}
+				}
+			}
+			else
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_USDT"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price < m_bwbUsdtBuyPrice && pDataCenter->m_mapBalanceInfo["usdt"].balance >= 1)
+					{
+						int cnt = int(pDataCenter->m_mapBalanceInfo["usdt"].balance / m_bwbUsdtBuyPrice) - 2;
+						pDataCenter->m_mapBalanceInfo["usdt"].balance = 0;
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbUsdtBuyPrice, 4), true, 1);
+					}
+				}
+			}
+		}
+		//BWB/BTC
+		{
+			if(!CFuncCommon::CheckEqual(m_bwbBtcWatchSellPrice, 0))
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_BTC"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price > m_bwbBtcWatchSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
+					{
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbBtcSellPrice, 4), false, 0);
+						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
+					}
+				}
+			}
+			else
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_BTC"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price > m_bwbBtcSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
+					{
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbBtcSellPrice, 4), false, 0);
+						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
+					}
+				}
+			}
+			if(!CFuncCommon::CheckEqual(m_bwbBtcWatchBuyPrice, 0))
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_BTC"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price < m_bwbBtcWatchBuyPrice && pDataCenter->m_mapBalanceInfo["btc"].balance >= 1)
+					{
+						int cnt = int(pDataCenter->m_mapBalanceInfo["btc"].balance / m_bwbBtcBuyPrice) - 2;
+						pDataCenter->m_mapBalanceInfo["btc"].balance = 0;
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbBtcBuyPrice, 4), true, 1);
+					}
+				}
+			}
+			else
+			{
+				double price = pDataCenter->m_mapLatestExecutedOrderPrice["BWB_BTC"];
+				if(!CFuncCommon::CheckEqual(price, 0))
+				{
+					if(price < m_bwbBtcBuyPrice && pDataCenter->m_mapBalanceInfo["btc"].balance >= 1)
+					{
+						int cnt = int(pDataCenter->m_mapBalanceInfo["btc"].balance / m_bwbBtcBuyPrice) - 2;
+						pDataCenter->m_mapBalanceInfo["btc"].balance = 0;
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbBtcBuyPrice, 4), true, 1);
+					}
+				}
+			}
+		}
+	}
 }

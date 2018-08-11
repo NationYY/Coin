@@ -48,6 +48,9 @@ public:
 	virtual const char* GetMarketString(eMarketType type, bool bHttp){
 		return "";
 	}
+	virtual int GetMarketID(eMarketType type){
+		return 0;
+	}
 	virtual double GetTakerRate(){
 		return 0;
 	}

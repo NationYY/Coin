@@ -7,13 +7,13 @@ void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 {
 	Json::Value retObj;
 	Json::Reader reader;
-	char szRet[10240] = { 0 };
+	char szRet[15360] = {0};
 	int __size = msg->get_payload().size();
 	memcpy(szRet, msg->get_payload().c_str(), __size);
 	if(m_bGZIP)
 	{
-		unsigned char szOut[10240] = {0};
-		int outSize = 10240;
+		unsigned char szOut[15360] = {0};
+		int outSize = 15360;
 		if(GZlibDecompress((unsigned char*)szRet, __size, szOut, &outSize))
 		{
 			memset(szRet, 0, sizeof(szRet));
@@ -22,8 +22,8 @@ void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 	}
 	if(m_bUTF8)
 	{
-		char _szRet[10240] = {0};
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", szRet, strlen(szRet), _szRet, 10240);
+		char _szRet[15360] = {0};
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", szRet, strlen(szRet), _szRet, 15360);
 		strcpy(szRet, _szRet);
 	}
 	reader.parse(szRet, retObj);
