@@ -32,6 +32,8 @@ public:
 			return "BWB_USDT";
 		case eMarketType_BWB_BTC:
 			return "BWB_BTC";
+		case eMarketType_BWB_ETH:
+			return "BWB_ETH";
 		}
 		return NULL;
 	}
@@ -49,6 +51,8 @@ public:
 			return 302;
 		case eMarketType_BWB_BTC:
 			return 301;
+		case eMarketType_BWB_ETH:
+			return 314;
 		}
 		return 0;
 	}

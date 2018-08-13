@@ -16,6 +16,7 @@ CBWExchange::CBWExchange(std::string strAPIKey, std::string strSecretKey)
 	m_listSupportMarket.push_back(eMarketType_BTC_USDT);
 	m_listSupportMarket.push_back(eMarketType_BWB_USDT);
 	m_listSupportMarket.push_back(eMarketType_BWB_BTC);
+	m_listSupportMarket.push_back(eMarketType_BWB_ETH);
 }
 
 

@@ -40,6 +40,7 @@ public:
 		time_t lastCancelTime;
 		int checkIndex;
 		__int64 serverCreatDate;
+		int cancelTimes;
 		SOrderInfo()
 		{
 			memset(this, 0, sizeof(SOrderInfo));

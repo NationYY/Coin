@@ -390,6 +390,9 @@ BOOL CCoinDlg::OnInitDialog()
 			case eMarketType_BWB_BTC:
 				m_cbMarketType.InsertString(index, "BWB_BTC");
 				break;
+			case eMarketType_BWB_ETH:
+				m_cbMarketType.InsertString(index, "BWB_ETH");
+				break;
 			default:
 				break;
 			}
@@ -555,16 +558,25 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				pReferenceExchange->Update();
 			std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pExchange->GetDataCenter()->m_mapTradeOrderID.begin();
 			std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pExchange->GetDataCenter()->m_mapTradeOrderID.end();
+			int cancelCheckTime = m_tradeFrequency/1000 * 5;
+			cancelCheckTime = max(cancelCheckTime, 180);
 			time_t tNow = time(NULL);
 			while(itB != itE)
 			{
-				if(tNow - itB->second.addTime >= 60 && tNow - itB->second.lastCancelTime > 20)
+				if(itB->second.cancelTimes == 10)
+					itB = pExchange->GetDataCenter()->m_mapTradeOrderID.erase(itB);
+				else
 				{
-					itB->second.lastCancelTime = tNow;
-					g_pCoinDlg->AddLog("超时未成交,提交撤单1[%s]!", itB->first.c_str());
-					pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
+					if(tNow - itB->second.addTime >= cancelCheckTime && tNow - itB->second.lastCancelTime > 30)
+					{
+						itB->second.cancelTimes++;
+						itB->second.lastCancelTime = tNow;
+						g_pCoinDlg->AddLog("超时未成交,提交撤单1[%s]!", itB->first.c_str());
+						pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
+					}
+					++itB;
 				}
-				++itB;
+
 			}
 		}
 		break;
@@ -649,8 +661,8 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				else
 				{
 					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-					int checkDel = 5;
-					while(checkDel)
+					int checkDel = 2;
+					while(checkDel < 5)
 					{
 						double newBuyPrice = sellPrice - tradePremiumPrice * checkDel;
 						if(newBuyPrice > buyPrice)
@@ -667,7 +679,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 							g_trade_pair_index++;
 							break;
 						}
-						checkDel--;
+						checkDel++;
 					}
 					
 
