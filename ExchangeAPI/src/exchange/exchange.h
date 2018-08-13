@@ -45,6 +45,17 @@ public:
 	virtual const std::list<eMarketType>& GetSupportMarket(){
 		return m_listSupportMarket;
 	}
+	virtual bool IsSupportMarket(eMarketType type){
+		std::list<eMarketType>::iterator itB = m_listSupportMarket.begin();
+		std::list<eMarketType>::iterator itE = m_listSupportMarket.end();
+		while(itB != itE)
+		{
+			if(*itB == type)
+				return true;
+			++itB;
+		}
+		return false;
+	}
 	virtual const char* GetMarketString(eMarketType type, bool bHttp){
 		return "";
 	}

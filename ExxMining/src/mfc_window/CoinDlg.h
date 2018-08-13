@@ -95,4 +95,5 @@ public:
 	double m_priceCheckValue;
 	std::string m_accessKey;
 	std::string m_secretKey;
+	bool m_bUseRreferenceCheck;
 };
