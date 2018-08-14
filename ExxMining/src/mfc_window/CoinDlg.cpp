@@ -661,10 +661,10 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				else
 				{
 					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-					int checkDel = 2;
-					while(checkDel < 5)
+					static int arrCheckOffset[] = {2,3,4,5,1};
+					for(int i=0; i<5; ++i)
 					{
-						double newBuyPrice = sellPrice - tradePremiumPrice * checkDel;
+						double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
 						if(newBuyPrice > buyPrice)
 						{
 							CString szPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
@@ -679,10 +679,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 							g_trade_pair_index++;
 							break;
 						}
-						checkDel++;
 					}
-					
-
 				}
 			}
 		}
