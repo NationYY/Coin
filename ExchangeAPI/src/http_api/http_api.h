@@ -30,7 +30,7 @@ public:
 	virtual void API_Balance() = 0;
 	virtual void API_Ticker(eMarketType type) = 0;
 	virtual void API_EntrustDepth(eMarketType type) = 0;
-	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData) = 0;
+	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData, std::string strCustomData) = 0;
 	virtual void API_GetTradeOrderListState(eMarketType type, int page, bool bBuy) = 0;
 	virtual void API_GetTradeOrderState(eMarketType type, std::string strID) = 0;
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) = 0;

@@ -26,7 +26,7 @@ void CBWHttpAPI::API_Balance()
 	RequestAsync(info);
 }
 
-void CBWHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData)
+void CBWHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData, std::string strCustomData)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_Trade;
@@ -39,6 +39,7 @@ void CBWHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string 
 	info.mapParams["price"] = SHttpParam(eHttpParamType_Int, strPrice.c_str());
 	info.confirmationType = eHttpConfirmationType_Zbg;
 	info.customData = customData;
+	info.strCustomData = strCustomData;
 	info.bUTF8 = true;
 	RequestAsync(info);
 

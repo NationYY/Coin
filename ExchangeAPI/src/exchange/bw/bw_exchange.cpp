@@ -125,7 +125,7 @@ void CBWExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const s
 		Parse_TradeOrderState(retObj, strRet);
 		break;
 	case eHttpAPIType_Trade:
-		Parse_Trade(retObj, strRet);
+		Parse_Trade(retObj, strRet, strCustomData);
 		break;
 	case eHttpAPIType_CancelTrade:
 		Parse_CancelTrade(retObj, strRet, strCustomData);
@@ -221,10 +221,17 @@ void CBWExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string& 
 	}
 }
 
-void CBWExchange::Parse_Trade(Json::Value& retObj, const std::string& strRet)
+void CBWExchange::Parse_Trade(Json::Value& retObj, const std::string& strRet, std::string strCustomData)
 {
 	if(retObj["resMsg"]["code"].isString() && retObj["resMsg"]["code"].asString() == "1" && retObj["datas"]["entrustId"].isString())
-		m_dataCenter.AddTradeOrders(retObj["datas"]["entrustId"].asString());
+	{
+		eTradeType type = eTradeType_buy;
+		if(strCustomData == "buy")
+			type = eTradeType_buy;
+		else if(strCustomData == "sell")
+			type = eTradeType_sell;
+		m_dataCenter.AddTradeOrders(retObj["datas"]["entrustId"].asString(), type);
+	}
 }
 
 void CBWExchange::Parse_CancelTrade(Json::Value& retObj, const std::string& strRet, std::string strCustomData)

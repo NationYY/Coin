@@ -100,7 +100,7 @@ void CExxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const 
 		Parse_EntrustDepth(retObj, strRet);
 		break;
 	case eHttpAPIType_Trade:
-		Parse_Trade(retObj, strRet);
+		Parse_Trade(retObj, strRet, strCustomData);
 		break;
 	case eHttpAPIType_TradeOrderListState:
 		Parse_TradeOrderListState(retObj, strRet);
@@ -189,10 +189,17 @@ void CExxExchange::Parse_EntrustDepth(Json::Value& retObj, const std::string& st
 	}
 }
 
-void CExxExchange::Parse_Trade(Json::Value& retObj, const std::string& strRet)
+void CExxExchange::Parse_Trade(Json::Value& retObj, const std::string& strRet, std::string strCustomData)
 {
 	if(retObj["code"].isInt() && retObj["code"].asInt() == 100 && retObj["id"].isString())
-		m_dataCenter.AddTradeOrders(retObj["id"].asString());
+	{
+		eTradeType type = eTradeType_buy;
+		if(strCustomData == "buy")
+			type = eTradeType_buy;
+		else if(strCustomData == "sell")
+			type = eTradeType_sell;
+		m_dataCenter.AddTradeOrders(retObj["id"].asString(), type);
+	}
 }
 
 void CExxExchange::Parse_TradeOrderState(Json::Value& retObj, const std::string& strRet)

@@ -582,7 +582,7 @@ void CBWBTradeDlg::CheckPrice()
 				{
 					if(price > m_bwbUsdtWatchSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
 					{
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0, "");
 						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
 					}
 				}
@@ -594,7 +594,7 @@ void CBWBTradeDlg::CheckPrice()
 				{
 					if(price > m_bwbUsdtSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
 					{
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0, "");
 						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
 					}
 				}
@@ -608,7 +608,7 @@ void CBWBTradeDlg::CheckPrice()
 					{
 						int cnt = int(pDataCenter->m_mapBalanceInfo["usdt"].balance / m_bwbUsdtBuyPrice) - 2;
 						pDataCenter->m_mapBalanceInfo["usdt"].balance = 0;
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbUsdtBuyPrice, 4), true, 1);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbUsdtBuyPrice, 4), true, 1, "");
 					}
 				}
 			}
@@ -621,7 +621,7 @@ void CBWBTradeDlg::CheckPrice()
 					{
 						int cnt = int(pDataCenter->m_mapBalanceInfo["usdt"].balance / m_bwbUsdtBuyPrice) - 2;
 						pDataCenter->m_mapBalanceInfo["usdt"].balance = 0;
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbUsdtBuyPrice, 4), true, 1);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbUsdtBuyPrice, 4), true, 1, "");
 					}
 				}
 			}
@@ -635,7 +635,7 @@ void CBWBTradeDlg::CheckPrice()
 				{
 					if(price > m_bwbBtcWatchSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
 					{
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbBtcSellPrice, 4), false, 0);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbBtcSellPrice, 4), false, 0, "");
 						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
 					}
 				}
@@ -647,7 +647,7 @@ void CBWBTradeDlg::CheckPrice()
 				{
 					if(price > m_bwbBtcSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
 					{
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbBtcSellPrice, 4), false, 0);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbBtcSellPrice, 4), false, 0, "");
 						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
 					}
 				}
@@ -661,7 +661,7 @@ void CBWBTradeDlg::CheckPrice()
 					{
 						int cnt = int(pDataCenter->m_mapBalanceInfo["btc"].balance / m_bwbBtcBuyPrice) - 2;
 						pDataCenter->m_mapBalanceInfo["btc"].balance = 0;
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbBtcBuyPrice, 4), true, 1);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbBtcBuyPrice, 4), true, 1, "");
 					}
 				}
 			}
@@ -674,7 +674,7 @@ void CBWBTradeDlg::CheckPrice()
 					{
 						int cnt = int(pDataCenter->m_mapBalanceInfo["btc"].balance / m_bwbBtcBuyPrice) - 2;
 						pDataCenter->m_mapBalanceInfo["btc"].balance = 0;
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbBtcBuyPrice, 4), true, 1);
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_BTC, CFuncCommon::ToString(cnt), CFuncCommon::Double2String(m_bwbBtcBuyPrice, 4), true, 1, "");
 					}
 				}
 			}

@@ -59,7 +59,7 @@ public:
 private:
 	void Parse_Balance(Json::Value& retObj, const std::string& strRet);
 	void Parse_TradeOrderState(Json::Value& retObj, const std::string& strRet);
-	void Parse_Trade(Json::Value& retObj, const std::string& strRet);
+	void Parse_Trade(Json::Value& retObj, const std::string& strRet, std::string strCustomData);
 	void Parse_CancelTrade(Json::Value& retObj, const std::string& strRet, std::string strCustomData);
 
 };

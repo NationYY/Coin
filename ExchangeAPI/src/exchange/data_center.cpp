@@ -51,10 +51,11 @@ void CDataCenter::DelSellEntrustDepth(std::string& strPrice, int serverTime, std
 	m_updateEntrustDepthTime = serverTime;
 }
 
-void CDataCenter::AddTradeOrders(std::string& orderID)
+void CDataCenter::AddTradeOrders(std::string& orderID, eTradeType type)
 {
 	SOrderInfo info;
 	info.addTime = time(NULL);
+	info.tradeType = type;
 	m_mapTradeOrderID[orderID] = info;
 }
 

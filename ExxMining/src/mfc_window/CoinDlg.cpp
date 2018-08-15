@@ -568,7 +568,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pExchange->GetDataCenter()->m_mapTradeOrderID.begin();
 			std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pExchange->GetDataCenter()->m_mapTradeOrderID.end();
 			int cancelCheckTime = m_tradeFrequency/1000 * 5;
-			cancelCheckTime = max(cancelCheckTime, 180);
+			cancelCheckTime = max(cancelCheckTime, 90);
 			while(itB != itE)
 			{
 				if(itB->second.cancelTimes == 10)
@@ -655,9 +655,9 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 						{
 							CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
 							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index);
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
 							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index);
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
 							STradePair pair;
 							pair.tSendTime = time(NULL);
 							pair.tLastCheckTime = pair.tSendTime;
@@ -670,16 +670,18 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				{
 					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
 					static int arrCheckOffset[] = {2,3,4,5,1};
+					bool bFound = false;
 					for(int i=0; i<5; ++i)
 					{
 						double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
 						if(newBuyPrice > buyPrice)
 						{
+							bFound = true;
 							CString szPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
 							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index);
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
 							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index);
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
 							STradePair pair;
 							pair.tSendTime = time(NULL);
 							pair.tLastCheckTime = pair.tSendTime;
@@ -687,6 +689,19 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 							g_trade_pair_index++;
 							break;
 						}
+					}
+					if(!bFound)
+					{
+						CString szPrice = mapSellEntrustDepth.begin()->first.c_str();
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+						STradePair pair;
+						pair.tSendTime = time(NULL);
+						pair.tLastCheckTime = pair.tSendTime;
+						m_mapTradePairs[g_trade_pair_index] = pair;
+						g_trade_pair_index++;
 					}
 				}
 			}

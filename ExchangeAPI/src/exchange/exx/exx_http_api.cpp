@@ -28,12 +28,13 @@ void CExxHttpAPI::API_Balance()
 	RequestAsync(info);
 }
 
-void CExxHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData)
+void CExxHttpAPI::API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData, std::string strCustomData)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_Trade;
 	info.reqType = eHttpReqType_Get;
 	info.customData = customData;
+	info.strCustomData = strCustomData; 
 	info.strMethod = "order";
 	info.confirmationType = eHttpConfirmationType_Exx;
 	info.mapParams["accesskey"] = SHttpParam(eHttpParamType_String, m_strAPIKey);

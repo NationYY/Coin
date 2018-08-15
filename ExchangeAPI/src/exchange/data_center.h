@@ -14,7 +14,7 @@ public:
 	void DelBuyEntrustDepth(std::string& strPrice, int serverTime, std::string marketName = "");
 	void UpdateSellEntrustDepth(std::string& strPrice, std::string& strVolume, int serverTime, std::string marketName = "");
 	void DelSellEntrustDepth(std::string& strPrice, int serverTime, std::string marketName = "");
-	void AddTradeOrders(std::string& orderID);
+	void AddTradeOrders(std::string& orderID, eTradeType type);
 	void DelTradeOrders(std::string& orderID);
 	void DeleteTradeOrder(std::string& orderID);
 	void UpdateTradeOrder(std::string& orderID, __int64 date);
@@ -41,6 +41,7 @@ public:
 		int checkIndex;
 		__int64 serverCreatDate;
 		int cancelTimes;
+		eTradeType tradeType;
 		SOrderInfo()
 		{
 			memset(this, 0, sizeof(SOrderInfo));
