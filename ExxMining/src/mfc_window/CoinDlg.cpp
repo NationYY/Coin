@@ -72,6 +72,8 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_tLastGetReferenceExecutedOrder(0)
 	, m_bUseRreferenceCheck(true)
 	, m_tLastReconnectHightSpeed(0)
+	, m_maxBuyOrderCnt(0)
+	, m_maxSellOrderCnt(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -96,6 +98,9 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC13, m_staticAllFinishTradeCnt);
 	DDX_Control(pDX, IDC_STATIC15, m_staticFailCreateTradeCnt);
 	DDX_Text(pDX, IDC_EDIT3, m_priceCheckValue);
+	DDX_Text(pDX, IDC_EDIT5, m_maxBuyOrderCnt);
+	DDX_Text(pDX, IDC_EDIT6, m_maxSellOrderCnt);
+	DDX_Control(pDX, IDC_EDIT3, m_editPriceCheck);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -415,6 +420,17 @@ BOOL CCoinDlg::OnInitDialog()
 	localLogger.SetLogPath(log_path.c_str());
 	localLogger.Start();
 
+
+	int sel = m_config.get_int("bw", "market_select", -1);
+	if(sel != -1)
+		m_cbMarketType.SetCurSel(sel);
+	m_strTradeVolume = m_config.get("bw", "trade_volume", "");
+	m_tradeFrequency = m_config.get_int("bw", "trade_frequency", 0);
+	m_tradePriceDecimal = m_config.get_int("bw", "trade_price_decimal", 0);
+	m_maxBuyOrderCnt = m_config.get_int("bw", "max_buy_order", 0);
+	m_maxSellOrderCnt = m_config.get_int("bw", "max_sell_order", 0);
+	UpdateData(FALSE);
+	m_editPriceCheck.SetWindowTextA(m_config.get("bw", "price_check_value", ""));
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -541,6 +557,18 @@ void CCoinDlg::OnBnClickedButtonBegin()
 		pReferenceExchange->GetWebSocket()->API_LatestExecutedOrder((eMarketType)type);
 	SetTimer(eTimerType_Trade, m_tradeFrequency, NULL);
 	SetTimer(eTimerType_TradeOrderState, 1000, NULL);
+
+
+
+	m_config.set_value("bw", "market_select", CFuncCommon::ToString(sel));
+	m_config.set_value("bw", "trade_volume", m_strTradeVolume.GetBuffer());
+	m_config.set_value("bw", "trade_frequency", CFuncCommon::ToString(m_tradeFrequency));
+	m_config.set_value("bw", "trade_price_decimal", CFuncCommon::ToString(m_tradePriceDecimal));
+	m_editPriceCheck.GetWindowTextA(temp);
+	m_config.set_value("bw", "price_check_value", temp.GetBuffer());
+	m_config.set_value("bw", "max_buy_order", CFuncCommon::ToString(m_maxBuyOrderCnt));
+	m_config.set_value("bw", "max_sell_order", CFuncCommon::ToString(m_maxSellOrderCnt));
+	m_config.save("./config.ini");
 	m_bIsRun = true;
 	// TODO:  在此添加控件通知处理程序代码
 }
@@ -612,7 +640,21 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			CDataCenter* pDataCenter = pExchange->GetDataCenter();
 			std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth[m_strMarketType].mapBuyEntrustDepth;
 			std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth[m_strMarketType].mapSellEntrustDepth;
-			if(pDataCenter && mapBuyEntrustDepth.size() && mapSellEntrustDepth.size())
+
+			std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pDataCenter->m_mapTradeOrderID.begin();
+			std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pDataCenter->m_mapTradeOrderID.end();
+			int buyCnt = 0;
+			int sellCnt = 0;
+			while(itB != itE)
+			{
+				if(itB->second.tradeType == eTradeType_buy)
+					buyCnt++;
+				else if(itB->second.tradeType == eTradeType_sell)
+					sellCnt++;
+				++itB;
+			}
+			bool bCheck = ((m_maxBuyOrderCnt == 0 || buyCnt < m_maxBuyOrderCnt) && (m_maxSellOrderCnt == 0 || sellCnt < m_maxSellOrderCnt));
+			if(pDataCenter && mapBuyEntrustDepth.size() && mapSellEntrustDepth.size() && bCheck)
 			{
 				double buyPrice, sellPrice;
 				sellPrice = atof(mapSellEntrustDepth.begin()->first.c_str());
@@ -719,7 +761,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			{
 				if(itB->second.checkIndex != pDataCenter->m_orderCheckIndex)
 				{
-					if(itB->second.serverCreatDate != 0 || (tNow - itB->second.addTime > 2))
+					//if(itB->second.serverCreatDate != 0 || (tNow - itB->second.addTime > 2))
 					{
 						bFound = true;
 						itB->second.checkIndex = pDataCenter->m_orderCheckIndex;
@@ -881,7 +923,7 @@ void CCoinDlg::OnBnClickedButtonStop()
 			g_pCoinDlg->KillTimer(eTimerType_EntrustDepth);
 		}
 		g_pCoinDlg->KillTimer(eTimerType_Trade);
-		g_pCoinDlg->KillTimer(eTimerType_TradeOrderState);
+		//g_pCoinDlg->KillTimer(eTimerType_TradeOrderState);
 		m_bIsRun = false;
 	}
 }

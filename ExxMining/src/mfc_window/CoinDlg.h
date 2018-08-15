@@ -97,4 +97,7 @@ public:
 	std::string m_accessKey;
 	std::string m_secretKey;
 	bool m_bUseRreferenceCheck;
+	int m_maxBuyOrderCnt;
+	int m_maxSellOrderCnt;
+	CEdit m_editPriceCheck;
 };
