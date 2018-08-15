@@ -82,6 +82,7 @@ public:
 	eMarketType m_marketType;
 	std::string m_strMarketType;
 	CListBox m_listLog;
+	time_t m_tLastReconnectHightSpeed;
 	time_t m_tLastGetEntrustDepth;
 	time_t m_tLastGetReferenceExecutedOrder;
 	int m_successCreateTradeCnt;

@@ -71,6 +71,7 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_priceCheckValue(0)
 	, m_tLastGetReferenceExecutedOrder(0)
 	, m_bUseRreferenceCheck(true)
+	, m_tLastReconnectHightSpeed(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -551,6 +552,14 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 	case eTimerType_APIUpdate:
 		{
+			time_t tNow = time(NULL);
+			if(m_btnHightSpeed.GetCheck() && m_tLastGetEntrustDepth && tNow - m_tLastGetEntrustDepth > 20000 && tNow - m_tLastReconnectHightSpeed > 10)
+			{
+				g_pCoinDlg->AddLog("第三方参考行情长时间未同步,尝试重连!");
+				m_tLastReconnectHightSpeed = tNow;
+				pExchange->GetWebSocket()->Close();
+				pExchange->GetWebSocket()->Run();
+			}
 			LocalLogger::GetInstancePt()->SwapFront2Middle();
 			if(pExchange)
 				pExchange->Update();
@@ -560,7 +569,6 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pExchange->GetDataCenter()->m_mapTradeOrderID.end();
 			int cancelCheckTime = m_tradeFrequency/1000 * 5;
 			cancelCheckTime = max(cancelCheckTime, 180);
-			time_t tNow = time(NULL);
 			while(itB != itE)
 			{
 				if(itB->second.cancelTimes == 10)
