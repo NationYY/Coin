@@ -594,7 +594,8 @@ void CBWBTradeDlg::CheckPrice()
 				{
 					if(price > m_bwbUsdtSellPrice && pDataCenter->m_mapBalanceInfo["bwb"].balance >= 1)
 					{
-						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(m_bwbUsdtSellPrice, 4), false, 0, "");
+						price = price*0.9;
+						g_pExchange->GetTradeHttp()->API_Trade(eMarketType_BWB_USDT, CFuncCommon::ToString(int(pDataCenter->m_mapBalanceInfo["bwb"].balance)), CFuncCommon::Double2String(price, 4), false, 0, "");
 						pDataCenter->m_mapBalanceInfo["bwb"].balance = 0;
 					}
 				}
