@@ -85,6 +85,7 @@ public:
 	time_t m_tLastReconnectHightSpeed;
 	time_t m_tLastGetEntrustDepth;
 	time_t m_tLastGetReferenceExecutedOrder;
+	time_t m_tLastCheckBalanceTime;
 	int m_successCreateTradeCnt;
 	int m_failCreateTradeCnt;
 	int m_succesCancelTradeCnt;
@@ -100,4 +101,6 @@ public:
 	int m_maxBuyOrderCnt;
 	int m_maxSellOrderCnt;
 	CEdit m_editPriceCheck;
+	CStatic m_staticNowBuyTradeCnt;
+	CStatic m_staticNowSellTradeCnt;
 };

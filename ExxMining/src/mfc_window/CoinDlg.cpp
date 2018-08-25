@@ -18,7 +18,7 @@
 #endif
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CCoinDlg* g_pCoinDlg = NULL;
-const int CHECK_STATE_RATE = 3;
+const int CHECK_STATE_RATE = 5;
 int g_trade_pair_index = 1;
 CExchange* pExchange = NULL;
 CExchange* pReferenceExchange = NULL;
@@ -74,6 +74,7 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_tLastReconnectHightSpeed(0)
 	, m_maxBuyOrderCnt(0)
 	, m_maxSellOrderCnt(0)
+	, m_tLastCheckBalanceTime(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -101,6 +102,8 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT5, m_maxBuyOrderCnt);
 	DDX_Text(pDX, IDC_EDIT6, m_maxSellOrderCnt);
 	DDX_Control(pDX, IDC_EDIT3, m_editPriceCheck);
+	DDX_Control(pDX, IDC_STATIC10, m_staticNowBuyTradeCnt);
+	DDX_Control(pDX, IDC_STATIC12, m_staticNowSellTradeCnt);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -225,7 +228,13 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id2, it->second.id2);
 					}
 					else
+					{
 						g_pCoinDlg->m_mapTradePairs.erase(it);
+						if(pExchange && pExchange->GetHttp())
+							pExchange->GetHttp()->API_Balance();
+						g_pCoinDlg->m_tLastCheckBalanceTime = time(NULL);
+						g_pCoinDlg->KillTimer(eTimerType_Balance);
+					}
 				}
 				else
 				{
@@ -603,24 +612,63 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 					itB = pExchange->GetDataCenter()->m_mapTradeOrderID.erase(itB);
 				else
 				{
-					if(tNow - itB->second.addTime >= cancelCheckTime && tNow - itB->second.lastCancelTime > 30)
+					if(itB->second.tradeType == eTradeType_buy)
 					{
-						itB->second.cancelTimes++;
-						itB->second.lastCancelTime = tNow;
-						g_pCoinDlg->AddLog("超时未成交,提交撤单1[%s]!", itB->first.c_str());
-						pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
+						if(tNow - itB->second.addTime >= 40 && tNow - itB->second.lastCancelTime > 30)
+						{
+							itB->second.cancelTimes++;
+							itB->second.lastCancelTime = tNow;
+							g_pCoinDlg->AddLog("超时未成交,提交撤单1[%s]!", itB->first.c_str());
+							pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
+						}
 					}
+					else if(itB->second.tradeType == eTradeType_sell)
+					{
+						if(tNow - itB->second.addTime >= cancelCheckTime && tNow - itB->second.lastCancelTime > 30)
+						{
+							itB->second.cancelTimes++;
+							itB->second.lastCancelTime = tNow;
+							g_pCoinDlg->AddLog("超时未成交,提交撤单1[%s]!", itB->first.c_str());
+							pExchange->GetHttp()->API_CancelTrade(m_marketType, itB->first, itB->first);
+						}
+					}
+					
 					++itB;
 				}
 
 			}
+
+			CDataCenter* pDataCenter = pExchange->GetDataCenter();
+			std::map<std::string, CDataCenter::SOrderInfo>::iterator _itB = pDataCenter->m_mapTradeOrderID.begin();
+			std::map<std::string, CDataCenter::SOrderInfo>::iterator _itE = pDataCenter->m_mapTradeOrderID.end();
+			int buyCnt = 0;
+			int sellCnt = 0;
+			while(_itB != _itE)
+			{
+				if(_itB->second.tradeType == eTradeType_buy)
+					buyCnt++;
+				else if(_itB->second.tradeType == eTradeType_sell)
+					sellCnt++;
+				++_itB;
+			}
+			CString temp;
+			temp.Format("%d", buyCnt);
+			m_staticNowBuyTradeCnt.SetWindowText(temp.GetBuffer());
+			temp.Format("%d", sellCnt);
+			m_staticNowSellTradeCnt.SetWindowText(temp.GetBuffer());
 		}
 		break;
 	case eTimerType_Balance:
 		{
-			if(pExchange && pExchange->GetHttp())
-				pExchange->GetHttp()->API_Balance();
-			KillTimer(eTimerType_Balance);
+			time_t tNow = time(NULL);
+			if(tNow - m_tLastCheckBalanceTime > 4)
+			{
+				if(pExchange && pExchange->GetHttp())
+					pExchange->GetHttp()->API_Balance();
+				m_tLastCheckBalanceTime = tNow;
+				KillTimer(eTimerType_Balance);
+			}
+			
 		}
 		break;
 	case eTimerType_EntrustDepth:
@@ -713,37 +761,74 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
 					static int arrCheckOffset[] = {2,3,4,5,1};
 					bool bFound = false;
+					double finalPrice = 0.0;
+					CString szFinalPrice = "0.0";
 					for(int i=0; i<5; ++i)
 					{
 						double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
 						if(newBuyPrice > buyPrice)
 						{
 							bFound = true;
-							CString szPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
-							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
-							STradePair pair;
-							pair.tSendTime = time(NULL);
-							pair.tLastCheckTime = pair.tSendTime;
-							m_mapTradePairs[g_trade_pair_index] = pair;
-							g_trade_pair_index++;
+							finalPrice = newBuyPrice;
 							break;
 						}
 					}
 					if(!bFound)
 					{
-						CString szPrice = mapSellEntrustDepth.begin()->first.c_str();
-						if(pExchange->GetTradeHttp())
-							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-						if(pExchange->GetTradeHttp())
-							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
-						STradePair pair;
-						pair.tSendTime = time(NULL);
-						pair.tLastCheckTime = pair.tSendTime;
-						m_mapTradePairs[g_trade_pair_index] = pair;
-						g_trade_pair_index++;
+						szFinalPrice = mapSellEntrustDepth.begin()->first.c_str();
+						finalPrice = sellPrice;
+					}
+					else
+						szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
+					if(finalPrice > 0.0)
+					{
+						CString szTradeVolume = m_strTradeVolume;
+						int nTradeVolume = atoi(szTradeVolume.GetBuffer());
+						if(m_marketType != eMarketType_BWB_USDT)
+						{
+							KillTimer(eTimerType_Trade);
+							AfxMessageBox("必须挖BWB_USDT");
+							return;
+						}
+						double sellBWBCnt = pDataCenter->m_mapBalanceInfo["bwb"].balance;
+						double buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
+						if(nTradeVolume <= (int)sellBWBCnt && nTradeVolume <= (int)buyBWBCnt)
+						{
+						}
+						else if(nTradeVolume <= (int)sellBWBCnt || nTradeVolume <= (int)buyBWBCnt)
+						{
+
+						}
+						/*else if(nTradeVolume <= (int)buyBWBCnt)
+						{
+							double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+							double newBuyPrice = buyPrice + tradePremiumPrice;
+							buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / newBuyPrice*0.9;
+							buyBWBCnt = min(nTradeVolume, buyBWBCnt);
+							szFinalPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
+							nTradeVolume = (int)buyBWBCnt;
+							szTradeVolume.Format("%d", nTradeVolume);
+						}*/
+						else
+						{
+							if(sellBWBCnt <= buyBWBCnt)
+								nTradeVolume = int(sellBWBCnt*0.9);
+							else
+								nTradeVolume = (int)buyBWBCnt;
+							szTradeVolume.Format("%d", nTradeVolume);
+						}
+						if(nTradeVolume > 10)
+						{
+							if(pExchange->GetTradeHttp())
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+							if(pExchange->GetTradeHttp())
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+							STradePair pair;
+							pair.tSendTime = time(NULL);
+							pair.tLastCheckTime = pair.tSendTime;
+							m_mapTradePairs[g_trade_pair_index] = pair;
+							g_trade_pair_index++;
+						}
 					}
 				}
 			}
