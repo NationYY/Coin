@@ -815,6 +815,13 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 								nTradeVolume = int(sellBWBCnt*0.9);
 							else
 								nTradeVolume = (int)buyBWBCnt;
+							if(nTradeVolume <= 10)
+							{
+								if(sellBWBCnt <= buyBWBCnt)
+									nTradeVolume = (int)buyBWBCnt;
+								else
+									nTradeVolume = int(sellBWBCnt*0.9);
+							}
 							szTradeVolume.Format("%d", nTradeVolume);
 						}
 						if(nTradeVolume > 10)
