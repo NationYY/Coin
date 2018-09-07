@@ -103,4 +103,5 @@ public:
 	CEdit m_editPriceCheck;
 	CStatic m_staticNowBuyTradeCnt;
 	CStatic m_staticNowSellTradeCnt;
+	float m_fSpecPrice;
 };

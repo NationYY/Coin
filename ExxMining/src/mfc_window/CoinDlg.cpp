@@ -75,6 +75,7 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_maxBuyOrderCnt(0)
 	, m_maxSellOrderCnt(0)
 	, m_tLastCheckBalanceTime(0)
+	, m_fSpecPrice(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -104,6 +105,7 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_editPriceCheck);
 	DDX_Control(pDX, IDC_STATIC10, m_staticNowBuyTradeCnt);
 	DDX_Control(pDX, IDC_STATIC12, m_staticNowSellTradeCnt);
+	DDX_Text(pDX, IDC_EDIT7, m_fSpecPrice);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -758,33 +760,44 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 				}
 				else
 				{
-					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-					static int arrCheckOffset[] = {2,3,4,5,1};
-					bool bFound = false;
 					double finalPrice = 0.0;
 					CString szFinalPrice = "0.0";
-					for(int i=0; i<5; ++i)
+					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+					if(m_fSpecPrice > 0)
 					{
-						double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
-						if(newBuyPrice > buyPrice)
+						if(m_fSpecPrice > buyPrice && m_fSpecPrice < sellPrice)
 						{
-							bFound = true;
-							finalPrice = newBuyPrice;
-							break;
+							finalPrice = m_fSpecPrice;
+							szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
 						}
 					}
-					if(!bFound)
-					{
-						szFinalPrice = mapSellEntrustDepth.begin()->first.c_str();
-						finalPrice = sellPrice;
-					}
 					else
-						szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
+					{
+						static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+						bool bFound = false;
+						for(int i = 0; i<5; ++i)
+						{
+							double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
+							if(newBuyPrice > buyPrice)
+							{
+								bFound = true;
+								finalPrice = newBuyPrice;
+								break;
+							}
+						}
+						if(!bFound)
+						{
+							szFinalPrice = mapSellEntrustDepth.begin()->first.c_str();
+							finalPrice = sellPrice;
+						}
+						else
+							szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
+					}
 					if(finalPrice > 0.0)
 					{
 						CString szTradeVolume = m_strTradeVolume;
 						int nTradeVolume = atoi(szTradeVolume.GetBuffer());
-						if(m_marketType != eMarketType_BWB_USDT || m_marketType != eMarketType_BWB_ETH)
+						if(m_marketType != eMarketType_BWB_USDT && m_marketType != eMarketType_BWB_ETH)
 						{
 							KillTimer(eTimerType_Trade);
 							AfxMessageBox("±ØÐëÍÚBWB_USDT»òÕßBWB_ETH");
