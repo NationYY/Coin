@@ -784,14 +784,18 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 					{
 						CString szTradeVolume = m_strTradeVolume;
 						int nTradeVolume = atoi(szTradeVolume.GetBuffer());
-						if(m_marketType != eMarketType_BWB_USDT)
+						if(m_marketType != eMarketType_BWB_USDT || m_marketType != eMarketType_BWB_ETH)
 						{
 							KillTimer(eTimerType_Trade);
-							AfxMessageBox("必须挖BWB_USDT");
+							AfxMessageBox("必须挖BWB_USDT或者BWB_ETH");
 							return;
 						}
 						double sellBWBCnt = pDataCenter->m_mapBalanceInfo["bwb"].balance;
-						double buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
+						double buyBWBCnt = 0;
+						if(m_marketType != eMarketType_BWB_USDT)
+							buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
+						else if(m_marketType != eMarketType_BWB_ETH)
+							buyBWBCnt = pDataCenter->m_mapBalanceInfo["eth"].balance / finalPrice*0.9;
 						if(nTradeVolume <= (int)sellBWBCnt && nTradeVolume <= (int)buyBWBCnt)
 						{
 						}
