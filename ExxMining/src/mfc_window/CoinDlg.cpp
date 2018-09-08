@@ -520,7 +520,10 @@ void CCoinDlg::OnBnClickedButtonBegin()
 	}
 	CString temp;
 	m_cbMarketType.GetWindowTextA(temp);
-	m_strMarketType = temp.GetBuffer();
+	char szBuffer[128];
+	_snprintf(szBuffer, 128, "%d", pExchange->GetMarketID((eMarketType)type));
+	m_strMarketType = szBuffer;
+	//m_strMarketType = temp.GetBuffer();
 	m_marketType = (eMarketType)type;
 	if(m_strTradeVolume == "")
 	{
@@ -717,6 +720,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 					if(buyPrice < sellPrice && latestExecutedOrderPrice > 0)
 					{
 						bool bPass = true;
+						int firstAction = 0;
 						if(buyPrice < latestExecutedOrderPrice && sellPrice > latestExecutedOrderPrice)
 						{
 							double tempBuyPrice = (sellPrice - buyPrice) / 2 + buyPrice;
@@ -729,27 +733,104 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 						}
 						else
 						{
-							if(buyPrice > latestExecutedOrderPrice && (buyPrice / latestExecutedOrderPrice) > 1 + m_priceCheckValue)
-								bPass = false;
-							else if(buyPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice / buyPrice) > 1 + m_priceCheckValue)
-								bPass = false;
+							double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+							if(buyPrice > latestExecutedOrderPrice)
+							{
+								if((buyPrice / latestExecutedOrderPrice) > 1 + m_priceCheckValue)
+									bPass = false;
+								else
+								{
+									static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+									bool bFound = false;
+									for(int i = 0; i<5; ++i)
+									{
+										double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
+										if(newBuyPrice > buyPrice)
+										{
+											bFound = true;
+											buyPrice = newBuyPrice;
+											break;
+										}
+									}
+									firstAction = 2;
+								}
+							}
+							else if(sellPrice < latestExecutedOrderPrice)
+							{
+								if((latestExecutedOrderPrice / sellPrice) > 1 + m_priceCheckValue)
+									bPass = false;
+								else
+								{
+									static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+									bool bFound = false;
+									for(int i = 0; i<5; ++i)
+									{
+										double newBuyPrice = buyPrice + tradePremiumPrice * arrCheckOffset[i];
+										if(newBuyPrice < sellPrice)
+										{
+											bFound = true;
+											buyPrice = newBuyPrice;
+											break;
+										}
+									}
+									if(!bFound)
+										buyPrice = sellPrice;
+									firstAction = 1;
+								}
+							}
+								
 							//else if(sellPrice > latestExecutedOrderPrice && (sellPrice/latestExecutedOrderPrice) > 1.005)
 							//	bPass = false;
 							//else if(sellPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/sellPrice) > 1.005)
 							//	bPass = false;
-							else
+							/*else
 							{
 								double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-								buyPrice = buyPrice + tradePremiumPrice * 3;
-							}
+								static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+								bool bFound = false;
+								for(int i = 0; i<5; ++i)
+								{
+									double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
+									if(newBuyPrice > buyPrice)
+									{
+										bFound = true;
+										buyPrice = newBuyPrice;
+										break;
+									}
+								}
+								if(!bFound)
+									buyPrice = sellPrice;
+
+								
+								//buyPrice = buyPrice + tradePremiumPrice * 3;
+							}*/
 						}
 						if(bPass)
 						{
 							CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
-							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+							if(firstAction == 0)
+							{
+								if(pExchange->GetTradeHttp())
+									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+								if(pExchange->GetTradeHttp())
+									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+							}
+							else if(firstAction == 1)
+							{
+								if(pExchange->GetTradeHttp())
+									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+								Sleep(1);
+								if(pExchange->GetTradeHttp())
+									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+							}
+							else if(firstAction == 2)
+							{
+								if(pExchange->GetTradeHttp())
+									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+								Sleep(1);
+								if(pExchange->GetTradeHttp())
+									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+							}
 							STradePair pair;
 							pair.tSendTime = time(NULL);
 							pair.tLastCheckTime = pair.tSendTime;
