@@ -241,7 +241,6 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				else
 				{
 					g_pCoinDlg->m_failCreateTradeCnt++;
-					g_pCoinDlg->UpdateTradeReport();
 					if(it->second.id1 == "NULL")
 						it->second.id1 = "";
 					else if(it->second.id1 == "")
@@ -251,9 +250,11 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					else
 					{
 						it->second.id2 = "";
-						g_pCoinDlg->AddLog("组合下单失败,提交撤单3[%s]!", it->second.id1.c_str());
+						g_pCoinDlg->m_successCreateTradeCnt--;
+						g_pCoinDlg->AddLog("组合下单失败[%s],提交撤单3[%s]!", retObj["resMsg"]["message"].asString().c_str(), it->second.id1.c_str());
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id1, it->second.id1);
 					}
+					g_pCoinDlg->UpdateTradeReport();
 				}
 			}
 		}
@@ -287,7 +288,13 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					++itB;
 				}
 			}
-
+			else
+			{
+				if(retObj["resMsg"]["message"].isString())
+					g_pCoinDlg->AddLog("撤单失败[%s]! id[%s]", retObj["resMsg"]["message"].asString().c_str(), strCustomData.c_str());
+				else
+					g_pCoinDlg->AddLog("撤单失败[%s]!", strCustomData.c_str());
+			}
 		}
 		break;
 	default:
