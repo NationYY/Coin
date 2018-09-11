@@ -527,10 +527,10 @@ void CCoinDlg::OnBnClickedButtonBegin()
 	}
 	CString temp;
 	m_cbMarketType.GetWindowTextA(temp);
-	char szBuffer[128];
-	_snprintf(szBuffer, 128, "%d", pExchange->GetMarketID((eMarketType)type));
-	m_strMarketType = szBuffer;
-	//m_strMarketType = temp.GetBuffer();
+	//char szBuffer[128];
+	//_snprintf(szBuffer, 128, "%d", pExchange->GetMarketID((eMarketType)type));
+	//m_strMarketType = szBuffer;
+	m_strMarketType = temp.GetBuffer();
 	m_marketType = (eMarketType)type;
 	if(m_strTradeVolume == "")
 	{

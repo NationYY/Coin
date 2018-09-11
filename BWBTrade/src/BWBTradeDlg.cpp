@@ -369,8 +369,8 @@ void CBWBTradeDlg::UpdateEntrustDepth()
 	m_listCtrlBwbBtc.DeleteAllItems();
 	CDataCenter* pDataCenter = g_pExchange->GetDataCenter();
 	{
-		std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth["302"].mapBuyEntrustDepth;
-		std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth["302"].mapSellEntrustDepth;
+		std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth["BWB_USDT"].mapBuyEntrustDepth;
+		std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth["BWB_USDT"].mapSellEntrustDepth;
 		int sellLine = min(mapSellEntrustDepth.size(), showLines);
 		for(int i = 0; i < sellLine; ++i)
 		{
