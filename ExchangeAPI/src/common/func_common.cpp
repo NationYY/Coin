@@ -35,6 +35,20 @@ std::string CFuncCommon::Double2String(double value, int decimal)
 	return ss.str();
 }
 
+double CFuncCommon::Round(double value, int decimal)
+{
+	std::stringstream ss;
+	ss.setf(std::ios::fixed);
+	ss << std::setprecision(decimal) << value;
+
+	double result;
+	ss >> result;
+	return result;
+}
+
+
+
+
 bool CFuncCommon::CheckEqual(double a, double b)
 {
 	return (fabs(a - b) < 0.000001) ? true : false;

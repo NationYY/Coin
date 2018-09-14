@@ -107,4 +107,6 @@ public:
 	float m_fSpecPrice;
 	int m_nextTradeFrequency;
 	DWORD m_dwLastUpdateTime;
+	float m_minPrice;
+	float m_maxPrice;
 };

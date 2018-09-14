@@ -11,5 +11,6 @@ public:
 	static char* ToString(__int64 number);
 	static char* ToString(int number);
 	static char* ToString(unsigned int number);
+	static double Round(double value, int decimal);
 };
 

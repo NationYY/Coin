@@ -78,6 +78,8 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_fSpecPrice(0)
 	, m_nextTradeFrequency(0)
 	, m_dwLastUpdateTime(0)
+	, m_minPrice(0)
+	, m_maxPrice(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -108,6 +110,8 @@ void CCoinDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC10, m_staticNowBuyTradeCnt);
 	DDX_Control(pDX, IDC_STATIC12, m_staticNowSellTradeCnt);
 	DDX_Text(pDX, IDC_EDIT7, m_fSpecPrice);
+	DDX_Text(pDX, IDC_EDIT8, m_minPrice);
+	DDX_Text(pDX, IDC_EDIT9, m_maxPrice);
 }
 
 BEGIN_MESSAGE_MAP(CCoinDlg, CDialogEx)
@@ -989,9 +993,11 @@ void CCoinDlg::TradeLogic()
 	{
 		double buyPrice, sellPrice;
 		sellPrice = atof(mapSellEntrustDepth.begin()->first.c_str());
+		sellPrice = CFuncCommon::Round(sellPrice, m_tradePriceDecimal);
 		std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
 		it--;
 		buyPrice = atof(it->first.c_str());
+		buyPrice = CFuncCommon::Round(buyPrice, m_tradePriceDecimal);
 		if(m_bUseRreferenceCheck)
 		{
 			double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_mapLatestExecutedOrderPrice[""];
@@ -1132,6 +1138,7 @@ void CCoinDlg::TradeLogic()
 			}
 			else
 			{
+				buyPrice += 0.0000001;
 				static int arrCheckOffset[] = {2, 3, 4, 5, 1};
 				bool bFound = false;
 				for(int i = 0; i<5; ++i)
@@ -1146,13 +1153,22 @@ void CCoinDlg::TradeLogic()
 				}
 				if(!bFound)
 				{
-					szFinalPrice = mapSellEntrustDepth.begin()->first.c_str();
-					finalPrice = sellPrice;
+					std::map<std::string, std::string>::iterator itTemp = mapBuyEntrustDepth.end();
+					itTemp--;
+					szFinalPrice = itTemp->first.c_str();
+					finalPrice = atof(szFinalPrice.GetBuffer());
+					finalPrice = CFuncCommon::Round(finalPrice, m_tradePriceDecimal);
 				}
 				else
 					szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
 			}
-			if(finalPrice > 0.0)
+			bool bCheck = true;
+			if(m_minPrice > 0.0000001 && m_maxPrice > 0.0000001)
+			{
+				if(finalPrice < m_minPrice || finalPrice > m_maxPrice)
+					bCheck = false;
+			}
+			if(finalPrice > 0.0000001 && bCheck)
 			{
 				CString szTradeVolume = m_strTradeVolume;
 				int nTradeVolume = atoi(szTradeVolume.GetBuffer());
