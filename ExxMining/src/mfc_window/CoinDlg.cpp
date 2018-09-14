@@ -76,6 +76,8 @@ CCoinDlg::CCoinDlg(CWnd* pParent /*=NULL*/)
 	, m_maxSellOrderCnt(0)
 	, m_tLastCheckBalanceTime(0)
 	, m_fSpecPrice(0)
+	, m_nextTradeFrequency(0)
+	, m_dwLastUpdateTime(0)
 {
 	g_pCoinDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -576,10 +578,11 @@ void CCoinDlg::OnBnClickedButtonBegin()
 	m_bUseRreferenceCheck = pReferenceExchange->IsSupportMarket(m_marketType);
 	if(m_bUseRreferenceCheck)
 		pReferenceExchange->GetWebSocket()->API_LatestExecutedOrder((eMarketType)type);
-	SetTimer(eTimerType_Trade, m_tradeFrequency, NULL);
+	//SetTimer(eTimerType_Trade, m_tradeFrequency, NULL);
 	SetTimer(eTimerType_TradeOrderState, 1000, NULL);
 
 
+	m_nextTradeFrequency = 0;
 
 	m_config.set_value("bw", "market_select", CFuncCommon::ToString(sel));
 	m_config.set_value("bw", "trade_volume", m_strTradeVolume.GetBuffer());
@@ -668,6 +671,27 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 			m_staticNowBuyTradeCnt.SetWindowText(temp.GetBuffer());
 			temp.Format("%d", sellCnt);
 			m_staticNowSellTradeCnt.SetWindowText(temp.GetBuffer());
+
+			if(m_bUseRreferenceCheck && m_tLastGetReferenceExecutedOrder && tNow - m_tLastGetReferenceExecutedOrder > 30000)
+			{
+				OnBnClickedButtonStop();
+				pExchange->GetWebSocket()->Close();
+				pExchange->Run();
+				while(!pExchange->GetWebSocket()->IsConnect())
+				{
+
+				}
+				OnBnClickedButtonBegin();
+			}
+			DWORD dwNow = GetTickCount();
+			if(dwNow < m_dwLastUpdateTime || dwNow - m_dwLastUpdateTime >= m_nextTradeFrequency && m_bIsRun)
+			{
+				TradeLogic();
+				m_dwLastUpdateTime = dwNow;
+				int min = m_tradeFrequency*0.3;
+				int _rand = (rand()%(m_tradeFrequency - min)) + min;
+				m_nextTradeFrequency = _rand;
+			}
 		}
 		break;
 	case eTimerType_Balance:
@@ -691,259 +715,7 @@ void CCoinDlg::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case eTimerType_Trade:
 		{
-			double offset = m_tradeFrequency/1000.0*2.5;
-			time_t tNow = time(NULL);
-			if(tNow - m_tLastGetEntrustDepth > offset)
-				return;
-			if(m_bUseRreferenceCheck && tNow - m_tLastGetReferenceExecutedOrder > 30000)
-				return;
-			CDataCenter* pDataCenter = pExchange->GetDataCenter();
-			std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth[m_strMarketType].mapBuyEntrustDepth;
-			std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth[m_strMarketType].mapSellEntrustDepth;
-
-			std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pDataCenter->m_mapTradeOrderID.begin();
-			std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pDataCenter->m_mapTradeOrderID.end();
-			int buyCnt = 0;
-			int sellCnt = 0;
-			while(itB != itE)
-			{
-				if(itB->second.tradeType == eTradeType_buy)
-					buyCnt++;
-				else if(itB->second.tradeType == eTradeType_sell)
-					sellCnt++;
-				++itB;
-			}
-			bool bCheck = ((m_maxBuyOrderCnt == 0 || buyCnt < m_maxBuyOrderCnt) && (m_maxSellOrderCnt == 0 || sellCnt < m_maxSellOrderCnt));
-			if(pDataCenter && mapBuyEntrustDepth.size() && mapSellEntrustDepth.size() && bCheck)
-			{
-				double buyPrice, sellPrice;
-				sellPrice = atof(mapSellEntrustDepth.begin()->first.c_str());
-				std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
-				it--;
-				buyPrice = atof(it->first.c_str());
-				if(m_bUseRreferenceCheck)
-				{
-					double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_mapLatestExecutedOrderPrice[""];
-					if(buyPrice < sellPrice && latestExecutedOrderPrice > 0)
-					{
-						bool bPass = true;
-						int firstAction = 0;
-						if(buyPrice < latestExecutedOrderPrice && sellPrice > latestExecutedOrderPrice)
-						{
-							double tempBuyPrice = (sellPrice - buyPrice) / 2 + buyPrice;
-							if(tempBuyPrice > latestExecutedOrderPrice && (tempBuyPrice / latestExecutedOrderPrice) > 1.001)
-								buyPrice = latestExecutedOrderPrice;
-							else if(tempBuyPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice / tempBuyPrice) >1.001)
-								buyPrice = latestExecutedOrderPrice;
-							else
-								buyPrice = tempBuyPrice;
-						}
-						else
-						{
-							double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-							if(buyPrice > latestExecutedOrderPrice)
-							{
-								if((buyPrice / latestExecutedOrderPrice) > 1 + m_priceCheckValue)
-									bPass = false;
-								else
-								{
-									static int arrCheckOffset[] = {2, 3, 4, 5, 1};
-									bool bFound = false;
-									for(int i = 0; i<5; ++i)
-									{
-										double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
-										if(newBuyPrice > buyPrice)
-										{
-											bFound = true;
-											buyPrice = newBuyPrice;
-											break;
-										}
-									}
-									firstAction = 2;
-								}
-							}
-							else if(sellPrice < latestExecutedOrderPrice)
-							{
-								if((latestExecutedOrderPrice / sellPrice) > 1 + m_priceCheckValue)
-									bPass = false;
-								else
-								{
-									static int arrCheckOffset[] = {2, 3, 4, 5, 1};
-									bool bFound = false;
-									for(int i = 0; i<5; ++i)
-									{
-										double newBuyPrice = buyPrice + tradePremiumPrice * arrCheckOffset[i];
-										if(newBuyPrice < sellPrice)
-										{
-											bFound = true;
-											buyPrice = newBuyPrice;
-											break;
-										}
-									}
-									if(!bFound)
-										buyPrice = sellPrice;
-									firstAction = 1;
-								}
-							}
-								
-							//else if(sellPrice > latestExecutedOrderPrice && (sellPrice/latestExecutedOrderPrice) > 1.005)
-							//	bPass = false;
-							//else if(sellPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/sellPrice) > 1.005)
-							//	bPass = false;
-							/*else
-							{
-								double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-								static int arrCheckOffset[] = {2, 3, 4, 5, 1};
-								bool bFound = false;
-								for(int i = 0; i<5; ++i)
-								{
-									double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
-									if(newBuyPrice > buyPrice)
-									{
-										bFound = true;
-										buyPrice = newBuyPrice;
-										break;
-									}
-								}
-								if(!bFound)
-									buyPrice = sellPrice;
-
-								
-								//buyPrice = buyPrice + tradePremiumPrice * 3;
-							}*/
-						}
-						if(bPass)
-						{
-							CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
-							if(firstAction == 0)
-							{
-								if(pExchange->GetTradeHttp())
-									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-								if(pExchange->GetTradeHttp())
-									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
-							}
-							else if(firstAction == 1)
-							{
-								if(pExchange->GetTradeHttp())
-									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-								Sleep(1);
-								if(pExchange->GetTradeHttp())
-									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
-							}
-							else if(firstAction == 2)
-							{
-								if(pExchange->GetTradeHttp())
-									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
-								Sleep(1);
-								if(pExchange->GetTradeHttp())
-									pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-							}
-							STradePair pair;
-							pair.tSendTime = time(NULL);
-							pair.tLastCheckTime = pair.tSendTime;
-							m_mapTradePairs[g_trade_pair_index] = pair;
-							g_trade_pair_index++;
-						}
-					}
-				}
-				else
-				{
-					double finalPrice = 0.0;
-					CString szFinalPrice = "0.0";
-					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-					if(m_fSpecPrice > 0)
-					{
-						if(m_fSpecPrice > buyPrice && m_fSpecPrice < sellPrice)
-						{
-							finalPrice = m_fSpecPrice;
-							szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
-						}
-					}
-					else
-					{
-						static int arrCheckOffset[] = {2, 3, 4, 5, 1};
-						bool bFound = false;
-						for(int i = 0; i<5; ++i)
-						{
-							double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
-							if(newBuyPrice > buyPrice)
-							{
-								bFound = true;
-								finalPrice = newBuyPrice;
-								break;
-							}
-						}
-						if(!bFound)
-						{
-							szFinalPrice = mapSellEntrustDepth.begin()->first.c_str();
-							finalPrice = sellPrice;
-						}
-						else
-							szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
-					}
-					if(finalPrice > 0.0)
-					{
-						CString szTradeVolume = m_strTradeVolume;
-						int nTradeVolume = atoi(szTradeVolume.GetBuffer());
-						if(m_marketType != eMarketType_BWB_USDT && m_marketType != eMarketType_BWB_ETH)
-						{
-							KillTimer(eTimerType_Trade);
-							AfxMessageBox("必须挖BWB_USDT或者BWB_ETH");
-							return;
-						}
-						double sellBWBCnt = pDataCenter->m_mapBalanceInfo["bwb"].balance;
-						double buyBWBCnt = 0;
-						if(m_marketType != eMarketType_BWB_USDT)
-							buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
-						else if(m_marketType != eMarketType_BWB_ETH)
-							buyBWBCnt = pDataCenter->m_mapBalanceInfo["eth"].balance / finalPrice*0.9;
-						if(nTradeVolume <= (int)sellBWBCnt && nTradeVolume <= (int)buyBWBCnt)
-						{
-						}
-						else if(nTradeVolume <= (int)sellBWBCnt || nTradeVolume <= (int)buyBWBCnt)
-						{
-
-						}
-						/*else if(nTradeVolume <= (int)buyBWBCnt)
-						{
-							double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
-							double newBuyPrice = buyPrice + tradePremiumPrice;
-							buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / newBuyPrice*0.9;
-							buyBWBCnt = min(nTradeVolume, buyBWBCnt);
-							szFinalPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
-							nTradeVolume = (int)buyBWBCnt;
-							szTradeVolume.Format("%d", nTradeVolume);
-						}*/
-						else
-						{
-							if(sellBWBCnt <= buyBWBCnt)
-								nTradeVolume = int(sellBWBCnt*0.9);
-							else
-								nTradeVolume = (int)buyBWBCnt;
-							if(nTradeVolume <= 10)
-							{
-								if(sellBWBCnt <= buyBWBCnt)
-									nTradeVolume = (int)buyBWBCnt;
-								else
-									nTradeVolume = int(sellBWBCnt*0.9);
-							}
-							szTradeVolume.Format("%d", nTradeVolume);
-						}
-						if(nTradeVolume > 10)
-						{
-							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-							if(pExchange->GetTradeHttp())
-								pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), false, g_trade_pair_index, "sell");
-							STradePair pair;
-							pair.tSendTime = time(NULL);
-							pair.tLastCheckTime = pair.tSendTime;
-							m_mapTradePairs[g_trade_pair_index] = pair;
-							g_trade_pair_index++;
-						}
-					}
-				}
-			}
+			TradeLogic();
 		}
 		break;
 	case eTimerType_TradeOrderState:
@@ -1119,7 +891,7 @@ void CCoinDlg::OnBnClickedButtonStop()
 		{
 			g_pCoinDlg->KillTimer(eTimerType_EntrustDepth);
 		}
-		g_pCoinDlg->KillTimer(eTimerType_Trade);
+		//g_pCoinDlg->KillTimer(eTimerType_Trade);
 		//g_pCoinDlg->KillTimer(eTimerType_TradeOrderState);
 		m_bIsRun = false;
 	}
@@ -1185,4 +957,262 @@ void CCoinDlg::UpdateTradeReport()
 	temp.Format("%d", m_failCreateTradeCnt);
 	m_staticFailCreateTradeCnt.SetWindowText(temp.GetBuffer());
 	
+}
+
+
+void CCoinDlg::TradeLogic()
+{
+	double offset = m_tradeFrequency/1000.0*2.5;
+	time_t tNow = time(NULL);
+	if(tNow - m_tLastGetEntrustDepth > offset)
+		return;
+	if(m_bUseRreferenceCheck && tNow - m_tLastGetReferenceExecutedOrder > 30000)
+		return;
+	CDataCenter* pDataCenter = pExchange->GetDataCenter();
+	std::map<std::string, std::string>& mapBuyEntrustDepth = pDataCenter->m_mapEntrustDepth[m_strMarketType].mapBuyEntrustDepth;
+	std::map<std::string, std::string>& mapSellEntrustDepth = pDataCenter->m_mapEntrustDepth[m_strMarketType].mapSellEntrustDepth;
+
+	std::map<std::string, CDataCenter::SOrderInfo>::iterator itB = pDataCenter->m_mapTradeOrderID.begin();
+	std::map<std::string, CDataCenter::SOrderInfo>::iterator itE = pDataCenter->m_mapTradeOrderID.end();
+	int buyCnt = 0;
+	int sellCnt = 0;
+	while(itB != itE)
+	{
+		if(itB->second.tradeType == eTradeType_buy)
+			buyCnt++;
+		else if(itB->second.tradeType == eTradeType_sell)
+			sellCnt++;
+		++itB;
+	}
+	bool bCheck = ((m_maxBuyOrderCnt == 0 || buyCnt < m_maxBuyOrderCnt) && (m_maxSellOrderCnt == 0 || sellCnt < m_maxSellOrderCnt));
+	if(pDataCenter && mapBuyEntrustDepth.size() && mapSellEntrustDepth.size() && bCheck)
+	{
+		double buyPrice, sellPrice;
+		sellPrice = atof(mapSellEntrustDepth.begin()->first.c_str());
+		std::map<std::string, std::string>::iterator it = mapBuyEntrustDepth.end();
+		it--;
+		buyPrice = atof(it->first.c_str());
+		if(m_bUseRreferenceCheck)
+		{
+			double latestExecutedOrderPrice = pReferenceExchange->GetDataCenter()->m_mapLatestExecutedOrderPrice[""];
+			if(buyPrice < sellPrice && latestExecutedOrderPrice > 0)
+			{
+				bool bPass = true;
+				int firstAction = 0;
+				if(buyPrice < latestExecutedOrderPrice && sellPrice > latestExecutedOrderPrice)
+				{
+					double tempBuyPrice = (sellPrice - buyPrice) / 2 + buyPrice;
+					if(tempBuyPrice > latestExecutedOrderPrice && (tempBuyPrice / latestExecutedOrderPrice) > 1.001)
+						buyPrice = latestExecutedOrderPrice;
+					else if(tempBuyPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice / tempBuyPrice) >1.001)
+						buyPrice = latestExecutedOrderPrice;
+					else
+						buyPrice = tempBuyPrice;
+				}
+				else
+				{
+					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+					if(buyPrice > latestExecutedOrderPrice)
+					{
+						if((buyPrice / latestExecutedOrderPrice) > 1 + m_priceCheckValue)
+							bPass = false;
+						else
+						{
+							static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+							bool bFound = false;
+							for(int i = 0; i<5; ++i)
+							{
+								double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
+								if(newBuyPrice > buyPrice)
+								{
+									bFound = true;
+									buyPrice = newBuyPrice;
+									break;
+								}
+							}
+							firstAction = 2;
+						}
+					}
+					else if(sellPrice < latestExecutedOrderPrice)
+					{
+						if((latestExecutedOrderPrice / sellPrice) > 1 + m_priceCheckValue)
+							bPass = false;
+						else
+						{
+							static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+							bool bFound = false;
+							for(int i = 0; i<5; ++i)
+							{
+								double newBuyPrice = buyPrice + tradePremiumPrice * arrCheckOffset[i];
+								if(newBuyPrice < sellPrice)
+								{
+									bFound = true;
+									buyPrice = newBuyPrice;
+									break;
+								}
+							}
+							if(!bFound)
+								buyPrice = sellPrice;
+							firstAction = 1;
+						}
+					}
+								
+					//else if(sellPrice > latestExecutedOrderPrice && (sellPrice/latestExecutedOrderPrice) > 1.005)
+					//	bPass = false;
+					//else if(sellPrice < latestExecutedOrderPrice && (latestExecutedOrderPrice/sellPrice) > 1.005)
+					//	bPass = false;
+					/*else
+					{
+						double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+						static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+						bool bFound = false;
+						for(int i = 0; i<5; ++i)
+						{
+							double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
+							if(newBuyPrice > buyPrice)
+							{
+								bFound = true;
+								buyPrice = newBuyPrice;
+								break;
+							}
+						}
+						if(!bFound)
+							buyPrice = sellPrice;
+
+								
+						//buyPrice = buyPrice + tradePremiumPrice * 3;
+					}*/
+				}
+				if(bPass)
+				{
+					CString szPrice = CFuncCommon::Double2String(buyPrice, m_tradePriceDecimal).c_str();
+					if(firstAction == 0)
+					{
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+					}
+					else if(firstAction == 1)
+					{
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+						Sleep(1);
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+					}
+					else if(firstAction == 2)
+					{
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+						Sleep(1);
+						if(pExchange->GetTradeHttp())
+							pExchange->GetTradeHttp()->API_Trade(m_marketType, m_strTradeVolume.GetBuffer(), szPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+					}
+					STradePair pair;
+					pair.tSendTime = time(NULL);
+					pair.tLastCheckTime = pair.tSendTime;
+					m_mapTradePairs[g_trade_pair_index] = pair;
+					g_trade_pair_index++;
+				}
+			}
+		}
+		else
+		{
+			double finalPrice = 0.0;
+			CString szFinalPrice = "0.0";
+			double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+			if(m_fSpecPrice > 0)
+			{
+				if(m_fSpecPrice > buyPrice && m_fSpecPrice < sellPrice)
+				{
+					finalPrice = m_fSpecPrice;
+					szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
+				}
+			}
+			else
+			{
+				static int arrCheckOffset[] = {2, 3, 4, 5, 1};
+				bool bFound = false;
+				for(int i = 0; i<5; ++i)
+				{
+					double newBuyPrice = sellPrice - tradePremiumPrice * arrCheckOffset[i];
+					if(newBuyPrice > buyPrice)
+					{
+						bFound = true;
+						finalPrice = newBuyPrice;
+						break;
+					}
+				}
+				if(!bFound)
+				{
+					szFinalPrice = mapSellEntrustDepth.begin()->first.c_str();
+					finalPrice = sellPrice;
+				}
+				else
+					szFinalPrice = CFuncCommon::Double2String(finalPrice, m_tradePriceDecimal).c_str();
+			}
+			if(finalPrice > 0.0)
+			{
+				CString szTradeVolume = m_strTradeVolume;
+				int nTradeVolume = atoi(szTradeVolume.GetBuffer());
+				if(m_marketType != eMarketType_BWB_USDT && m_marketType != eMarketType_BWB_ETH)
+				{
+					//KillTimer(eTimerType_Trade);
+					AfxMessageBox("必须挖BWB_USDT或者BWB_ETH");
+					return;
+				}
+				double sellBWBCnt = pDataCenter->m_mapBalanceInfo["bwb"].balance;
+				double buyBWBCnt = 0;
+				if(m_marketType == eMarketType_BWB_USDT)
+					buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
+				else if(m_marketType == eMarketType_BWB_ETH)
+					buyBWBCnt = pDataCenter->m_mapBalanceInfo["eth"].balance / finalPrice*0.9;
+				if(nTradeVolume <= (int)sellBWBCnt && nTradeVolume <= (int)buyBWBCnt)
+				{
+				}
+				else if(nTradeVolume <= (int)sellBWBCnt || nTradeVolume <= (int)buyBWBCnt)
+				{
+
+				}
+				/*else if(nTradeVolume <= (int)buyBWBCnt)
+				{
+					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
+					double newBuyPrice = buyPrice + tradePremiumPrice;
+					buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / newBuyPrice*0.9;
+					buyBWBCnt = min(nTradeVolume, buyBWBCnt);
+					szFinalPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
+					nTradeVolume = (int)buyBWBCnt;
+					szTradeVolume.Format("%d", nTradeVolume);
+				}*/
+				else
+				{
+					if(sellBWBCnt <= buyBWBCnt)
+						nTradeVolume = int(sellBWBCnt*0.9);
+					else
+						nTradeVolume = (int)buyBWBCnt;
+					if(nTradeVolume <= 10)
+					{
+						if(sellBWBCnt <= buyBWBCnt)
+							nTradeVolume = (int)buyBWBCnt;
+						else
+							nTradeVolume = int(sellBWBCnt*0.9);
+					}
+					szTradeVolume.Format("%d", nTradeVolume);
+				}
+				if(nTradeVolume > 10)
+				{
+					if(pExchange->GetTradeHttp())
+						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), true, g_trade_pair_index, "buy");
+					if(pExchange->GetTradeHttp())
+						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+					STradePair pair;
+					pair.tSendTime = time(NULL);
+					pair.tLastCheckTime = pair.tSendTime;
+					m_mapTradePairs[g_trade_pair_index] = pair;
+					g_trade_pair_index++;
+				}
+			}
+		}
+	}
 }

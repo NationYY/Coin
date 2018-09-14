@@ -48,6 +48,7 @@ public:
 	void UpdateEntrustDepth();
 	void UpdateFinishOrder();
 	void UpdateTradeReport();
+	void TradeLogic();
 	void AddLog(char* szLog, ...);
 	CListCtrl m_listBalance;
 	clib::config m_config;
@@ -104,4 +105,6 @@ public:
 	CStatic m_staticNowBuyTradeCnt;
 	CStatic m_staticNowSellTradeCnt;
 	float m_fSpecPrice;
+	int m_nextTradeFrequency;
+	DWORD m_dwLastUpdateTime;
 };
