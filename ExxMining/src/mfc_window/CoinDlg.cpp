@@ -1219,9 +1219,10 @@ void CCoinDlg::TradeLogic()
 				if(nTradeVolume > 10)
 				{
 					if(pExchange->GetTradeHttp())
-						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), true, g_trade_pair_index, "buy");
-					if(pExchange->GetTradeHttp())
 						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), false, g_trade_pair_index, "sell");
+					Sleep(1);
+					if(pExchange->GetTradeHttp())
+						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), true, g_trade_pair_index, "buy");
 					STradePair pair;
 					pair.tSendTime = time(NULL);
 					pair.tLastCheckTime = pair.tSendTime;
