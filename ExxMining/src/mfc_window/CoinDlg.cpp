@@ -1166,7 +1166,39 @@ void CCoinDlg::TradeLogic()
 			if(m_minPrice > 0.0000001 && m_maxPrice > 0.0000001)
 			{
 				if(finalPrice < m_minPrice || finalPrice > m_maxPrice)
+				{
+					if(finalPrice > m_maxPrice)
+					{
+						//尝试压价
+						std::map<std::string, std::string>::reverse_iterator itRB = mapBuyEntrustDepth.rbegin();
+						std::map<std::string, std::string>::reverse_iterator itRE = mapBuyEntrustDepth.rend();
+						double pushPrice = 0.0;
+						double num = 0;
+						while(itRB != itRE)
+						{
+							double ___price = atof(itRB->first.c_str());
+							___price = CFuncCommon::Round(___price, m_tradePriceDecimal);
+							num += atof(itRB->second.c_str());
+							if(___price < m_maxPrice)
+							{
+								pushPrice = ___price;
+								break;
+							}
+							++itRB;
+						}
+						if(pushPrice > 0 && num < 50)
+						{
+							num += 1;
+							CString szPushVolume, szPushPrice;
+							szPushVolume.Format("%f", num);
+							g_pCoinDlg->AddLog("自动压价%.2fBWB!", num);
+							szPushPrice = CFuncCommon::Double2String(pushPrice, m_tradePriceDecimal).c_str();
+							if(pExchange->GetTradeHttp())
+								pExchange->GetTradeHttp()->API_Trade(m_marketType, szPushVolume.GetBuffer(), szPushPrice.GetBuffer(), false, -1, "sell");
+						}
+					}
 					bCheck = false;
+				}
 			}
 			if(finalPrice > 0.0000001 && bCheck)
 			{
@@ -1189,7 +1221,12 @@ void CCoinDlg::TradeLogic()
 				}
 				else if(nTradeVolume <= (int)sellBWBCnt || nTradeVolume <= (int)buyBWBCnt)
 				{
-
+					double minCnt = min(sellBWBCnt, buyBWBCnt);
+					if(minCnt > nTradeVolume*0.3)
+					{
+						nTradeVolume = (int)minCnt;
+						szTradeVolume.Format("%d", nTradeVolume);
+					}
 				}
 				/*else if(nTradeVolume <= (int)buyBWBCnt)
 				{
