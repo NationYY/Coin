@@ -17,6 +17,8 @@ CBWExchange::CBWExchange(std::string strAPIKey, std::string strSecretKey)
 	m_listSupportMarket.push_back(eMarketType_BWB_USDT);
 	m_listSupportMarket.push_back(eMarketType_BWB_BTC);
 	m_listSupportMarket.push_back(eMarketType_BWB_ETH);
+	m_listSupportMarket.push_back(eMarketType_BWB_QC);
+	m_listSupportMarket.push_back(eMarketType_USDT_QC);
 }
 
 
@@ -177,6 +179,15 @@ void CBWExchange::Parse_Balance(Json::Value& retObj, const std::string& strRet)
 				double freeze = atof(strFreeze.c_str());
 				double balance = atof(strBalance.c_str());
 				m_dataCenter.SetBalance("eth", freeze+balance, freeze, balance);
+			}
+			break;
+		case QC_ID:
+			{
+				std::string strFreeze = fundsList[i]["freeze"].asString();
+				std::string strBalance = fundsList[i]["amount"].asString();
+				double freeze = atof(strFreeze.c_str());
+				double balance = atof(strBalance.c_str());
+				m_dataCenter.SetBalance("qc", freeze + balance, freeze, balance);
 			}
 			break;
 		default:

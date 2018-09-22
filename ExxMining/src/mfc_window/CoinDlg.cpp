@@ -423,6 +423,13 @@ BOOL CCoinDlg::OnInitDialog()
 			case eMarketType_BWB_ETH:
 				m_cbMarketType.InsertString(index, "BWB_ETH");
 				break;
+			case eMarketType_BWB_QC:
+				m_cbMarketType.InsertString(index, "BWB_QC");
+				break;
+			case eMarketType_USDT_QC:
+				m_cbMarketType.InsertString(index, "USDT_QC");
+				break;
+				
 			default:
 				break;
 			}
@@ -1191,7 +1198,7 @@ void CCoinDlg::TradeLogic()
 							num += 1;
 							CString szPushVolume, szPushPrice;
 							szPushVolume.Format("%f", num);
-							g_pCoinDlg->AddLog("自动压价%.2fBWB!", num);
+							g_pCoinDlg->AddLog("自动压价%.2f个!", num);
 							szPushPrice = CFuncCommon::Double2String(pushPrice, m_tradePriceDecimal).c_str();
 							if(pExchange->GetTradeHttp())
 								pExchange->GetTradeHttp()->API_Trade(m_marketType, szPushVolume.GetBuffer(), szPushPrice.GetBuffer(), false, -1, "sell");
@@ -1204,56 +1211,63 @@ void CCoinDlg::TradeLogic()
 			{
 				CString szTradeVolume = m_strTradeVolume;
 				int nTradeVolume = atoi(szTradeVolume.GetBuffer());
-				if(m_marketType != eMarketType_BWB_USDT && m_marketType != eMarketType_BWB_ETH)
+				if(m_marketType != eMarketType_BWB_USDT && m_marketType != eMarketType_BWB_ETH && m_marketType != eMarketType_BWB_QC && m_marketType != eMarketType_USDT_QC)
 				{
 					//KillTimer(eTimerType_Trade);
-					AfxMessageBox("必须挖BWB_USDT或者BWB_ETH");
+					AfxMessageBox("必须挖BWB_USDT,BWB_ETH,BWB_QC,USDT_QC之一");
 					return;
 				}
-				double sellBWBCnt = pDataCenter->m_mapBalanceInfo["bwb"].balance;
-				double buyBWBCnt = 0;
+				const char* sellName = NULL;
+				if(m_marketType == eMarketType_BWB_USDT || m_marketType == eMarketType_BWB_ETH || m_marketType == eMarketType_BWB_QC)
+					sellName = "bwb";
+				else if(m_marketType == eMarketType_USDT_QC)
+					sellName = "usdt";
+				double sellCnt = pDataCenter->m_mapBalanceInfo[sellName].balance;
+				double buyCnt = 0;
 				if(m_marketType == eMarketType_BWB_USDT)
-					buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
+					buyCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / finalPrice*0.9;
 				else if(m_marketType == eMarketType_BWB_ETH)
-					buyBWBCnt = pDataCenter->m_mapBalanceInfo["eth"].balance / finalPrice*0.9;
-				if(nTradeVolume <= (int)sellBWBCnt && nTradeVolume <= (int)buyBWBCnt)
+					buyCnt = pDataCenter->m_mapBalanceInfo["eth"].balance / finalPrice*0.9;
+				else if(m_marketType == eMarketType_BWB_QC || m_marketType == eMarketType_USDT_QC)
+					buyCnt = pDataCenter->m_mapBalanceInfo["qc"].balance / finalPrice*0.9;
+				if(nTradeVolume <= (int)sellCnt && nTradeVolume <= (int)buyCnt)
 				{
 				}
-				else if(nTradeVolume <= (int)sellBWBCnt || nTradeVolume <= (int)buyBWBCnt)
+				else if(nTradeVolume <= (int)sellCnt || nTradeVolume <= (int)buyCnt)
 				{
-					double minCnt = min(sellBWBCnt, buyBWBCnt);
+					double minCnt = min(sellCnt, buyCnt);
 					if(minCnt > nTradeVolume*0.3)
 					{
 						nTradeVolume = (int)minCnt;
 						szTradeVolume.Format("%d", nTradeVolume);
 					}
 				}
-				/*else if(nTradeVolume <= (int)buyBWBCnt)
+				/*else if(nTradeVolume <= (int)buyCnt)
 				{
 					double tradePremiumPrice = 1 / double(pow(10, m_tradePriceDecimal));
 					double newBuyPrice = buyPrice + tradePremiumPrice;
-					buyBWBCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / newBuyPrice*0.9;
-					buyBWBCnt = min(nTradeVolume, buyBWBCnt);
+					buyCnt = pDataCenter->m_mapBalanceInfo["usdt"].balance / newBuyPrice*0.9;
+					buyCnt = min(nTradeVolume, buyCnt);
 					szFinalPrice = CFuncCommon::Double2String(newBuyPrice, m_tradePriceDecimal).c_str();
-					nTradeVolume = (int)buyBWBCnt;
+					nTradeVolume = (int)buyCnt;
 					szTradeVolume.Format("%d", nTradeVolume);
 				}*/
 				else
 				{
-					if(sellBWBCnt <= buyBWBCnt)
-						nTradeVolume = int(sellBWBCnt*0.9);
+					if(sellCnt <= buyCnt)
+						nTradeVolume = int(sellCnt*0.9);
 					else
-						nTradeVolume = (int)buyBWBCnt;
+						nTradeVolume = (int)buyCnt;
 					if(nTradeVolume <= 10)
 					{
-						if(sellBWBCnt <= buyBWBCnt)
-							nTradeVolume = (int)buyBWBCnt;
+						if(sellCnt <= buyCnt)
+							nTradeVolume = (int)buyCnt;
 						else
-							nTradeVolume = int(sellBWBCnt*0.9);
+							nTradeVolume = int(sellCnt*0.9);
 					}
 					szTradeVolume.Format("%d", nTradeVolume);
 				}
-				if(nTradeVolume > 10)
+				if(nTradeVolume > 5)
 				{
 					if(pExchange->GetTradeHttp())
 						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), false, g_trade_pair_index, "sell");

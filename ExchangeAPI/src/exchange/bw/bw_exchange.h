@@ -4,6 +4,7 @@
 #define BTC_ID 2
 #define USDT_ID 11
 #define ETH_ID 5
+#define QC_ID 23
 class CBWExchange : public CExchange
 {
 public:
@@ -34,6 +35,10 @@ public:
 			return "BWB_BTC";
 		case eMarketType_BWB_ETH:
 			return "BWB_ETH";
+		case eMarketType_BWB_QC:
+			return "BWB_QC";
+		case eMarketType_USDT_QC:
+			return "USDT_QC";
 		}
 		return NULL;
 	}
@@ -53,6 +58,10 @@ public:
 			return 301;
 		case eMarketType_BWB_ETH:
 			return 314;
+		case eMarketType_BWB_QC:
+			return 316;
+		case eMarketType_USDT_QC:
+			return 3195;
 		}
 		return 0;
 	}
