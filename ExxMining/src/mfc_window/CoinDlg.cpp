@@ -218,10 +218,18 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		break;
 	case eHttpAPIType_Trade:
 		{
+			std::string code = "-1";
+			std::string errorMessage = "";
+			if(retObj["resMsg"]["code"].isString())
+				code = retObj["resMsg"]["code"].asString();
+			if(retObj["resMsg"]["message"].isString())
+				errorMessage = retObj["resMsg"]["message"].asString();
+			if(code != "1")
+				g_pCoinDlg->AddLog("下单失败,code=%s,message=%s", code.c_str(), errorMessage.c_str());
 		    std::map<int, CCoinDlg::STradePair>::iterator it = g_pCoinDlg->m_mapTradePairs.find(customData);
 			if(it != g_pCoinDlg->m_mapTradePairs.end())
 			{
-				if(retObj["resMsg"]["code"].isString() && retObj["resMsg"]["code"].asString() == "1")
+				if(code == "1")
 				{
 					g_pCoinDlg->m_successCreateTradeCnt++;
 					g_pCoinDlg->UpdateTradeReport();
@@ -257,7 +265,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					{
 						it->second.id2 = "";
 						g_pCoinDlg->m_successCreateTradeCnt--;
-						g_pCoinDlg->AddLog("组合下单失败[%s],提交撤单3[%s]!", retObj["resMsg"]["message"].asString().c_str(), it->second.id1.c_str());
+						g_pCoinDlg->AddLog("组合下单失败,提交撤单3[%s]!", it->second.id1.c_str());
 						pExchange->GetHttp()->API_CancelTrade(g_pCoinDlg->m_marketType, it->second.id1, it->second.id1);
 					}
 					g_pCoinDlg->UpdateTradeReport();
@@ -1267,7 +1275,7 @@ void CCoinDlg::TradeLogic()
 					}
 					szTradeVolume.Format("%d", nTradeVolume);
 				}
-				if(nTradeVolume > 5)
+				if(nTradeVolume > 0)
 				{
 					if(pExchange->GetTradeHttp())
 						pExchange->GetTradeHttp()->API_Trade(m_marketType, szTradeVolume.GetBuffer(), szFinalPrice.GetBuffer(), false, g_trade_pair_index, "sell");
