@@ -63,7 +63,7 @@ void local_websocket_callbak_close(const char* szExchangeName)
 
 void local_websocket_callbak_fail(const char* szExchangeName)
 {
-
+	AfxMessageBox("Á¬½ÓÊ§°Ü");
 }
 
 void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
@@ -87,6 +87,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BUTTON1, &COKExFuturesDlg::OnBnClickedButtonStart)
 END_MESSAGE_MAP()
 
 
@@ -123,10 +124,10 @@ BOOL COKExFuturesDlg::OnInitDialog()
 
 	if(!m_config.open("./config.ini"))
 		return FALSE;
-	const char* id = m_config.get("bw", "AccessKey", "");
-	const char* key = m_config.get("bw", "SecretKey", "");
+	const char* id = m_config.get("futures", "apiKey", "");
+	const char* key = m_config.get("futures", "secretKey", "");
 
-	pExchange = new CBWExchange(id, key);
+	pExchange = new COkexExchange(id, key, true);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
 	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
 	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
@@ -211,8 +212,20 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 	case eTimerType_APIUpdate:
 		{
 			LocalLogger::GetInstancePt()->SwapFront2Middle();
+			if(pExchange)
+				pExchange->Update();
 		}
 		break;
 	}
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void COKExFuturesDlg::OnBnClickedButtonStart()
+{
+	std::string strKlineType = "3min";
+	std::string strCoinType = "etc";
+	std::string strFuturesCycle = "next_week";
+	if(pExchange->GetWebSocket())
+		pExchange->GetWebSocket()->API_FuturesKlineData(true, strKlineType, strCoinType, strFuturesCycle);
 }

@@ -41,4 +41,6 @@ private:
 	clib::config m_config;
 	std::string m_accessKey;
 	std::string m_secretKey;
+public:
+	afx_msg void OnBnClickedButtonStart();
 };

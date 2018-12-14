@@ -43,6 +43,7 @@
     <ClInclude Include="..\src\mfc_window\OKExFuturesDlg.h">
       <Filter>mfc_window</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\ReadMe.txt" />

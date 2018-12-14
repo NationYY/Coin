@@ -37,6 +37,42 @@ enum eTradeType
 	eTradeType_buy,
 	eTradeType_sell,
 };
+
+enum eKlineType
+{
+	eKlineType_1min,
+	eKlineType_3min,
+	eKlineType_5min,
+	eKlineType_15min,
+	eKlineType_30min,
+	eKlineType_1hour,
+	eKlineType_2hour,
+	eKlineType_4hour,
+	eKlineType_6hour,
+	eKlineType_12hour,
+	eKlineType_day,
+	eKlineType_3day,
+	eKlineType_week
+};
+
+enum eCoinType
+{
+	eCoinType_btc,
+	eCoinType_ltc,
+	eCoinType_eth,
+	eCoinType_etc,
+	eCoinType_bch,
+	eCoinType_eos,
+	eCoinType_xrp,
+	eCoinType_btg
+};
+
+enum eFuturesCycle
+{
+	eFuturesCycle_this_week,
+	eFuturesCycle_next_week,
+	eFuturesCycle_quarter
+};
 struct SBalanceInfo
 {
 	SBalanceInfo()

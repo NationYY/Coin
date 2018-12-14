@@ -13,7 +13,7 @@ class CWebsocketAPI
 public:
 	CWebsocketAPI();
 	~CWebsocketAPI();
-	void SetKey(std::string strAPIKey, std::string strSecretKey);
+	void SetKey(std::string strAPIKey, std::string strSecretKey, bool bFutures = false);
 	void SetURI(std::string strURI);
 	void SetExchange(CExchange* pExchange){
 		m_pExchange = pExchange;
@@ -55,11 +55,13 @@ public:
 	void Update();
 	void PushRet(int type, Json::Value& retObj, const char* szRet);
 	static unsigned __stdcall CWebsocketAPI::RunThread(LPVOID arg);
-	//订阅交易深度
+	//订阅现货交易深度
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd) = 0;
 	//订阅最新成交的订单
 	virtual void API_LatestExecutedOrder(eMarketType type) = 0;
 	virtual void Ping() = 0;
+	//订阅合约K线
+	virtual void API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle) {};
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥
@@ -73,7 +75,8 @@ protected:
 	WEBSOCKET_MESSAGE_FUNCTION_TYPE m_messageFunc;
 	WEBSOCKET_FAIL_FUNCTION_TYPE m_failFunc;
 	bool m_bUTF8;
-	bool m_bGZIP; 
+	bool m_bGZIP;
+	bool m_bFutures;
 	CExchange* m_pExchange;
 public:
 	bool m_bConnect;

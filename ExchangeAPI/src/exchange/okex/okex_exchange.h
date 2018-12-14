@@ -3,7 +3,7 @@
 class COkexExchange : public CExchange
 {
 public:
-	COkexExchange(std::string strAPIKey, std::string strSecretKey);
+	COkexExchange(std::string strAPIKey, std::string strSecretKey, bool bFutures);
 	~COkexExchange();
 	virtual const char* GetName(){
 		return "Okex";

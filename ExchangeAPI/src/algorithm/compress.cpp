@@ -31,7 +31,8 @@ bool GZlibDecompress(unsigned char* zdata, int nzdata, unsigned char* data, int*
 	d_stream.avail_in = 0;
 	d_stream.next_out = data;
 	//只有设置为MAX_WBITS + 16才能在解压带header和trailer的文本
-	err = inflateInit2(&d_stream, MAX_WBITS + 16);
+	//err = inflateInit2(&d_stream, MAX_WBITS + 16);
+	err = inflateInit2(&d_stream, -MAX_WBITS);
 	if(err != Z_OK)
 		return false;
 	//if(inflateInit2(&d_stream, 47) != Z_OK) return -1;

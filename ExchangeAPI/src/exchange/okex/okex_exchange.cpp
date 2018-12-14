@@ -3,10 +3,11 @@
 #include "exchange/okex/okex_http_api.h"
 #include "exchange/okex/okex_websocket_api.h"
 
-COkexExchange::COkexExchange(std::string strAPIKey, std::string strSecretKey)
+COkexExchange::COkexExchange(std::string strAPIKey, std::string strSecretKey, bool bFutures)
 {
-	m_pWebSocketAPI = new COkexWebsocketAPI(strAPIKey, strSecretKey);
+	m_pWebSocketAPI = new COkexWebsocketAPI(strAPIKey, strSecretKey, bFutures);
 	m_pWebSocketAPI->SetExchange(this);
+	m_pWebSocketAPI->SetGZIP(true);
 	m_pHttpAPI = new COkexHttpAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI->SetExchange(this);
 	m_listSupportMarket.push_back(eMarketType_ETH_BTC);
