@@ -8,13 +8,14 @@
 #include "afxdialogex.h"
 #include <clib/lib/file/file_util.h>
 #include "log/local_log.h"
+#include "exchange/okex/okex_exchange.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-
+CExchange* pExchange = NULL;
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -45,8 +46,30 @@ END_MESSAGE_MAP()
 
 
 // COKExFuturesDlg 对话框
+void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
+{
 
+}
 
+void local_websocket_callbak_open(const char* szExchangeName)
+{
+
+}
+
+void local_websocket_callbak_close(const char* szExchangeName)
+{
+
+}
+
+void local_websocket_callbak_fail(const char* szExchangeName)
+{
+
+}
+
+void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+{
+
+}
 
 COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(COKExFuturesDlg::IDD, pParent)
@@ -97,6 +120,22 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
+
+	if(!m_config.open("./config.ini"))
+		return FALSE;
+	const char* id = m_config.get("bw", "AccessKey", "");
+	const char* key = m_config.get("bw", "SecretKey", "");
+
+	pExchange = new CBWExchange(id, key);
+	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
+	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
+	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
+	pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
+	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pExchange->Run();
+
+
+
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 

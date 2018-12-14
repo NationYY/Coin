@@ -3,6 +3,8 @@
 //
 
 #pragma once
+
+#include <clib/lib/util/config.h>
 enum eTimerType
 {
 	eTimerType_APIUpdate,
@@ -35,4 +37,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+private:
+	clib::config m_config;
+	std::string m_accessKey;
+	std::string m_secretKey;
 };
