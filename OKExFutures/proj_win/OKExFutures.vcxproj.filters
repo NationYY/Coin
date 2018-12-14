@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="mfc_window">
+      <UniqueIdentifier>{50306ea0-9b6a-4597-8da3-a75c886d1c06}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="OKExFutures.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\OKExFutures.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\OKExFutures.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\stdafx.cpp" />
+    <ClCompile Include="..\src\mfc_window\OKExFutures.cpp">
+      <Filter>mfc_window</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mfc_window\OKExFuturesDlg.cpp">
+      <Filter>mfc_window</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="proj_win\Resource.h" />
+    <ClInclude Include="proj_win\targetver.h" />
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\mfc_window\OKExFutures.h">
+      <Filter>mfc_window</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mfc_window\OKExFuturesDlg.h">
+      <Filter>mfc_window</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\src\ReadMe.txt" />
+  </ItemGroup>
+</Project>
