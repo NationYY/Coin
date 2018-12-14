@@ -6,7 +6,8 @@
 #include "OKExFutures.h"
 #include "OKExFuturesDlg.h"
 #include "afxdialogex.h"
-
+#include <clib/lib/file/file_util.h>
+#include "log/local_log.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -62,6 +63,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -95,6 +97,16 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
+
+	SetTimer(eTimerType_APIUpdate, 1, NULL);
+
+	clib::string log_path = "log/";
+	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
+
+	LocalLogger& localLogger = LocalLogger::GetInstance();
+	localLogger.SetBatchMode(true);
+	localLogger.SetLogPath(log_path.c_str());
+	localLogger.Start();
 
 	// TODO:  在此添加额外的初始化代码
 
@@ -150,3 +162,18 @@ HCURSOR COKExFuturesDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+	switch(nIDEvent)
+	{
+	case eTimerType_APIUpdate:
+		{
+			LocalLogger::GetInstancePt()->SwapFront2Middle();
+		}
+		break;
+	}
+	CDialogEx::OnTimer(nIDEvent);
+}

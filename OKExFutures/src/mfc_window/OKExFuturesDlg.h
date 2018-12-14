@@ -3,7 +3,11 @@
 //
 
 #pragma once
-
+enum eTimerType
+{
+	eTimerType_APIUpdate,
+	eTimerType_EntrustDepth,
+};
 
 // COKExFuturesDlg ¶Ô»°¿ò
 class COKExFuturesDlg : public CDialogEx
@@ -29,4 +33,6 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
