@@ -16,6 +16,7 @@
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CExchange* pExchange = NULL;
+COKExFuturesDlg* g_pOKExFuturesDlg = NULL;
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -53,7 +54,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 
 void local_websocket_callbak_open(const char* szExchangeName)
 {
-
+	AfxMessageBox("连接成功");
 }
 
 void local_websocket_callbak_close(const char* szExchangeName)
@@ -63,17 +64,39 @@ void local_websocket_callbak_close(const char* szExchangeName)
 
 void local_websocket_callbak_fail(const char* szExchangeName)
 {
-	AfxMessageBox("连接失败");
+	LOCAL_ERROR("连接失败");
 }
 
+std::string lastTime = "";
+std::string lastInfo = "";
 void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
-
+	switch(apiType)
+	{
+	case eWebsocketAPIType_FuturesKline:
+		{
+			if(lastTime == "")
+			{
+				LOCAL_INFO(strRet.c_str());
+			}
+			else
+			{
+				if(lastTime != retObj[0]["data"][0][0].asString())
+					LOCAL_INFO(lastInfo.c_str());
+			}
+			lastTime = retObj[0]["data"][0][0].asString();
+			lastInfo = strRet;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(COKExFuturesDlg::IDD, pParent)
 {
+	g_pOKExFuturesDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -139,6 +162,7 @@ BOOL COKExFuturesDlg::OnInitDialog()
 
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
+	SetTimer(eTimerType_Ping, 5000, NULL);
 
 	clib::string log_path = "log/";
 	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
@@ -214,6 +238,12 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 			LocalLogger::GetInstancePt()->SwapFront2Middle();
 			if(pExchange)
 				pExchange->Update();
+		}
+		break;
+	case eTimerType_Ping:
+		{
+			if(pExchange)
+				pExchange->GetWebSocket()->Ping();
 		}
 		break;
 	}

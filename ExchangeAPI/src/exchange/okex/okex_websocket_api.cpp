@@ -33,7 +33,13 @@ void COkexWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool b
 
 void COkexWebsocketAPI::API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle)
 {
+	m_lastAddChannelFuturesKline = "ok_sub_futureusd_";
+	m_lastAddChannelFuturesKline.append(strCoinType);
+	m_lastAddChannelFuturesKline.append("_kline_");
+	m_lastAddChannelFuturesKline.append(strFuturesCycle);
+	m_lastAddChannelFuturesKline.append("_");
+	m_lastAddChannelFuturesKline.append(strKlineType);
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"event\":\"%s\",\"channel\":\"ok_sub_futureusd_%s_kline_%s_%z\"}", (bAdd ? "addChannel" : "removeChannel"), strCoinType.c_str(),  strFuturesCycle.c_str(), strKlineType.c_str());
+	_snprintf(szBuffer, 512, "{\"event\":\"%s\",\"channel\":\"ok_sub_futureusd_%s_kline_%s_%s\"}", (bAdd ? "addChannel" : "removeChannel"), strCoinType.c_str(),  strFuturesCycle.c_str(), strKlineType.c_str());
 	Request(szBuffer);
 }

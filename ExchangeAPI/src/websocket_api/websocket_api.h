@@ -80,5 +80,6 @@ protected:
 	CExchange* m_pExchange;
 public:
 	bool m_bConnect;
+	std::string m_lastAddChannelFuturesKline;
 };
 

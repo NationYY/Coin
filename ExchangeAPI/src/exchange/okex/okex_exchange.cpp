@@ -2,7 +2,7 @@
 #include "okex_exchange.h"
 #include "exchange/okex/okex_http_api.h"
 #include "exchange/okex/okex_websocket_api.h"
-
+#include "log/local_log.h"
 COkexExchange::COkexExchange(std::string strAPIKey, std::string strSecretKey, bool bFutures)
 {
 	m_pWebSocketAPI = new COkexWebsocketAPI(strAPIKey, strSecretKey, bFutures);
@@ -22,6 +22,11 @@ COkexExchange::~COkexExchange()
 
 void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
+	/*if(retObj.isObject() && retObj["event"].isString() && retObj["event"].asString() == "pong")
+	{
+	}
+	else
+		LOCAL_ERROR(strRet.c_str());*/
 	if(retObj.isArray() && retObj[0].isObject() && retObj[0]["channel"].isString() && retObj[0]["channel"].asString().find("ok_sub_spot") != std::string::npos && retObj[0]["channel"].asString().find("depth") != std::string::npos)
 	{
 		Json::Value& data = retObj[0]["data"];
@@ -51,6 +56,11 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 		}
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
+	}
+	if(retObj.isArray() && retObj[0].isObject() && retObj[0]["channel"].isString() && retObj[0]["channel"].asString() == m_pWebSocketAPI->m_lastAddChannelFuturesKline)
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesKline, szExchangeName, retObj, strRet);
 	}
 }
 

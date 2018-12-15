@@ -57,10 +57,10 @@ void WebSocket::start()
 	if(ec) {
 		m_endpoint.get_alog().write(websocketpp::log::alevel::app, ec.message());
 	}
-	con->set_open_handshake_timeout(18000);
-	m_endpoint.set_open_handshake_timeout(18000);
-	m_endpoint.set_close_handshake_timeout(18000);
-	m_endpoint.set_pong_timeout(18000);
+	con->set_open_handshake_timeout(50000);
+	m_endpoint.set_open_handshake_timeout(50000);
+	m_endpoint.set_close_handshake_timeout(50000);
+	m_endpoint.set_pong_timeout(50000);
 	//con->set_proxy("http://humupdates.uchicago.edu:8443");
 
 	m_endpoint.connect(con);

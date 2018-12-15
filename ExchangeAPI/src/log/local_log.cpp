@@ -3,8 +3,7 @@
 #include "string.h"
 #include <stdarg.h> 
 #include <stdio.h>
-
-
+#include<Windows.h>
 std::string LocalLogger::s_LogTypeTitle[LOG_MAX_TYPE] = {
 	"ERROR", "WARNING", "INFO", "FUNCTION"
 };
@@ -51,7 +50,7 @@ void LocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 		(int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec,
 		s_LogTypeTitle[log_type].c_str(), log_text);
 	context[sizeof(context)-1] = '\0';
-
+	OutputDebugString(context);
 	if (m_batchMode)
 	{
 		m_vecFront.push_back(context);

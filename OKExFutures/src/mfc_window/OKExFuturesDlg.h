@@ -9,6 +9,7 @@ enum eTimerType
 {
 	eTimerType_APIUpdate,
 	eTimerType_EntrustDepth,
+	eTimerType_Ping,
 };
 
 // COKExFuturesDlg ¶Ô»°¿ò
