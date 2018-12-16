@@ -12,6 +12,30 @@ enum eTimerType
 	eTimerType_Ping,
 };
 
+struct SKlineData
+{
+	__int64 time;		//时间
+	double openPrice;	//开盘价
+	double highPrice;	//最高价
+	double lowPrice;	//最低价
+	double closePrice;	//收盘价
+	int volume;			//成交量(张)
+	double volumeByCurrency;//成交量(币)
+	SKlineData(){
+		memset(this, 0, sizeof(SKlineData));
+	}
+};
+
+struct SBollInfo
+{
+	__int64 time;
+	double mb;
+	double up;
+	double dn;
+	SBollInfo(){
+		memset(this, 0, sizeof(SBollInfo));
+	}
+};
 // COKExFuturesDlg 对话框
 class COKExFuturesDlg : public CDialogEx
 {
@@ -42,6 +66,16 @@ private:
 	clib::config m_config;
 	std::string m_accessKey;
 	std::string m_secretKey;
+	int m_nBollCycle;
+	int m_nPriceDecimal;
 public:
 	afx_msg void OnBnClickedButtonStart();
+public:
+	void AddKlineData(SKlineData& data);
+private:
+	void Test();
+	void OnBollUpdate();
+private:
+	std::vector<SKlineData> m_vecKlineData;
+	std::vector<SBollInfo> m_vecBollData;
 };
