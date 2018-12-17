@@ -14,10 +14,11 @@ enum eTimerType
 
 enum eBollTrend
 {
-	eBollTrend_Normal,		//空转
-	eBollTrend_ShouKou,	//收口
-	eBollTrend_ZhangKou,	//张口
-	eBollTrend_Channel,	//通道
+	eBollTrend_Normal,			//空转
+	eBollTrend_ShouKou,			//收口
+	eBollTrend_ShouKouChannel,	//收口通道
+	eBollTrend_ZhangKou,		//张口
+	eBollTrend_ZhangKouChannel,	//张口通道
 };
 
 struct SKlineData
@@ -83,9 +84,10 @@ public:
 private:
 	void Test();
 	void OnBollUpdate();
-	void CheckTrend();
-	
+	void CheckBollTrend();
+	void __CheckTrend_Normal();
 private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;
+	eBollTrend m_bollState;
 };

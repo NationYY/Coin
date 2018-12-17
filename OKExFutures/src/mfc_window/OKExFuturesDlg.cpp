@@ -530,6 +530,8 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					data.closePrice = stod(lastKlineJson[0]["data"][0][4].asString());
 					data.volume = stoi(lastKlineJson[0]["data"][0][5].asString());
 					data.volumeByCurrency = stod(lastKlineJson[0]["data"][0][6].asString());
+					if(data.volume == 0 && CFuncCommon::CheckEqual(data.volumeByCurrency, 0.0))
+						break;
 					g_pOKExFuturesDlg->AddKlineData(data);
 				}
 					
@@ -799,10 +801,50 @@ void COKExFuturesDlg::Test()
 
 void COKExFuturesDlg::OnBollUpdate()
 {
-	CheckTrend();
+	CheckBollTrend();
 }
 
-void COKExFuturesDlg::CheckTrend()
+void COKExFuturesDlg::CheckBollTrend()
 {
+	switch(m_bollState)
+	{
+	case eBollTrend_Normal:
+		__CheckTrend_Normal();
+		break;
+	case eBollTrend_ShouKou:
+		break;
+	case eBollTrend_ShouKouChannel:
+		break;
+	case eBollTrend_ZhangKou:
+		break;
+	case eBollTrend_ZhangKouChannel:
+		break;
+	default:
+		break;
+	}
+}
 
+void COKExFuturesDlg::__CheckTrend_Normal()
+{
+	if(m_vecBollData.size() >= 10)
+	{
+		if(m_vecKlineData[m_vecKlineData.size()-1].time == 1544926320000)
+			int a = 3;
+		int minBar = 0;
+		double minValue = 100.0;
+		for(int i = m_vecBollData.size()-1; i>=(int)m_vecBollData.size()-10; --i)
+		{
+			double offset = m_vecBollData[i].up - m_vecBollData[i].dn;
+			if(offset < minValue)
+			{
+				minValue = offset;
+				minBar = i+m_nBollCycle-1;
+			}
+		}
+		double offset = m_vecBollData[m_vecBollData.size()-1].up - m_vecBollData[m_vecBollData.size()-1].dn;
+		if(offset / minValue > 2.5)
+		{
+			//m_bollState = eBollTrend_ZhangKou;
+		}
+	}
 }
