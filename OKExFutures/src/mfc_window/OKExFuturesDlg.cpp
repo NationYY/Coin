@@ -799,6 +799,10 @@ void COKExFuturesDlg::Test()
 
 void COKExFuturesDlg::OnBollUpdate()
 {
+	CheckTrend();
+}
 
+void COKExFuturesDlg::CheckTrend()
+{
 
 }
