@@ -18,7 +18,6 @@ enum eBollTrend
 	eBollTrend_ShouKou,			//收口
 	eBollTrend_ShouKouChannel,	//收口通道
 	eBollTrend_ZhangKou,		//张口
-	eBollTrend_ZhangKouChannel,	//张口通道
 };
 
 struct SKlineData
@@ -75,8 +74,6 @@ private:
 	clib::config m_config;
 	std::string m_accessKey;
 	std::string m_secretKey;
-	int m_nBollCycle;
-	int m_nPriceDecimal;
 public:
 	afx_msg void OnBnClickedButtonStart();
 public:
@@ -86,8 +83,19 @@ private:
 	void OnBollUpdate();
 	void CheckBollTrend();
 	void __CheckTrend_Normal();
+	void __CheckTrend_ZhangKou();
+	void __CheckTrend_ShouKou();
+	void __SetBollState(eBollTrend state, int param=0);
 private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;
-	eBollTrend m_bollState;
+	eBollTrend m_eBollState;
+	int m_nZhangKouConfirmBar;
+	int m_nShouKouConfirmBar;
+private:
+	int m_nBollCycle;				//布林线周期
+	int m_nPriceDecimal;			//价格小数点精度
+	int m_nZhangKouCheckCycle;		//布林张口确认周期
+	int m_nZhangKouTrendCheckCycle;	//布林张口趋势确认周期 必须是奇数
+	int m_nShouKouCheckCycle;		//布林收口确认周期
 };

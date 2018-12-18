@@ -83,3 +83,11 @@ char* CFuncCommon::ToString(unsigned int number)
 	sprintf(szBuff, "%u", number);
 	return szBuff;
 }
+
+std::string CFuncCommon::FormatTimeStr(__int64 time)
+{
+	tm* pTM = localtime((const time_t*)&time);
+	char szBuff[128] = {0};
+	_snprintf(szBuff, 128, "%d-%02d-%02d %02d:%02d:%02d", pTM->tm_year+1900, pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
+	return szBuff;
+}

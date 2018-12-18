@@ -35,7 +35,11 @@ LocalLogger::~LocalLogger()
 
 void LocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 {
-
+	if(strlen(log_text) == 0)
+	{
+		OutputDebugString("\n");
+		return;
+	}
 	if (log_type < 0 || log_type >= LOG_MAX_TYPE)
 	{
 		log_type = LOG_ERROR;

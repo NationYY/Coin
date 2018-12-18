@@ -12,5 +12,6 @@ public:
 	static char* ToString(int number);
 	static char* ToString(unsigned int number);
 	static double Round(double value, int decimal);
+	static std::string FormatTimeStr(__int64 time);
 };
 
