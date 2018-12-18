@@ -704,7 +704,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
 		if(offset / minValue > 2.5)
 		{
-			__SetBollState(eBollTrend_ZhangKou);
+			__SetBollState(eBollTrend_ZhangKou, 0);
 			return;
 		}
 		else if(offset / minValue > 1.5)
@@ -727,7 +727,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 				}
 				if(up == check || down == check)
 				{
-					__SetBollState(eBollTrend_ZhangKou);
+					__SetBollState(eBollTrend_ZhangKou, 1);
 					return;
 				}
 			}
@@ -752,13 +752,9 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
 			if(offset/avgPrice < 0.013)
 			{
-				std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000);
-				LOCAL_INFO("[收口] 确认时间[%s]", strConfirmTime.c_str());
 				__SetBollState(eBollTrend_ShouKou);
 				return;
-
 			}
-			
 		}
 	}
 }
@@ -781,34 +777,41 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 	switch(m_eBollState)
 	{
 	case eBollTrend_ZhangKou:
-		m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
-		std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000);
-		LOCAL_INFO("[张口] 确认时间[%s] 柱体穿插判断", strConfirmTime.c_str());
-
-
-		if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
 		{
-			int up = 0;
-			int down = 0;
-			for(int i = KLINE_DATA_SIZE-1; i>=(int)KLINE_DATA_SIZE-m_nZhangKouTrendCheckCycle; --i)
+			m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
+			CString szInfo;
+			szInfo.Format("张口<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000).c_str(), (param==0 ? "开口角判断" : "柱体穿插判断"));
+			if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
 			{
-				if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-					up++;
-				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up )
-					up++;
-				else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-					down++;
-				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
-					down++;
+				int up = 0;
+				int down = 0;
+				for(int i = KLINE_DATA_SIZE-1; i>=(int)KLINE_DATA_SIZE-m_nZhangKouTrendCheckCycle; --i)
+				{
+					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
+						up++;
+					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+						up++;
+					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
+						down++;
+					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+						down++;
+				}
+				CString _szInfo = "";
+				if(up > down)
+					_szInfo.Format(" 趋势[涨 %d:%d]", up, down);
+				else
+					_szInfo.Format(" 趋势[跌 %d:%d]", up, down);
+				szInfo.Append(_szInfo);
 			}
-			if(up > down)
-				LOCAL_INFO("[张口趋势] 涨 [%d:%d]", up, down);
-			else
-				LOCAL_INFO("[张口趋势] 跌 [%d:%d]", up, down);
+			LOCAL_INFO(szInfo.GetBuffer());
 		}
 		break;
 	case eBollTrend_ShouKou:
-		m_nShouKouConfirmBar = KLINE_DATA_SIZE-1;
+		{
+			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000);
+			LOCAL_INFO("收口>>>> 确认时间[%s]", strConfirmTime.c_str());
+			m_nShouKouConfirmBar = KLINE_DATA_SIZE-1;
+		}
 		break;
 	default:
 		break;
