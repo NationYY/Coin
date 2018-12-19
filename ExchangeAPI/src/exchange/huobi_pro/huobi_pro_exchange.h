@@ -4,7 +4,7 @@ class CHuobiProExchange : public CExchange
 {
 public:
 	CHuobiProExchange(std::string strAPIKey, std::string strSecretKey);
-	~CHuobiProExchange();
+	virtual ~CHuobiProExchange();
 	virtual const char* GetName(){
 		return "HuobiPro";
 	}

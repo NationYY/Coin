@@ -6,7 +6,7 @@ class CExchange
 {
 public:
 	CExchange();
-	~CExchange();
+	virtual ~CExchange();
 	virtual const char* GetName() = 0;
 	virtual void Update();
 	void SetHttpCallBackMessage(http_callbak_message callbakMessage){

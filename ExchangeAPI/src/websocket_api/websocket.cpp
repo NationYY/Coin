@@ -33,6 +33,7 @@ void WebSocket::on_message(websocketpp::connection_hdl hdl, message_ptr msg)
 
 void WebSocket::on_open(websocketpp::connection_hdl hdl)
 {
+	m_bConnect = true;
 	m_hdl = hdl;
 	m_manual_close = false;
 	Json::Value retObj;
@@ -42,6 +43,7 @@ void WebSocket::on_open(websocketpp::connection_hdl hdl)
 
 void WebSocket::on_close(websocketpp::connection_hdl hdl)
 {
+	m_bConnect = false;
 	Json::Value retObj;
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->m_bConnect = false;
@@ -94,6 +96,7 @@ void WebSocket::on_fail(websocketpp::connection_hdl hdl)
 	std::cout << con->get_ec() << " - " << szBuffer << std::endl;
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->m_bConnect = false;
+	m_bConnect = false;
 	Json::Value retObj;
 	if(m_pWebSocketAPI)
 		m_pWebSocketAPI->PushRet(3, retObj, "");

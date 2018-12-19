@@ -12,7 +12,7 @@ class CWebsocketAPI
 {
 public:
 	CWebsocketAPI();
-	~CWebsocketAPI();
+	virtual ~CWebsocketAPI();
 	void SetKey(std::string strAPIKey, std::string strSecretKey, bool bFutures = false);
 	void SetURI(std::string strURI);
 	void SetExchange(CExchange* pExchange){

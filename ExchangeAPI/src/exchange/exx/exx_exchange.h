@@ -4,7 +4,7 @@ class CExxExchange : public CExchange
 {
 public:
 	CExxExchange(std::string strAPIKey, std::string strSecretKey);
-	~CExxExchange();
+	virtual ~CExxExchange();
 	virtual const char* GetName(){
 		return "EXX";
 	}

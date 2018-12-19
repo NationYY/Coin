@@ -12,7 +12,7 @@ class CHttpAPI
 {
 public:
 	CHttpAPI();
-	~CHttpAPI();
+	virtual ~CHttpAPI();
 	void SetKey(std::string strAPIKey, std::string strSecretKey);
 	void SetURL(std::string strURL);
 	void SetExchange(CExchange* pExchange){

@@ -4,7 +4,7 @@ class CHuobiProHttpAPI : public CHttpAPI
 {
 public:
 	CHuobiProHttpAPI(std::string strAPIKey, std::string strSecretKey);
-	~CHuobiProHttpAPI();
+	virtual ~CHuobiProHttpAPI();
 	virtual void API_Balance() {};
 	virtual void API_Ticker(eMarketType type) {};
 	virtual void API_EntrustDepth(eMarketType type) {};

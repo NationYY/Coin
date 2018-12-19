@@ -4,7 +4,7 @@ class COkexWebsocketAPI : public CWebsocketAPI
 {
 public:
 	COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, bool bFutures);
-	~COkexWebsocketAPI();
+	virtual ~COkexWebsocketAPI();
 public:
 	virtual void Ping();
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);

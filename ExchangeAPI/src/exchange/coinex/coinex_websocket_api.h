@@ -4,7 +4,7 @@ class CCoinexWebSocketAPI : public CWebsocketAPI
 {
 public:
 	CCoinexWebSocketAPI(std::string strAPIKey, std::string strSecretKey);
-	~CCoinexWebSocketAPI();
+	virtual ~CCoinexWebSocketAPI();
 	void LoginIn();
 	void GetServerTime();
 public:

@@ -4,7 +4,7 @@ class CHuobiHadaxWebsocketAPI : public CWebsocketAPI
 {
 public:
 	CHuobiHadaxWebsocketAPI(std::string strAPIKey, std::string strSecretKey);
-	~CHuobiHadaxWebsocketAPI();
+	virtual ~CHuobiHadaxWebsocketAPI();
 public:
 	virtual void Ping();
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);

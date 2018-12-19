@@ -4,7 +4,7 @@ class CCoinexExchange : public CExchange
 {
 public:
 	CCoinexExchange(std::string strAPIKey, std::string strSecretKey);
-	~CCoinexExchange();
+	virtual ~CCoinexExchange();
 	virtual const char* GetName(){
 		return "Coinex";
 	}

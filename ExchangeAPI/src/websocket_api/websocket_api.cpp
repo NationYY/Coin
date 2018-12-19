@@ -10,6 +10,8 @@ m_bUTF8(false), m_pExchange(NULL), m_bGZIP(false), m_bFutures(false)
 
 CWebsocketAPI::~CWebsocketAPI()
 {
+	if(m_pWebsocket)
+		delete m_pWebsocket;
 }
 
 void CWebsocketAPI::SetKey(std::string strAPIKey, std::string strSecretKey, bool bFutures)

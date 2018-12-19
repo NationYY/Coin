@@ -4,7 +4,7 @@ class CBWHttpAPI : public CHttpAPI
 {
 public:
 	CBWHttpAPI(std::string strAPIKey, std::string strSecretKey);
-	~CBWHttpAPI();
+	virtual ~CBWHttpAPI();
 public:
 	virtual void API_Balance();
 	virtual void API_Ticker(eMarketType type) {};

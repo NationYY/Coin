@@ -4,7 +4,7 @@ class CZbgExchange : public CExchange
 {
 public:
 	CZbgExchange(std::string strAPIKey, std::string strSecretKey);
-	~CZbgExchange();
+	virtual ~CZbgExchange();
 	virtual const char* GetName(){
 		return "ZBG";
 	}

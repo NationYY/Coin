@@ -8,7 +8,7 @@ std::string LocalLogger::s_LogTypeTitle[LOG_MAX_TYPE] = {
 	"ERROR", "WARNING", "INFO", "FUNCTION"
 };
 
-LocalLogger::LocalLogger() :m_batchMode(false), m_quitFlag(false), m_completeFlag(true)
+LocalLogger::LocalLogger() :m_batchMode(false), m_quitFlag(false), m_completeFlag(true), m_bFirst(true)
 {
 
 }
@@ -35,10 +35,10 @@ LocalLogger::~LocalLogger()
 
 void LocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 {
-	if(strlen(log_text) == 0)
+	if(m_bFirst)
 	{
 		OutputDebugString("\n");
-		return;
+		m_bFirst = false;
 	}
 	if (log_type < 0 || log_type >= LOG_MAX_TYPE)
 	{

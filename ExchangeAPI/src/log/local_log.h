@@ -72,4 +72,5 @@ private:
 	std::ofstream m_outputFile;
 	int m_nDay;
 	std::string m_logFilePath;
+	bool m_bFirst;
 };

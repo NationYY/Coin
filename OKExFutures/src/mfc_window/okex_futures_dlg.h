@@ -85,6 +85,7 @@ private:
 	void __CheckTrend_Normal();
 	void __CheckTrend_ZhangKou();
 	void __CheckTrend_ShouKou();
+	void __CheckTrend_ShouKouChannel();
 	void __SetBollState(eBollTrend state, int param=0);
 public:
 	bool m_bRun;
@@ -92,14 +93,20 @@ private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;
 	eBollTrend m_eBollState;
+	eBollTrend m_eLastBollState;
 	int m_nZhangKouConfirmBar;
 	int m_nShouKouConfirmBar;
+	int m_nShouKouChannelConfirmBar;
+	bool m_bZhangKouUp;
 private:
 	int m_nBollCycle;				//布林线周期
 	int m_nPriceDecimal;			//价格小数点精度
 	int m_nZhangKouCheckCycle;		//布林张口确认周期
 	int m_nZhangKouTrendCheckCycle;	//布林张口趋势确认周期 必须是奇数
 	int m_nShouKouCheckCycle;		//布林收口确认周期
+	int m_nZhangKouDoubleConfirmCycle;	//布林张口二次确认周期
+	int m_nShoukouDoubleConfirmCycle;	//布林收口二次确认周期
 public:
 	afx_msg void OnBnClickedButtonTest();
+	afx_msg void OnDestroy();
 };

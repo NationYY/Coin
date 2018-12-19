@@ -4,7 +4,7 @@ class CBWWebsocketAPI : public CWebsocketAPI
 {
 public:
 	CBWWebsocketAPI(std::string strAPIKey, std::string strSecretKey);
-	~CBWWebsocketAPI();
+	virtual ~CBWWebsocketAPI();
 public:
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
 	//订阅最新成交的订单

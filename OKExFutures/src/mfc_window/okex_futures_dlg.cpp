@@ -64,7 +64,7 @@ void local_websocket_callbak_open(const char* szExchangeName)
 	LOCAL_ERROR("连接成功");
 	if(g_pOKExFuturesDlg->m_bRun)
 	{
-		g_pOKExFuturesDlg->m_bRun = true;
+		g_pOKExFuturesDlg->m_bRun = false;
 		g_pOKExFuturesDlg->OnBnClickedButtonStart();
 	}
 }
@@ -136,6 +136,10 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_nShouKouCheckCycle = 20;
 	m_nZhangKouTrendCheckCycle = 5;
 	m_bRun = false;
+	m_eBollState = eBollTrend_Normal;
+	m_eLastBollState = eBollTrend_Normal;
+	m_nZhangKouDoubleConfirmCycle = 2;
+	m_nShoukouDoubleConfirmCycle = 3;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -150,6 +154,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON1, &COKExFuturesDlg::OnBnClickedButtonStart)
 	ON_BN_CLICKED(IDC_BUTTON2, &COKExFuturesDlg::OnBnClickedButtonTest)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -293,7 +298,6 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 {
 	if(m_bRun)
 		return;
-	LOCAL_INFO("");
 	std::string strKlineType = "3min";
 	std::string strCoinType = "etc";
 	std::string strFuturesCycle = "next_week";
@@ -313,16 +317,16 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 		}
 	}
 	KLINE_DATA.push_back(data);
-	if((int)KLINE_DATA_SIZE >= m_nBollCycle)
+	if(KLINE_DATA_SIZE >= m_nBollCycle)
 	{
 		double totalClosePrice = 0.0;
-		for(int i = (int)KLINE_DATA_SIZE-1; i>=(int)KLINE_DATA_SIZE-m_nBollCycle; --i)
+		for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-m_nBollCycle; --i)
 		{
 			totalClosePrice += KLINE_DATA[i].closePrice;
 		}
 		double ma = totalClosePrice/m_nBollCycle;
 		double totalDifClosePriceSQ = 0.0;
-		for(int i = (int)KLINE_DATA_SIZE-1; i>=(int)KLINE_DATA_SIZE-m_nBollCycle; --i)
+		for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-m_nBollCycle; --i)
 		{
 			totalDifClosePriceSQ += ((KLINE_DATA[i].closePrice - ma)*(KLINE_DATA[i].closePrice - ma));
 		}
@@ -407,6 +411,7 @@ void COKExFuturesDlg::CheckBollTrend()
 		__CheckTrend_ShouKou();
 		break;
 	case eBollTrend_ShouKouChannel:
+		__CheckTrend_ShouKouChannel();
 		break;
 	case eBollTrend_ZhangKou:
 		__CheckTrend_ZhangKou();
@@ -424,7 +429,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 	{
 		int minBar = 0;
 		double minValue = 100.0;
-		for(int i = BOLL_DATA_SIZE-1; i>=(int)BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
+		for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
 		{
 			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
 			if(offset < minValue)
@@ -446,7 +451,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 			{
 				int up = 0;
 				int down = 0;
-				for(int i = KLINE_DATA_SIZE-1; i>=(int)KLINE_DATA_SIZE-check; --i)
+				for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
 				{
 					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
 						up++;
@@ -457,7 +462,12 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
 						down++;
 				}
-				if(up == check || down == check)
+				if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
+				{
+					__SetBollState(eBollTrend_ZhangKou, 1);
+					return;
+				}
+				else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
 				{
 					__SetBollState(eBollTrend_ZhangKou, 1);
 					return;
@@ -469,7 +479,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 	{
 		int maxBar = 0;
 		double maxValue = 0.0;
-		for(int i = BOLL_DATA_SIZE-1; i>=(int)BOLL_DATA_SIZE-m_nShouKouCheckCycle; --i)
+		for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nShouKouCheckCycle; --i)
 		{
 			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
 			if(offset > maxValue)
@@ -493,18 +503,150 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 
 void COKExFuturesDlg::__CheckTrend_ZhangKou()
 {
-	if(KLINE_DATA_SIZE - m_nZhangKouConfirmBar >= 20)
-		__SetBollState(eBollTrend_Normal);
+	//寻找收口的同时用N个周期判断张口的成立
+	if(BOLL_DATA_SIZE <= m_nZhangKouConfirmBar+m_nZhangKouDoubleConfirmCycle+1)
+	{
+		if(m_bZhangKouUp)
+		{
+			if(BOLL_DATA[BOLL_DATA_SIZE-1].up < BOLL_DATA[BOLL_DATA_SIZE-2].up)
+			{
+				LOCAL_INFO("张口不成立");
+				__SetBollState(m_eLastBollState);
+			}
+
+		}
+		else
+		{
+			if(BOLL_DATA[BOLL_DATA_SIZE-1].dn > BOLL_DATA[BOLL_DATA_SIZE-2].dn)
+			{
+				LOCAL_INFO("张口不成立");
+				__SetBollState(m_eLastBollState);
+			}
+		}
+	}
+	else
+	{
+		//寻找收口,从确定张口的柱子开始
+		int maxBar = 0;
+		double maxValue = 0.0;
+		for(int i = m_nZhangKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
+		{
+			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+			if(offset > maxValue)
+			{
+				maxValue = offset;
+				maxBar = i-1;
+			}
+		}
+		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
+		if(maxValue / offset > 2)
+		{
+			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
+			if(offset/avgPrice < 0.013)
+			{
+				__SetBollState(eBollTrend_ShouKou);
+				return;
+			}
+		}
+	}
 }
 
 void COKExFuturesDlg::__CheckTrend_ShouKou()
 {
-	if(KLINE_DATA_SIZE - m_nShouKouConfirmBar >= 20)
-		__SetBollState(eBollTrend_Normal);
-
+	//用N个周期来确认收口完成
+	if(BOLL_DATA_SIZE >= m_nShouKouConfirmBar+m_nShoukouDoubleConfirmCycle)
+	{
+		double last = 0.0;
+		bool bRet = true;
+		for(int i = 0; i<m_nShoukouDoubleConfirmCycle; ++i)
+		{
+			double offset = BOLL_DATA[BOLL_DATA_SIZE-1-i].up - BOLL_DATA[BOLL_DATA_SIZE-1-i].dn;
+			if(last > 0)
+			{
+				if(offset >= last)
+				{
+					if(offset/last > 1.1)
+					{
+						bRet = false;
+						break;
+					}
+				}
+				else
+				{
+					if(last/offset > 1.1)
+					{
+						bRet = false;
+						break;
+					}
+				}
+			}
+			else
+				last = offset;
+		}
+		if(bRet)
+		{
+			__SetBollState(eBollTrend_ShouKouChannel);
+			return;
+		}
+	}
 }
+
+
+void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
+{
+	//寻找张口,从确定收口通道的柱子开始
+	int minBar = 0;
+	double minValue = 100.0;
+	for(int i=m_nShouKouChannelConfirmBar; i<BOLL_DATA_SIZE; ++i)
+	{
+		double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+		if(offset < minValue)
+		{
+			minValue = offset;
+			minBar = i-1;
+		}
+	}
+	double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
+	if(offset / minValue > 2.5)
+	{
+		__SetBollState(eBollTrend_ZhangKou, 0);
+		return;
+	}
+	else if(offset / minValue > 1.5)
+	{
+		int check = m_nZhangKouTrendCheckCycle/2 + 1;
+		if(KLINE_DATA_SIZE >= check)
+		{
+			int up = 0;
+			int down = 0;
+			for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
+			{
+				if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
+					up++;
+				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+					up++;
+				else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
+					down++;
+				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+					down++;
+			}
+			if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
+			{
+				__SetBollState(eBollTrend_ZhangKou, 1);
+				return;
+			}
+			else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
+			{
+				__SetBollState(eBollTrend_ZhangKou, 1);
+				return;
+			}
+		}
+	}
+}
+
 void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 {
+	m_eLastBollState = m_eBollState;
 	m_eBollState = state;
 	switch(m_eBollState)
 	{
@@ -512,12 +654,12 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 		{
 			m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
 			CString szInfo;
-			szInfo.Format("张口<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000).c_str(), (param==0 ? "开口角判断" : "柱体穿插判断"));
+			szInfo.Format("张口产生<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000).c_str(), (param==0 ? "开口角判断" : "柱体穿插判断"));
 			if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
 			{
 				int up = 0;
 				int down = 0;
-				for(int i = KLINE_DATA_SIZE-1; i>=(int)KLINE_DATA_SIZE-m_nZhangKouTrendCheckCycle; --i)
+				for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-m_nZhangKouTrendCheckCycle; --i)
 				{
 					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
 						up++;
@@ -530,9 +672,15 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 				}
 				CString _szInfo = "";
 				if(up > down)
+				{
+					m_bZhangKouUp = true;
 					_szInfo.Format(" 趋势[涨 %d:%d]", up, down);
+				}
 				else
+				{
+					m_bZhangKouUp = false;
 					_szInfo.Format(" 趋势[跌 %d:%d]", up, down);
+				}
 				szInfo.Append(_szInfo);
 			}
 			LOCAL_INFO(szInfo.GetBuffer());
@@ -541,8 +689,15 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 	case eBollTrend_ShouKou:
 		{
 			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000);
-			LOCAL_INFO("收口>>>> 确认时间[%s]", strConfirmTime.c_str());
+			LOCAL_INFO("收口产生>>>> 确认时间[%s]", strConfirmTime.c_str());
 			m_nShouKouConfirmBar = KLINE_DATA_SIZE-1;
+		}
+		break;
+	case eBollTrend_ShouKouChannel:
+		{
+			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000);
+			LOCAL_INFO("收口通道===== 确认时间[%s]", strConfirmTime.c_str());
+			m_nShouKouChannelConfirmBar = KLINE_DATA_SIZE-1;
 		}
 		break;
 	default:
@@ -554,4 +709,13 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 void COKExFuturesDlg::OnBnClickedButtonTest()
 {
 	Test();
+}
+
+void COKExFuturesDlg::OnDestroy()
+{
+	delete pExchange;
+	LocalLogger::ReleaseInstance();
+	CDialogEx::OnDestroy();
+
+	// TODO:  在此处添加消息处理程序代码
 }

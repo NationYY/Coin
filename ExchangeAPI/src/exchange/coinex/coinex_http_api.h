@@ -4,7 +4,7 @@ class CCoinexHttpAPI : public CHttpAPI
 {
 public:
 	CCoinexHttpAPI(std::string strAPIKey, std::string strSecretKey);
-	~CCoinexHttpAPI();
+	virtual ~CCoinexHttpAPI();
 	void API_market_list();
 	virtual void API_Balance();
 

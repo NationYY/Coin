@@ -9,7 +9,7 @@ class CBWExchange : public CExchange
 {
 public:
 	CBWExchange(std::string strAPIKey, std::string strSecretKey);
-	~CBWExchange();
+	virtual ~CBWExchange();
 	virtual const char* GetName(){
 		return "BW";
 	}
