@@ -126,11 +126,9 @@ public:
 
     void doclose() 
 	{
+		m_manual_close = true;
 		if(m_bConnect)
-		{
-			m_manual_close = true;
 			m_endpoint.close(m_hdl,websocketpp::close::status::going_away,"");
-		}
     }
 
 	void run(std::string &uri)

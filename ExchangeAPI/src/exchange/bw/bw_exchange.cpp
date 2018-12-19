@@ -141,7 +141,7 @@ void CBWExchange::Parse_Balance(Json::Value& retObj, const std::string& strRet)
 {
 	m_dataCenter.ClearAllBalance();
 	Json::Value& fundsList = retObj["datas"]["list"];
-	for(int i = 0; i<fundsList.size(); ++i)
+	for(int i = 0; i<(int)fundsList.size(); ++i)
 	{
 		switch(fundsList[i]["currencyTypeId"].asInt())
 		{
