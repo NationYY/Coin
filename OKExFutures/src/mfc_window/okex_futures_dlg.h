@@ -1,5 +1,5 @@
 
-// OKExFuturesDlg.h : 头文件
+// okex_futures_dlg.h : 头文件
 //
 
 #pragma once
@@ -86,6 +86,8 @@ private:
 	void __CheckTrend_ZhangKou();
 	void __CheckTrend_ShouKou();
 	void __SetBollState(eBollTrend state, int param=0);
+public:
+	bool m_bRun;
 private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;
@@ -98,4 +100,6 @@ private:
 	int m_nZhangKouCheckCycle;		//布林张口确认周期
 	int m_nZhangKouTrendCheckCycle;	//布林张口趋势确认周期 必须是奇数
 	int m_nShouKouCheckCycle;		//布林收口确认周期
+public:
+	afx_msg void OnBnClickedButtonTest();
 };

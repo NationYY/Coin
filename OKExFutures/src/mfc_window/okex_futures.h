@@ -1,5 +1,5 @@
 
-// OKExFutures.h : PROJECT_NAME 应用程序的主头文件
+// okex_futures.h : PROJECT_NAME 应用程序的主头文件
 //
 
 #pragma once
@@ -12,7 +12,7 @@
 
 
 // COKExFuturesApp: 
-// 有关此类的实现，请参阅 OKExFutures.cpp
+// 有关此类的实现，请参阅 okex_futures.cpp
 //
 
 class COKExFuturesApp : public CWinApp

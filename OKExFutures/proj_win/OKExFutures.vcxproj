@@ -115,19 +115,19 @@
     <Image Include="res\OKExFutures.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\mfc_window\OKExFutures.cpp" />
-    <ClCompile Include="..\src\mfc_window\OKExFuturesDlg.cpp" />
+    <ClCompile Include="..\src\mfc_window\okex_futures.cpp" />
+    <ClCompile Include="..\src\mfc_window\okex_futures_dlg.cpp" />
     <ClCompile Include="..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\mfc_window\OKExFutures.h" />
-    <ClInclude Include="..\src\mfc_window\OKExFuturesDlg.h" />
+    <ClInclude Include="..\src\mfc_window\okex_futures.h" />
+    <ClInclude Include="..\src\mfc_window\okex_futures_dlg.h" />
     <ClInclude Include="..\src\stdafx.h" />
-    <ClInclude Include="proj_win\Resource.h" />
-    <ClInclude Include="proj_win\targetver.h" />
+    <ClInclude Include="..\src\test_kline_data.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\ReadMe.txt" />

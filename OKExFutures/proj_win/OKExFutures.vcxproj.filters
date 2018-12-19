@@ -26,24 +26,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\stdafx.cpp" />
-    <ClCompile Include="..\src\mfc_window\OKExFutures.cpp">
+    <ClCompile Include="..\src\mfc_window\okex_futures.cpp">
       <Filter>mfc_window</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mfc_window\OKExFuturesDlg.cpp">
+    <ClCompile Include="..\src\mfc_window\okex_futures_dlg.cpp">
       <Filter>mfc_window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="proj_win\Resource.h" />
-    <ClInclude Include="proj_win\targetver.h" />
     <ClInclude Include="..\src\stdafx.h" />
-    <ClInclude Include="..\src\mfc_window\OKExFutures.h">
-      <Filter>mfc_window</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mfc_window\OKExFuturesDlg.h">
-      <Filter>mfc_window</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="..\src\test_kline_data.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\src\mfc_window\okex_futures.h">
+      <Filter>mfc_window</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mfc_window\okex_futures_dlg.h">
+      <Filter>mfc_window</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\ReadMe.txt" />

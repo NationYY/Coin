@@ -1,10 +1,10 @@
 
-// OKExFutures.cpp : 定义应用程序的类行为。
+// okex_futures.cpp : 定义应用程序的类行为。
 //
 
 #include "stdafx.h"
-#include "OKExFutures.h"
-#include "OKExFuturesDlg.h"
+#include "okex_futures.h"
+#include "okex_futures_dlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
