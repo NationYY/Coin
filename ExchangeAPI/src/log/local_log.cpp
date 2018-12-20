@@ -4,16 +4,16 @@
 #include <stdarg.h> 
 #include <stdio.h>
 #include<Windows.h>
-std::string LocalLogger::s_LogTypeTitle[LOG_MAX_TYPE] = {
+std::string CLocalLogger::s_LogTypeTitle[LOG_MAX_TYPE] = {
 	"ERROR", "WARNING", "INFO", "FUNCTION"
 };
 
-LocalLogger::LocalLogger() :m_batchMode(false), m_quitFlag(false), m_completeFlag(true), m_bFirst(true)
+CLocalLogger::CLocalLogger() :m_batchMode(false), m_quitFlag(false), m_completeFlag(true), m_bFirst(true)
 {
 
 }
 
-LocalLogger::~LocalLogger()
+CLocalLogger::~CLocalLogger()
 {
 	if (!m_quitFlag)
 	{
@@ -33,7 +33,7 @@ LocalLogger::~LocalLogger()
 }
 
 
-void LocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
+void CLocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 {
 	if(m_bFirst)
 	{
@@ -67,7 +67,7 @@ void LocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 	}
 }
 
-void LocalLogger::SwapFront2Middle()
+void CLocalLogger::SwapFront2Middle()
 {
 	boost::mutex::scoped_lock sl(m_logMutex);
 	if (m_vecFront.size() && m_vecMiddle.empty())
@@ -77,7 +77,7 @@ void LocalLogger::SwapFront2Middle()
 	}
 }
 
-void LocalLogger::Start()
+void CLocalLogger::Start()
 {
 	if (m_logFilePath.empty())
 	{
@@ -86,11 +86,11 @@ void LocalLogger::Start()
 	m_nDay = 0;
 
 	LoadFile();
-	boost::thread t(boost::bind(&LocalLogger::ThreadWorker, this));
+	boost::thread t(boost::bind(&CLocalLogger::ThreadWorker, this));
 	t.detach();
 }
 
-void LocalLogger::Close()
+void CLocalLogger::Close()
 {
 	m_quitFlag = true;
 	{
@@ -100,7 +100,7 @@ void LocalLogger::Close()
 		
 }
 
-void LocalLogger::LoadFile()
+void CLocalLogger::LoadFile()
 {
 	time_t now_t = time(NULL);
 	tm nowtm;
@@ -120,7 +120,7 @@ void LocalLogger::LoadFile()
 	}
 }
 
-void LocalLogger::WriteLog()
+void CLocalLogger::WriteLog()
 {
 	while (!m_quitFlag)
 	{ 
@@ -145,7 +145,7 @@ void LocalLogger::WriteLog()
 
 }
 
-void LocalLogger::BatchWriteLog()
+void CLocalLogger::BatchWriteLog()
 {
 	std::string str_log;
 	while (!m_quitFlag)
@@ -172,7 +172,7 @@ void LocalLogger::BatchWriteLog()
 	}
 }
 
-void LocalLogger::ThreadWorker()
+void CLocalLogger::ThreadWorker()
 { 
 	//LOCAL_INFO("local_log start");
 
@@ -190,7 +190,7 @@ void LocalLogger::ThreadWorker()
 	m_completeFlag = true;
 }
 
-void LocalLogger::SetLogPath(const char* path)
+void CLocalLogger::SetLogPath(const char* path)
 {
 	if (NULL == path)
 		return;
@@ -198,7 +198,7 @@ void LocalLogger::SetLogPath(const char* path)
 	m_logFilePath = path;
 }
 
-void LocalLogger::LogError(const char * format, ...)
+void CLocalLogger::LogError(const char * format, ...)
 {
 	char context[MAX_LOCAL_LOG_CONTENT_LEN];
 	va_list args;
@@ -210,7 +210,7 @@ void LocalLogger::LogError(const char * format, ...)
 	PushLogText(LOG_ERROR, context);
 }
 
-void LocalLogger::LogWarning(const char * format, ...)
+void CLocalLogger::LogWarning(const char * format, ...)
 {
 	char context[MAX_LOCAL_LOG_CONTENT_LEN];
 	va_list args;
@@ -222,7 +222,7 @@ void LocalLogger::LogWarning(const char * format, ...)
 	PushLogText(LOG_WARNING, context);
 }
 
-void LocalLogger::LogInfo(const char * format, ...)
+void CLocalLogger::LogInfo(const char * format, ...)
 {
 	char context[MAX_LOCAL_LOG_CONTENT_LEN] = "";
 	va_list args;
@@ -234,7 +234,7 @@ void LocalLogger::LogInfo(const char * format, ...)
 	PushLogText(LOG_INFO, context);
 }
 
-void LocalLogger::LogFunction(const char * format, ...)
+void CLocalLogger::LogFunction(const char * format, ...)
 {
 	char context[MAX_LOCAL_LOG_CONTENT_LEN];
 	va_list args;

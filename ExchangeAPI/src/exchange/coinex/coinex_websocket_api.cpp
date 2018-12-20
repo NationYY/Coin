@@ -42,9 +42,9 @@ void CCoinexWebSocketAPI::LoginIn()
 }
 
 
-void CCoinexWebSocketAPI::Ping()
+bool CCoinexWebSocketAPI::Ping()
 {
-	Request("{\"method\":\"server.ping\",\"params\":[],\"id\" : 11}");
+	return Request("{\"method\":\"server.ping\",\"params\":[],\"id\" : 11}");
 }
 
 void CCoinexWebSocketAPI::API_LatestExecutedOrder(eMarketType type)

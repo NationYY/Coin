@@ -4,7 +4,7 @@
 CWebsocketAPI::CWebsocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false),
 m_bUTF8(false), m_pExchange(NULL), m_bGZIP(false), m_bFutures(false)
 {
-	m_strAPIKey = m_strURI = m_strSecretKey = m_lastAddChannelFuturesKline = "";
+	m_strAPIKey = m_strURI = m_strSecretKey = m_lastAddChannelFuturesKline = m_lastAddChannelFuturesTicker = "";
 }
 
 
@@ -26,12 +26,16 @@ void CWebsocketAPI::SetURI(std::string strURI)
 	m_strURI = strURI;
 }
 
-void CWebsocketAPI::Request(const char* szRequestInfo)
+bool CWebsocketAPI::Request(const char* szRequestInfo)
 {
 	if(!m_bConnect)
-		return;
+		return false;
 	if(m_pWebsocket)
+	{
 		m_pWebsocket->request(szRequestInfo);
+		return true;
+	}
+	return false;
 }
 
 void CWebsocketAPI::Close()

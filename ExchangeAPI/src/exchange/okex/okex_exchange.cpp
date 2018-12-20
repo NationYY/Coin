@@ -62,6 +62,16 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesKline, szExchangeName, retObj, strRet);
 	}
+	else if(retObj.isArray() && retObj[0].isObject() && retObj[0]["channel"].isString() && retObj[0]["channel"].asString() == m_pWebSocketAPI->m_lastAddChannelFuturesTicker)
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesTicker, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["event"].isString() && retObj["event"].asString() == "pong")
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_Pong, szExchangeName, retObj, strRet);
+	}
 }
 
 void COkexExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)

@@ -8,13 +8,14 @@
 #include "afxdialogex.h"
 #include <clib/lib/file/file_util.h>
 #include "log/local_log.h"
+#include "log/local_action_log.h"
 #include "exchange/okex/okex_exchange.h"
 #include "common/func_common.h"
 #include "test_kline_data.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
+#define DOUBLE_PRECISION 0.00000001
 #define BOLL_DATA m_vecBollData
 #define BOLL_DATA_SIZE ((int)m_vecBollData.size())
 #define REAL_BOLL_DATA_SIZE ((int)m_vecBollData.size() - m_nBollCycle -1)
@@ -61,7 +62,8 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 void local_websocket_callbak_open(const char* szExchangeName)
 {
 	//AfxMessageBox("连接成功");
-	LOCAL_ERROR("连接成功");
+	LOCAL_INFO("连接成功");
+	g_pOKExFuturesDlg->m_tListenPong = 0;
 	if(g_pOKExFuturesDlg->m_bRun)
 	{
 		g_pOKExFuturesDlg->m_bRun = false;
@@ -72,14 +74,16 @@ void local_websocket_callbak_open(const char* szExchangeName)
 void local_websocket_callbak_close(const char* szExchangeName)
 {
 	LOCAL_ERROR("断开连接");
+	g_pOKExFuturesDlg->m_tListenPong = 0;
 }
 
 void local_websocket_callbak_fail(const char* szExchangeName)
 {
 	LOCAL_ERROR("连接失败");
+	g_pOKExFuturesDlg->m_tListenPong = 0;
 }
 
-std::string lastKlineTime = "";
+__int64 lastKlineTime = 0;
 std::string lastKlineRetStr = "";
 Json::Value lastKlineJson;
 void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
@@ -88,36 +92,39 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 	{
 	case eWebsocketAPIType_FuturesKline:
 		{
-			std::string strTime = retObj[0]["data"][0][0].asString();
-			if(lastKlineTime == "")
+			char* szEnd = NULL;
+			__int64 curTime = _strtoi64(retObj[0]["data"][0][0].asString().c_str(), &szEnd, 10); 
+			if(curTime >= lastKlineTime)
 			{
-				LOCAL_INFO(strRet.c_str());
-			}
-			else
-			{
-				if(lastKlineTime != strTime)
+				int volume = stoi(retObj[0]["data"][0][5].asString());
+				double volumeByCurrency = stod(retObj[0]["data"][0][6].asString());
+				if(volume == 0 && CFuncCommon::CheckEqual(volumeByCurrency, 0.0))
 				{
-					LOCAL_INFO(lastKlineRetStr.c_str());
-					int volume = stoi(retObj[0]["data"][0][5].asString());
-					double volumeByCurrency = stod(retObj[0]["data"][0][6].asString());
-					if(volume == 0 && CFuncCommon::CheckEqual(volumeByCurrency, 0.0))
-					{
-						char* szEnd = NULL;
-						SKlineData data;
-						data.time = _strtoi64(lastKlineJson[0]["data"][0][0].asString().c_str(), &szEnd, 10);
-						data.openPrice = stod(lastKlineJson[0]["data"][0][1].asString());
-						data.highPrice = stod(lastKlineJson[0]["data"][0][2].asString());
-						data.lowPrice = stod(lastKlineJson[0]["data"][0][3].asString());
-						data.closePrice = stod(lastKlineJson[0]["data"][0][4].asString());
-						data.volume = stoi(lastKlineJson[0]["data"][0][5].asString());
-						data.volumeByCurrency = stod(lastKlineJson[0]["data"][0][6].asString());
-						g_pOKExFuturesDlg->AddKlineData(data);
-					}
+					CActionLog("market", "%s", lastKlineRetStr.c_str());
+					SKlineData data;
+					data.time = _strtoi64(lastKlineJson[0]["data"][0][0].asString().c_str(), &szEnd, 10);
+					data.openPrice = stod(lastKlineJson[0]["data"][0][1].asString());
+					data.highPrice = stod(lastKlineJson[0]["data"][0][2].asString());
+					data.lowPrice = stod(lastKlineJson[0]["data"][0][3].asString());
+					data.closePrice = stod(lastKlineJson[0]["data"][0][4].asString());
+					data.volume = stoi(lastKlineJson[0]["data"][0][5].asString());
+					data.volumeByCurrency = stod(lastKlineJson[0]["data"][0][6].asString());
+					g_pOKExFuturesDlg->AddKlineData(data);
 				}
+				lastKlineTime = curTime;
+				lastKlineRetStr = strRet;
+				lastKlineJson = retObj;
 			}
-			lastKlineTime = strTime;
-			lastKlineRetStr = strRet;
-			lastKlineJson = retObj;
+		}
+		break;
+	case eWebsocketAPIType_FuturesTicker:
+		{
+			CActionLog("market", "%s", strRet.c_str());
+		}
+		break;
+	case eWebsocketAPIType_Pong:
+		{
+			g_pOKExFuturesDlg->Pong();
 		}
 		break;
 	default:
@@ -140,6 +147,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_eLastBollState = eBollTrend_Normal;
 	m_nZhangKouDoubleConfirmCycle = 2;
 	m_nShoukouDoubleConfirmCycle = 3;
+	m_tListenPong = 0;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -190,10 +198,10 @@ BOOL COKExFuturesDlg::OnInitDialog()
 
 	if(!m_config.open("./config.ini"))
 		return FALSE;
-	const char* id = m_config.get("futures", "apiKey", "");
-	const char* key = m_config.get("futures", "secretKey", "");
+	m_accessKey = m_config.get("futures", "apiKey", "");
+	m_secretKey = m_config.get("futures", "secretKey", "");
 
-	pExchange = new COkexExchange(id, key, true);
+	pExchange = new COkexExchange(m_accessKey, m_secretKey, true);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
 	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
 	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
@@ -205,15 +213,18 @@ BOOL COKExFuturesDlg::OnInitDialog()
 
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
-	SetTimer(eTimerType_Ping, 5000, NULL);
+	SetTimer(eTimerType_Ping, 30000, NULL);
 
 	clib::string log_path = "log/";
 	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
 
-	LocalLogger& localLogger = LocalLogger::GetInstance();
-	localLogger.SetBatchMode(true);
-	localLogger.SetLogPath(log_path.c_str());
-	localLogger.Start();
+	CLocalLogger& _localLogger = CLocalLogger::GetInstance();
+	_localLogger.SetBatchMode(true);
+	_localLogger.SetLogPath(log_path.c_str());
+	_localLogger.Start();
+
+	CLocalActionLog::GetInstancePt()->set_log_path(log_path.c_str());
+	CLocalActionLog::GetInstancePt()->start();
 
 	// TODO:  在此添加额外的初始化代码
 
@@ -278,15 +289,27 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 	case eTimerType_APIUpdate:
 		{
-			LocalLogger::GetInstancePt()->SwapFront2Middle();
+			CLocalLogger::GetInstancePt()->SwapFront2Middle();
 			if(pExchange)
 				pExchange->Update();
+			if(m_tListenPong && time(NULL) - m_tListenPong > 15)
+			{
+				m_tListenPong = 0;
+				delete pExchange;
+				pExchange = new COkexExchange(m_accessKey, m_secretKey, true);
+				pExchange->SetHttpCallBackMessage(local_http_callbak_message);
+				pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
+				pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
+				pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
+				pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+				pExchange->Run();
+			}
 		}
 		break;
 	case eTimerType_Ping:
 		{
-			if(pExchange)
-				pExchange->GetWebSocket()->Ping();
+			if(pExchange && pExchange->GetWebSocket()->Ping())
+				m_tListenPong = time(NULL);
 		}
 		break;
 	}
@@ -302,7 +325,11 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 	std::string strCoinType = "etc";
 	std::string strFuturesCycle = "next_week";
 	if(pExchange->GetWebSocket())
+	{
 		pExchange->GetWebSocket()->API_FuturesKlineData(true, strKlineType, strCoinType, strFuturesCycle);
+		pExchange->GetWebSocket()->API_FuturesTickerData(true, strCoinType, strFuturesCycle);
+		
+	}
 	m_bRun = true;
 }
 
@@ -358,9 +385,9 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 		info.mb = ma;
 		info.up = info.mb + 2*md;
 		info.dn = info.mb - 2*md;
-		info.mb = CFuncCommon::Round(int((info.mb+addValue)*scaleValue)/scaleValue+0.00000001, m_nPriceDecimal);
-		info.up = CFuncCommon::Round(int((info.up+addValue)*scaleValue)/scaleValue+0.00000001, m_nPriceDecimal);
-		info.dn = CFuncCommon::Round(int((info.dn+addValue)*scaleValue)/scaleValue+0.00000001, m_nPriceDecimal);
+		info.mb = CFuncCommon::Round(int((info.mb+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
+		info.up = CFuncCommon::Round(int((info.up+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
+		info.dn = CFuncCommon::Round(int((info.dn+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
 		info.time = data.time;
 		BOLL_DATA.push_back(info);
 		OnBollUpdate();
@@ -384,12 +411,12 @@ void COKExFuturesDlg::Test()
 		reader.parse(g_test_kline[i].c_str(), retObj);
 		SKlineData data;
 		data.time = _strtoi64(retObj[0]["data"][0][0].asString().c_str(), &szEnd, 10);
-		data.openPrice = CFuncCommon::Round(stod(retObj[0]["data"][0][1].asString())+0.00000001, m_nPriceDecimal);
-		data.highPrice = CFuncCommon::Round(stod(retObj[0]["data"][0][2].asString())+0.00000001, m_nPriceDecimal);
-		data.lowPrice = CFuncCommon::Round(stod(retObj[0]["data"][0][3].asString())+0.00000001, m_nPriceDecimal);
-		data.closePrice = CFuncCommon::Round(stod(retObj[0]["data"][0][4].asString())+0.00000001, m_nPriceDecimal);
+		data.openPrice = CFuncCommon::Round(stod(retObj[0]["data"][0][1].asString())+DOUBLE_PRECISION, m_nPriceDecimal);
+		data.highPrice = CFuncCommon::Round(stod(retObj[0]["data"][0][2].asString())+DOUBLE_PRECISION, m_nPriceDecimal);
+		data.lowPrice = CFuncCommon::Round(stod(retObj[0]["data"][0][3].asString())+DOUBLE_PRECISION, m_nPriceDecimal);
+		data.closePrice = CFuncCommon::Round(stod(retObj[0]["data"][0][4].asString())+DOUBLE_PRECISION, m_nPriceDecimal);
 		data.volume = stoi(retObj[0]["data"][0][5].asString());
-		data.volumeByCurrency = CFuncCommon::Round(stod(retObj[0]["data"][0][6].asString())+0.00000001, m_nPriceDecimal);
+		data.volumeByCurrency = CFuncCommon::Round(stod(retObj[0]["data"][0][6].asString())+DOUBLE_PRECISION, m_nPriceDecimal);
 		g_pOKExFuturesDlg->AddKlineData(data);
 	}
 
@@ -441,7 +468,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
 		if(offset / minValue > 2.5)
 		{
-			__SetBollState(eBollTrend_ZhangKou, 0);
+			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 			return;
 		}
 		else if(offset / minValue > 1.5)
@@ -464,12 +491,33 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 				}
 				if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
 				{
-					__SetBollState(eBollTrend_ZhangKou, 1);
-					return;
+					double min_up = 100.0;
+					for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
+					{
+						if(BOLL_DATA[i].up < min_up)
+							min_up = BOLL_DATA[i].up;
+					}
+					if((BOLL_DATA[BOLL_DATA_SIZE-1].up / min_up) >= 1.005)
+					{
+						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+						return;
+					}
+
 				}
 				else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
 				{
-					__SetBollState(eBollTrend_ZhangKou, 1);
+					double max_down = 0;
+					for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
+					{
+						if(BOLL_DATA[i].dn > max_down)
+							max_down = BOLL_DATA[i].dn;
+					}
+					if((BOLL_DATA[BOLL_DATA_SIZE-1].dn / max_down) <= 0.095)
+					{
+						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+						return;
+					}
+					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
 					return;
 				}
 			}
@@ -489,10 +537,10 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 			}
 		}
 		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if(maxValue / offset > 2)
+		if(maxValue / offset > 3)
 		{
 			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
-			if(offset/avgPrice < 0.013)
+			if(offset/avgPrice < 0.02)
 			{
 				__SetBollState(eBollTrend_ShouKou);
 				return;
@@ -531,6 +579,23 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 		double maxValue = 0.0;
 		for(int i = m_nZhangKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
 		{
+			if(m_bZhangKouUp)
+			{
+				if(BOLL_DATA[BOLL_DATA_SIZE-1].up < BOLL_DATA[i].up && (BOLL_DATA_SIZE-1-i) > 1)
+				{
+					__SetBollState(eBollTrend_ShouKou);
+					return;
+				}
+			}
+			else
+			{
+
+				if(BOLL_DATA[BOLL_DATA_SIZE-1].dn > BOLL_DATA[i].dn && (BOLL_DATA_SIZE-1-i) > 1)
+				{
+					__SetBollState(eBollTrend_ShouKou);
+					return;
+				}
+			}
 			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
 			if(offset > maxValue)
 			{
@@ -539,15 +604,26 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 			}
 		}
 		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if(maxValue / offset > 2)
+		if((offset/m_nZhangKouMinValue) < 1.5)
+		{
+			__SetBollState(eBollTrend_ShouKou);
+			return;
+		}
+		if((maxValue/offset) > 2.5)
 		{
 			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
-			if(offset/avgPrice < 0.013)
+			if(offset/avgPrice < 0.02)
 			{
 				__SetBollState(eBollTrend_ShouKou);
 				return;
 			}
 		}
+	}
+	//超过25个周期直接进入收口通道状态
+	if(KLINE_DATA_SIZE-1-m_nZhangKouConfirmBar >= 25)
+	{
+		__SetBollState(eBollTrend_ShouKouChannel, 1);
+		return;
 	}
 }
 
@@ -561,6 +637,13 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 		for(int i = 0; i<m_nShoukouDoubleConfirmCycle; ++i)
 		{
 			double offset = BOLL_DATA[BOLL_DATA_SIZE-1-i].up - BOLL_DATA[BOLL_DATA_SIZE-1-i].dn;
+
+			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
+			if(offset/avgPrice >= 0.02)
+			{
+				bRet = false;
+				break;
+			}
 			if(last > 0)
 			{
 				if(offset >= last)
@@ -585,19 +668,14 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 		}
 		if(bRet)
 		{
-			__SetBollState(eBollTrend_ShouKouChannel);
+			__SetBollState(eBollTrend_ShouKouChannel, 0);
 			return;
 		}
 	}
-}
-
-
-void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
-{
-	//寻找张口,从确定收口通道的柱子开始
+	//寻找张口,从确定收口的柱子开始
 	int minBar = 0;
 	double minValue = 100.0;
-	for(int i=m_nShouKouChannelConfirmBar; i<BOLL_DATA_SIZE; ++i)
+	for(int i = m_nShouKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
 	{
 		double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
 		if(offset < minValue)
@@ -609,7 +687,7 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 	double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
 	if(offset / minValue > 2.5)
 	{
-		__SetBollState(eBollTrend_ZhangKou, 0);
+		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 		return;
 	}
 	else if(offset / minValue > 1.5)
@@ -632,19 +710,78 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 			}
 			if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
 			{
-				__SetBollState(eBollTrend_ZhangKou, 1);
+				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
 				return;
 			}
 			else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
 			{
-				__SetBollState(eBollTrend_ZhangKou, 1);
+				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+				return;
+			}
+		}
+	}
+	//超过25个周期直接进入收口通道状态
+	if(KLINE_DATA_SIZE-1-m_nShouKouConfirmBar >= 25)
+	{
+		__SetBollState(eBollTrend_ShouKouChannel, 1);
+		return;
+	}
+}
+
+
+void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
+{
+	//寻找张口,从确定收口通道的柱子开始
+	int minBar = 0;
+	double minValue = 100.0;
+	for(int i=m_nShouKouChannelConfirmBar; i<BOLL_DATA_SIZE; ++i)
+	{
+		double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+		if(offset < minValue)
+		{
+			minValue = offset;
+			minBar = i-1;
+		}
+	}
+	double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
+	if(offset / minValue > 2.5)
+	{
+		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
+		return;
+	}
+	else if(offset / minValue > 1.5)
+	{
+		int check = m_nZhangKouTrendCheckCycle/2 + 1;
+		if(KLINE_DATA_SIZE >= check)
+		{
+			int up = 0;
+			int down = 0;
+			for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
+			{
+				if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
+					up++;
+				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+					up++;
+				else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
+					down++;
+				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+					down++;
+			}
+			if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
+			{
+				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+				return;
+			}
+			else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
+			{
+				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
 				return;
 			}
 		}
 	}
 }
 
-void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
+void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam)
 {
 	m_eLastBollState = m_eBollState;
 	m_eBollState = state;
@@ -653,8 +790,9 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 	case eBollTrend_ZhangKou:
 		{
 			m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
+			m_nZhangKouMinValue = dParam;
 			CString szInfo;
-			szInfo.Format("张口产生<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000).c_str(), (param==0 ? "开口角判断" : "柱体穿插判断"));
+			szInfo.Format("张口产生<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000).c_str(), (nParam==0 ? "开口角判断" : "柱体穿插判断"));
 			if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
 			{
 				int up = 0;
@@ -696,7 +834,7 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int param)
 	case eBollTrend_ShouKouChannel:
 		{
 			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time/1000);
-			LOCAL_INFO("收口通道===== 确认时间[%s]", strConfirmTime.c_str());
+			LOCAL_INFO("收口通道===== 确认时间[%s] %s", strConfirmTime.c_str(), (nParam==0 ? "趋势判断" : "超时判断"));
 			m_nShouKouChannelConfirmBar = KLINE_DATA_SIZE-1;
 		}
 		break;
@@ -714,8 +852,14 @@ void COKExFuturesDlg::OnBnClickedButtonTest()
 void COKExFuturesDlg::OnDestroy()
 {
 	delete pExchange;
-	LocalLogger::ReleaseInstance();
+	CLocalLogger::ReleaseInstance();
+	CLocalActionLog::ReleaseInstance();
 	CDialogEx::OnDestroy();
 
 	// TODO:  在此处添加消息处理程序代码
+}
+
+void COKExFuturesDlg::Pong()
+{
+	m_tListenPong = 0;
 }

@@ -6,7 +6,7 @@ public:
 	CHuobiProWebsocketAPI(std::string strAPIKey, std::string strSecretKey);
 	virtual ~CHuobiProWebsocketAPI();
 public:
-	virtual void Ping();
+	virtual bool Ping();
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
 	virtual void API_LatestExecutedOrder(eMarketType type){}
 };

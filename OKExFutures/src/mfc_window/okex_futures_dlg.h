@@ -78,6 +78,7 @@ public:
 	afx_msg void OnBnClickedButtonStart();
 public:
 	void AddKlineData(SKlineData& data);
+	void Pong();
 private:
 	void Test();
 	void OnBollUpdate();
@@ -86,15 +87,17 @@ private:
 	void __CheckTrend_ZhangKou();
 	void __CheckTrend_ShouKou();
 	void __CheckTrend_ShouKouChannel();
-	void __SetBollState(eBollTrend state, int param=0);
+	void __SetBollState(eBollTrend state, int nParam=0, double dParam=0.0);
 public:
 	bool m_bRun;
+	time_t m_tListenPong;
 private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;
 	eBollTrend m_eBollState;
 	eBollTrend m_eLastBollState;
 	int m_nZhangKouConfirmBar;
+	double m_nZhangKouMinValue;
 	int m_nShouKouConfirmBar;
 	int m_nShouKouChannelConfirmBar;
 	bool m_bZhangKouUp;

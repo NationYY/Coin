@@ -166,6 +166,7 @@
     <ClCompile Include="..\src\exchange\zbg\zbg_http_api.cpp" />
     <ClCompile Include="..\src\exchange\zbg\zbg_websocket_api.cpp" />
     <ClCompile Include="..\src\http_api\http_api.cpp" />
+    <ClCompile Include="..\src\log\local_action_log.cpp" />
     <ClCompile Include="..\src\log\local_log.cpp" />
     <ClCompile Include="..\src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -205,6 +206,7 @@
     <ClInclude Include="..\src\exchange\zbg\zbg_websocket_api.h" />
     <ClInclude Include="..\src\http_api\http_api.h" />
     <ClInclude Include="..\src\http_api\http_def.h" />
+    <ClInclude Include="..\src\log\local_action_log.h" />
     <ClInclude Include="..\src\log\local_log.h" />
     <ClInclude Include="..\src\stdafx.h" />
     <ClInclude Include="..\src\targetver.h" />

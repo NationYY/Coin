@@ -14,9 +14,11 @@ enum eHttpAPIType
 
 enum eWebsocketAPIType
 {
+	eWebsocketAPIType_Pong,			//心跳
 	eWebsocketAPIType_EntrustDepth,	//交易深度
 	eWebsocketAPIType_LatestExecutedOrder,//最新成交的订单
 	eWebsocketAPIType_FuturesKline,	//合约K线
+	eWebsocketAPIType_FuturesTicker,//合约行情
 	eWebsocketAPIType_Max,
 };
 

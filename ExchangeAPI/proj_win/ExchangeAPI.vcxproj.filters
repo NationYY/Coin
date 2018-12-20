@@ -137,6 +137,9 @@
     <ClCompile Include="..\src\exchange\bw\bw_websocket_api.cpp">
       <Filter>exchange\bw</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\log\local_action_log.cpp">
+      <Filter>log</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\stdafx.h" />
@@ -242,6 +245,9 @@
     </ClInclude>
     <ClInclude Include="..\src\exchange\bw\bw_websocket_api.h">
       <Filter>exchange\bw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\log\local_action_log.h">
+      <Filter>log</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

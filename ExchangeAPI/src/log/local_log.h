@@ -4,10 +4,10 @@
 #include <iostream>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#define LOCAL_ERROR		LocalLogger::GetInstancePt()->LogError
-#define LOCAL_WARNING	LocalLogger::GetInstancePt()->LogWarning
-#define LOCAL_INFO		LocalLogger::GetInstancePt()->LogInfo
-#define LOCAL_FUNCTION		LocalLogger::GetInstancePt()->LogFunction 
+#define LOCAL_ERROR		CLocalLogger::GetInstancePt()->LogError
+#define LOCAL_WARNING	CLocalLogger::GetInstancePt()->LogWarning
+#define LOCAL_INFO		CLocalLogger::GetInstancePt()->LogInfo
+#define LOCAL_FUNCTION		CLocalLogger::GetInstancePt()->LogFunction 
 #define MAX_UUID_CACHE_COUNT 10000
 
 
@@ -26,13 +26,13 @@ enum LOG_TYPE
 	LOG_FUNCTION, //功能：程序中重要的操作使用此类型记录log
 	LOG_MAX_TYPE,
 };
-class LocalLogger
+class CLocalLogger
 {
-	DECLARE_SINGLETONPT(LocalLogger)
+	DECLARE_SINGLETONPT(CLocalLogger)
 	static std::string s_LogTypeTitle[LOG_MAX_TYPE];
 public:
-	LocalLogger();
-	~LocalLogger();
+	CLocalLogger();
+	~CLocalLogger();
 public:
 	void SetBatchMode(bool mode){ m_batchMode = mode; };
 	bool IsBatchMode(){ return m_batchMode; } 

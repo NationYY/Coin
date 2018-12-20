@@ -18,7 +18,7 @@ public:
 	void SetExchange(CExchange* pExchange){
 		m_pExchange = pExchange;
 	}
-	void Request(const char* szRequestInfo);
+	bool Request(const char* szRequestInfo);
 	void SetUTF8(bool bValue){
 		m_bUTF8 = bValue;
 	}
@@ -59,9 +59,11 @@ public:
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd) = 0;
 	//订阅最新成交的订单
 	virtual void API_LatestExecutedOrder(eMarketType type) = 0;
-	virtual void Ping() = 0;
+	virtual bool Ping() = 0;
 	//订阅合约K线
 	virtual void API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle) {};
+	//订阅合约tick
+	virtual void API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle) {};
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥
@@ -81,5 +83,6 @@ protected:
 public:
 	bool m_bConnect;
 	std::string m_lastAddChannelFuturesKline;
+	std::string m_lastAddChannelFuturesTicker;
 };
 

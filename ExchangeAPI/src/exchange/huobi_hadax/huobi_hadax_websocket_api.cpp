@@ -13,11 +13,11 @@ CHuobiHadaxWebsocketAPI::~CHuobiHadaxWebsocketAPI()
 {
 }
 
-void CHuobiHadaxWebsocketAPI::Ping()
+bool CHuobiHadaxWebsocketAPI::Ping()
 {
 	char szBuffer[512] = {0};
 	_snprintf(szBuffer, 512, "{\"ping\": %lld}", time(NULL)*1000);
-	Request(szBuffer);
+	return Request(szBuffer);
 }
 
 void CHuobiHadaxWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
