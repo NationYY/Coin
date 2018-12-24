@@ -2,7 +2,7 @@
 #include "huobi_hadax_exchange.h"
 #include "exchange/huobi_hadax/huobi_hadax_http_api.h"
 #include "exchange/huobi_hadax/huobi_hadax_websocket_api.h"
-
+#ifdef _OPEN_HUOBI_HADAX_
 CHuobiHadaxExchange::CHuobiHadaxExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CHuobiHadaxWebsocketAPI(strAPIKey, strSecretKey);
@@ -58,3 +58,4 @@ void CHuobiHadaxExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj,
 {
 	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
 }
+#endif

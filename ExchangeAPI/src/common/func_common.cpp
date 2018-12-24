@@ -3,6 +3,9 @@
 #include "iconv/iconv.h"
 #include <sstream>
 #include <iomanip>
+#include <io.h>
+#include <iostream>
+#include "boost/thread.hpp"
 CFuncCommon::CFuncCommon()
 {
 }
@@ -90,4 +93,86 @@ std::string CFuncCommon::FormatTimeStr(__int64 time)
 	char szBuff[128] = {0};
 	_snprintf(szBuff, 128, "%d-%02d-%02d %02d:%02d:%02d", pTM->tm_year+1900, pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
 	return szBuff;
+}
+
+void CFuncCommon::GetAllFileInDirectory(const char* szPath, std::set<std::string>& setFiles)
+{
+	char dirNew[200];
+	strcpy(dirNew, szPath);
+	strcat(dirNew, "\\*.*");    // 在目录后面加上"\\*.*"进行第一次搜索
+
+	intptr_t handle;
+	_finddata_t findData;
+
+	handle = _findfirst(dirNew, &findData);
+	if(handle == -1)        // 检查是否成功
+		return;
+	do
+	{
+		if(findData.attrib & _A_SUBDIR)
+		{
+			if(strcmp(findData.name, ".") == 0 || strcmp(findData.name, "..") == 0)
+				continue;
+			strcpy(dirNew, szPath);
+			strcat(dirNew, "\\");
+			strcat(dirNew, findData.name);
+
+			GetAllFileInDirectory(dirNew, setFiles);
+		}
+		else
+			setFiles.insert(findData.name);
+	} while(_findnext(handle, &findData) == 0);
+
+	_findclose(handle);    // 关闭搜索句柄
+}
+
+std::string CFuncCommon::LocaltimeToISO8601(time_t time)
+{
+	tm* pTM = localtime(&time);
+	char buf[36];
+	strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S.000Z", pTM);//gmtime(&time));
+	return buf;
+}
+
+time_t CFuncCommon::ISO8601ToTime(std::string& time)
+{
+	tm time_struct;
+	std::istringstream ss(time);
+	ss >> std::get_time(&time_struct, "%Y-%m-%dT%H:%M:%SZ");
+	std::time_t time_unix = _mkgmtime(&time_struct);
+	return time_unix;
+}
+
+__int64 CFuncCommon::GenUUID()
+{
+	static boost::mutex guidMutex;
+	static __int64 increment = 0;
+	//我们时间只存储从2016年1月1日到现在的时间
+	static int targetTime = 1451635200;
+	static time_t lastTime = time(NULL) - targetTime;
+	time_t now = time(NULL) - targetTime;
+	//时间位
+	time_t time_flag = 0;
+	{
+		boost::mutex::scoped_lock lock(guidMutex);
+		//不能用不等于  因为lastTime会根据情况跳时间
+		if(lastTime < now)
+		{
+			lastTime = now;
+			increment = 0;
+		}
+		++increment;
+		//当前超过自增值了  直接跳到下一秒
+		if(increment >= 0x3FFFFFFFF)
+		{
+			lastTime = lastTime + 1;
+			increment = 0;
+		}
+		// 时间位 高29位
+		time_flag = (__int64)lastTime << 35;
+	}
+	// 数字：时间29，自增34
+	//return j + i +server_id + type;
+	return (time_flag | increment);
+
 }

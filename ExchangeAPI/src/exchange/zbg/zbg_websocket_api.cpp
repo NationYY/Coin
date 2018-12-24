@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "zbg_websocket_api.h"
-
+#ifdef _OPEN_ZBG_
 
 CZbgWebsocketAPI::CZbgWebsocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
@@ -22,3 +22,4 @@ void CZbgWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bA
 	_snprintf(szBuffer, 128, "{\"dataType\":\"323_ENTRUST_ADD_%s\",\"dataSize\":%d,\"action\":\"%s\"}", "", depthSize, (bAdd ? "ADD" : "DEL"));
 	Request(szBuffer);
 }
+#endif

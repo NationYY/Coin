@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _OPEN_HUOBI_PRO_
 #include "websocket_api/websocket_api.h"
 class CHuobiProWebsocketAPI : public CWebsocketAPI
 {
@@ -10,4 +11,5 @@ public:
 	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd);
 	virtual void API_LatestExecutedOrder(eMarketType type){}
 };
+#endif
 

@@ -17,6 +17,7 @@ enum eHttpConfirmationType
 	eHttpConfirmationType_Coinex,
 	eHttpConfirmationType_Exx,
 	eHttpConfirmationType_Zbg,
+	eHttpConfirmationType_OKEx,
 	eHttpConfirmationType_Max,
 };
 

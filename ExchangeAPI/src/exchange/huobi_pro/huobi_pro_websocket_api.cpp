@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "huobi_pro_websocket_api.h"
 
-
+#ifdef _OPEN_HUOBI_PRO_
 CHuobiProWebsocketAPI::CHuobiProWebsocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -29,3 +29,4 @@ void CHuobiProWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bo
 		_snprintf(szBuffer, 512, "{\"sub\": \"market.%s.depth.step0\",\"id\" : \"id1\"}", m_pExchange->GetMarketString(type, false));
 	Request(szBuffer);
 }
+#endif

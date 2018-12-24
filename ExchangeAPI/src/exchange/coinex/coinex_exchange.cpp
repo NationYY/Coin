@@ -2,7 +2,7 @@
 #include "coinex_exchange.h"
 #include "exchange/coinex/coinex_http_api.h"
 #include "exchange/coinex/coinex_websocket_api.h"
-
+#ifdef _OPEN_COINEX_
 CCoinexExchange::CCoinexExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CCoinexWebSocketAPI(strAPIKey, strSecretKey);
@@ -94,3 +94,4 @@ void CCoinexExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, con
 {
 	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
 }
+#endif

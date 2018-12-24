@@ -1,5 +1,6 @@
 #pragma once
 #include "exchange/exchange.h"
+#ifdef _OPEN_ZBG_
 class CZbgExchange : public CExchange
 {
 public:
@@ -15,3 +16,4 @@ private:
 
 };
 
+#endif

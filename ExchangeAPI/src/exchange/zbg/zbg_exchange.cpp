@@ -2,7 +2,7 @@
 #include "zbg_exchange.h"
 #include "exchange/zbg/zbg_http_api.h"
 #include "exchange/zbg/zbg_websocket_api.h"
-
+#ifdef _OPEN_ZBG_
 CZbgExchange::CZbgExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CZbgWebsocketAPI(strAPIKey, strSecretKey);
@@ -37,3 +37,4 @@ void CZbgExchange::Run(bool openWebSokect, int normalHttpThreadCnt, int tradeHtt
 	m_pHttpAPI->Request(info, resInfo);
 
 }
+#endif

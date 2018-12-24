@@ -1,5 +1,6 @@
 #pragma once
 #include "exchange/exchange.h"
+#ifdef _OPEN_HUOBI_PRO_
 class CHuobiProExchange : public CExchange
 {
 public:
@@ -28,3 +29,4 @@ public:
 	}
 };
 
+#endif

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "coinex_http_api.h"
 #include "exchange/exchange.h"
-
+#ifdef _OPEN_COINEX_
 CCoinexHttpAPI::CCoinexHttpAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -36,3 +36,4 @@ void CCoinexHttpAPI::API_Balance()
 	info.mapParams["tonce"] = SHttpParam(eHttpParamType_Int, szBuffer);
 	RequestAsync(info);
 }
+#endif

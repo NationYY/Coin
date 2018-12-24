@@ -23,6 +23,7 @@ enum eBollTrend
 struct SKlineData
 {
 	__int64 time;		//时间
+	char szTime[20];
 	double openPrice;	//开盘价
 	double highPrice;	//最高价
 	double lowPrice;	//最低价
@@ -34,14 +35,40 @@ struct SKlineData
 	}
 };
 
+struct STickerData
+{
+	int volume;			//成交量(张)
+	double sell;		//卖一价格
+	double buy;			//买一价格
+	double high;		//24小时最高价格
+	double low;			//24小时最低价格
+	double last;		//最新成交价格
+	STickerData(){
+		memset(this, 0, sizeof(STickerData));
+	}
+};
+
 struct SBollInfo
 {
 	__int64 time;
+	char szTime[20];
 	double mb;
 	double up;
 	double dn;
 	SBollInfo(){
 		memset(this, 0, sizeof(SBollInfo));
+	}
+	void Reset(){
+		memset(this, 0, sizeof(SBollInfo));
+	}
+};
+
+struct SFuturesAccountInfo
+{
+	double equity;	//账户权益
+	double margin;	//保证金
+	SFuturesAccountInfo(){
+		memset(this, 0, sizeof(SFuturesAccountInfo));
 	}
 };
 // COKExFuturesDlg 对话框
@@ -72,12 +99,19 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 private:
 	clib::config m_config;
-	std::string m_accessKey;
+	std::string m_apiKey;
 	std::string m_secretKey;
+	std::string m_passphrase;
+	std::string m_strKlineCycle;
+	std::string m_strCoinType;
+	std::string m_strFuturesCycle;
+	int m_nKlineCycle;
+	std::set<std::string> m_setAllTestFile;
 public:
 	afx_msg void OnBnClickedButtonStart();
 public:
 	void AddKlineData(SKlineData& data);
+	void OnRevTickerInfo(STickerData &data);
 	void Pong();
 private:
 	void Test();
@@ -87,6 +121,11 @@ private:
 	void __CheckTrend_ZhangKou();
 	void __CheckTrend_ShouKou();
 	void __CheckTrend_ShouKouChannel();
+
+	void __CheckTrade_ZhangKou();
+	void __CheckTrade_ShouKou();
+	void __CheckTrade_ShouKouChannel();
+	void __CheckTradeOrder();
 	void __SetBollState(eBollTrend state, int nParam=0, double dParam=0.0);
 public:
 	bool m_bRun;
@@ -101,7 +140,11 @@ private:
 	int m_nShouKouConfirmBar;
 	int m_nShouKouChannelConfirmBar;
 	bool m_bZhangKouUp;
-private:
+	SBollInfo m_curTickBoll;
+	STickerData m_curTickData;
+	//std::string m_curWaitClientOrderID;
+	//std::string m_curOrderID;
+public:
 	int m_nBollCycle;				//布林线周期
 	int m_nPriceDecimal;			//价格小数点精度
 	int m_nZhangKouCheckCycle;		//布林张口确认周期

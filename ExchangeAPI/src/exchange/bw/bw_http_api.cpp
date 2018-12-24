@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "bw_http_api.h"
 #include "exchange/exchange.h"
-
+#ifdef _OPEN_BW_
 CBWHttpAPI::CBWHttpAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -72,3 +72,4 @@ void CBWHttpAPI::API_GetTradeOrderState(eMarketType type, std::string strID)
 	info.bUTF8 = true;
 	RequestAsync(info);
 }
+#endif

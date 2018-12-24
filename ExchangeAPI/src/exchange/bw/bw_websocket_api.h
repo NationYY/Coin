@@ -1,5 +1,6 @@
 #pragma once
 #include "websocket_api/websocket_api.h"
+#ifdef _OPEN_BW_
 class CBWWebsocketAPI : public CWebsocketAPI
 {
 public:
@@ -12,3 +13,4 @@ public:
 	virtual bool Ping(){ return true; };
 };
 
+#endif

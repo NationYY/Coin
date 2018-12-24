@@ -5,6 +5,7 @@
 #define USDT_ID 11
 #define ETH_ID 5
 #define QC_ID 23
+#ifdef _OPEN_BW_
 class CBWExchange : public CExchange
 {
 public:
@@ -73,3 +74,5 @@ private:
 
 };
 
+
+#endif

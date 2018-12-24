@@ -1,5 +1,6 @@
 #pragma once
 #include "exchange/exchange.h"
+#ifdef _OPEN_EXX_
 class CExxExchange : public CExchange
 {
 public:
@@ -47,3 +48,4 @@ private:
 	void Parse_CancelTrade(Json::Value& retObj, const std::string& strRet, std::string strCustomData);
 };
 
+#endif

@@ -13,7 +13,7 @@ class CHttpAPI
 public:
 	CHttpAPI();
 	virtual ~CHttpAPI();
-	void SetKey(std::string strAPIKey, std::string strSecretKey);
+	void SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase = "");
 	void SetURL(std::string strURL);
 	void SetExchange(CExchange* pExchange){
 		m_pExchange = pExchange;
@@ -56,8 +56,9 @@ private:
 	bool m_bClose;
 	int m_nCloseThreadCnt;
 protected:
-	std::string m_strAPIKey;			//用户申请的apiKey
+	std::string m_strAPIKey;		//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥
+	std::string m_strPassphrase;
 	CExchange* m_pExchange;
 	
 };

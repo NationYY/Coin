@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "huobi_pro_http_api.h"
-
+#ifdef _OPEN_HUOBI_PRO_
 
 CHuobiProHttpAPI::CHuobiProHttpAPI(std::string strAPIKey, std::string strSecretKey)
 {
@@ -12,3 +12,4 @@ CHuobiProHttpAPI::CHuobiProHttpAPI(std::string strAPIKey, std::string strSecretK
 CHuobiProHttpAPI::~CHuobiProHttpAPI()
 {
 }
+#endif

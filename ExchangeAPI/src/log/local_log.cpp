@@ -50,7 +50,7 @@ void CLocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 	localtime_s(&nowtm, &now_t);
 	char context[MAX_LOCAL_LOG_CONTENT_LEN + 128];
 
-	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d %s %s \n",
+	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d %s %s\n",
 		(int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec,
 		s_LogTypeTitle[log_type].c_str(), log_text);
 	context[sizeof(context)-1] = '\0';

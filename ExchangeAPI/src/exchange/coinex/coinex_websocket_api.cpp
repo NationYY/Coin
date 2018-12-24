@@ -3,6 +3,7 @@
 #include <json/json.h>
 #include <clib/lib/math/math_ex.h>
 #include "exchange/exchange.h"
+#ifdef _OPEN_COINEX_
 CCoinexWebSocketAPI::CCoinexWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -63,3 +64,4 @@ void CCoinexWebSocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool
 		_snprintf(szBuffer, 512, "{\"method\":\"depth.subscribe\",\"params\":[\"%s\", %d, \"0\"],\"id\":15}", m_pExchange->GetMarketString(type, false), depthSize);
 	Request(szBuffer);
 }
+#endif

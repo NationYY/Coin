@@ -1,5 +1,6 @@
 #pragma once
 #include "websocket_api/websocket_api.h"
+#ifdef _OPEN_ZBG_
 class CZbgWebsocketAPI : public CWebsocketAPI
 {
 public:
@@ -10,4 +11,5 @@ public:
 	virtual void API_LatestExecutedOrder(eMarketType type) {};
 	virtual bool Ping() { return true; };
 };
+#endif
 

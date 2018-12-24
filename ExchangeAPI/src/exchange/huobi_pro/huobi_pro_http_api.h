@@ -1,5 +1,6 @@
 #pragma once
 #include "http_api/http_api.h"
+#ifdef _OPEN_HUOBI_PRO_
 class CHuobiProHttpAPI : public CHttpAPI
 {
 public:
@@ -13,4 +14,4 @@ public:
 	virtual void API_GetTradeOrderState(eMarketType type, std::string strID) {};
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) {};
 };
-
+#endif

@@ -1,5 +1,6 @@
 #pragma once
 #include "exchange/exchange.h"
+#ifdef _OPEN_COINEX_
 class CCoinexExchange : public CExchange
 {
 public:
@@ -28,4 +29,4 @@ public:
 	}
 private:
 };
-
+#endif

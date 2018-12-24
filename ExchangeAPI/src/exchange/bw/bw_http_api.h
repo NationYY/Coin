@@ -1,5 +1,6 @@
 #pragma once
 #include "http_api/http_api.h"
+#ifdef _OPEN_BW_
 class CBWHttpAPI : public CHttpAPI
 {
 public:
@@ -15,3 +16,5 @@ public:
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData);
 };
 
+
+#endif

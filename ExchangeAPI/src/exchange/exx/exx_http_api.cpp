@@ -2,6 +2,7 @@
 #include "exx_http_api.h"
 #include "exchange/data_center.h"
 #include "exchange/exchange.h"
+#ifdef _OPEN_EXX_
 CExxHttpAPI::CExxHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strContentType)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -128,3 +129,4 @@ void CExxHttpAPI::API_CancelTrade(eMarketType type, std::string strID, std::stri
 	info.mapParams["id"] = SHttpParam(eHttpParamType_String, strID);
 	RequestAsync(info);
 }
+#endif

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "exx_websocket_api.h"
 #include "exchange/exchange.h"
-
+#ifdef _OPEN_EXX_
 CExxWebSocketAPI::CExxWebSocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -22,3 +22,4 @@ void CExxWebSocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bA
 	_snprintf(szBuffer, 128, "{\"dataType\":\"1_ENTRUST_ADD_%s\",\"dataSize\":%d,\"action\":\"%s\"}", m_pExchange->GetMarketString(type, false), depthSize, (bAdd ? "ADD" : "DEL"));
 	Request(szBuffer);
 }
+#endif

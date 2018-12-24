@@ -2,7 +2,7 @@
 #include "bw_exchange.h"
 #include "exchange/bw/bw_http_api.h"
 #include "exchange/bw/bw_websocket_api.h"
-
+#ifdef _OPEN_BW_
 CBWExchange::CBWExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CBWWebsocketAPI(strAPIKey, strSecretKey);
@@ -250,3 +250,4 @@ void CBWExchange::Parse_CancelTrade(Json::Value& retObj, const std::string& strR
 	if(retObj["resMsg"]["code"].isString() && retObj["resMsg"]["code"].asString() == "1")
 		m_dataCenter.DelTradeOrders(strCustomData);
 }
+#endif

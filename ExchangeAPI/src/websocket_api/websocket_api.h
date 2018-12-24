@@ -13,7 +13,7 @@ class CWebsocketAPI
 public:
 	CWebsocketAPI();
 	virtual ~CWebsocketAPI();
-	void SetKey(std::string strAPIKey, std::string strSecretKey, bool bFutures = false);
+	void SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase = "", bool bFutures = false);
 	void SetURI(std::string strURI);
 	void SetExchange(CExchange* pExchange){
 		m_pExchange = pExchange;
@@ -67,6 +67,7 @@ public:
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥
+	std::string m_strPassphrase;
 	std::string m_strURI;
 	WebSocket* m_pWebsocket;
 	HANDLE m_hThread;
@@ -82,7 +83,7 @@ protected:
 	CExchange* m_pExchange;
 public:
 	bool m_bConnect;
-	std::string m_lastAddChannelFuturesKline;
-	std::string m_lastAddChannelFuturesTicker;
+	std::string m_futuresKlineCheck;
+	std::string m_futuresTickerCheck;
 };
 

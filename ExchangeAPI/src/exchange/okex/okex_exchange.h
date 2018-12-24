@@ -1,9 +1,10 @@
 #pragma once
+#ifdef _OPEN_OKEX_
 #include "exchange/exchange.h"
 class COkexExchange : public CExchange
 {
 public:
-	COkexExchange(std::string strAPIKey, std::string strSecretKey, bool bFutures);
+	COkexExchange(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures);
 	virtual ~COkexExchange();
 	virtual const char* GetName(){
 		return "Okex";
@@ -27,4 +28,5 @@ public:
 		return NULL;
 	}
 };
+#endif
 

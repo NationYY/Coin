@@ -2,6 +2,7 @@
 #include "huobi_pro_exchange.h"
 #include "exchange/huobi_pro/huobi_pro_http_api.h"
 #include "exchange/huobi_pro/huobi_pro_websocket_api.h"
+#ifdef _OPEN_HUOBI_PRO_
 CHuobiProExchange::CHuobiProExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CHuobiProWebsocketAPI(strAPIKey, strSecretKey);
@@ -56,3 +57,4 @@ void CHuobiProExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, c
 {
 	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
 }
+#endif

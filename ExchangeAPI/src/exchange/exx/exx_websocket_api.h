@@ -1,5 +1,6 @@
 #pragma once
 #include "websocket_api/websocket_api.h"
+#ifdef _OPEN_EXX_
 class CExxWebSocketAPI : public CWebsocketAPI
 {
 public:
@@ -10,3 +11,4 @@ public:
 	virtual bool Ping(){ return true; }
 };
 
+#endif

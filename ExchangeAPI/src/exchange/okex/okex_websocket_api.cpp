@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "okex_websocket_api.h"
-
-
-COkexWebsocketAPI::COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, bool bFutures)
+#include "algorithm/hmac.h"
+#include <websocketpp/base64/base64.hpp>
+#include "log/local_log.h"
+#ifdef _OPEN_OKEX_
+COkexWebsocketAPI::COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures)
 {
-	SetKey(strAPIKey, strSecretKey, bFutures);
+	SetKey(strAPIKey, strSecretKey, strPassphrase, bFutures);
 	if(bFutures)
-		SetURI("wss://real.okex.com:10440/websocket/okexapi");
+		SetURI("wss://real.okex.com:10442/ws/v3");
 	else
 		SetURI("wss://real.okex.com:10441/websocket");
 }
@@ -18,7 +20,7 @@ COkexWebsocketAPI::~COkexWebsocketAPI()
 
 bool COkexWebsocketAPI::Ping()
 {
-	return Request("{\"event\":\"ping\"}");
+	return Request("ping");
 }
 
 void COkexWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
@@ -30,29 +32,37 @@ void COkexWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool b
 	Request(szBuffer);
 }
 
-
 void COkexWebsocketAPI::API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle)
 {
-	m_lastAddChannelFuturesKline = "ok_sub_futureusd_";
-	m_lastAddChannelFuturesKline.append(strCoinType);
-	m_lastAddChannelFuturesKline.append("_kline_");
-	m_lastAddChannelFuturesKline.append(strFuturesCycle);
-	m_lastAddChannelFuturesKline.append("_");
-	m_lastAddChannelFuturesKline.append(strKlineType);
+	m_futuresKlineCheck = "futures/";
+	m_futuresKlineCheck.append(strKlineType);
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"event\":\"%s\",\"channel\":\"ok_sub_futureusd_%s_kline_%s_%s\"}", (bAdd ? "addChannel" : "removeChannel"), strCoinType.c_str(),  strFuturesCycle.c_str(), strKlineType.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/%s:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(),  strFuturesCycle.c_str());
 	Request(szBuffer);
 }
 
 
 void COkexWebsocketAPI::API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle)
 {
-	m_lastAddChannelFuturesTicker = "ok_sub_futureusd_";
-	m_lastAddChannelFuturesTicker.append(strCoinType);
-	m_lastAddChannelFuturesTicker.append("_ticker_");
-	m_lastAddChannelFuturesTicker.append(strFuturesCycle);
+	m_futuresTickerCheck = "futures/ticker";
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"event\":\"%s\",\"channel\":\"ok_sub_futureusd_%s_ticker_%s\"}", (bAdd ? "addChannel" : "removeChannel"), strCoinType.c_str(), strFuturesCycle.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/ticker:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
 	Request(szBuffer);
 
 }
+
+void COkexWebsocketAPI::API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp)
+{
+	std::string strTime = CFuncCommon::LocaltimeToISO8601(timeStamp);
+	unsigned char * mac = NULL;
+	unsigned int mac_length = 0;
+	std::string data = strTime + "GET" + "/users/self/verify";
+	int ret = HmacEncode("sha256", strSecretKey.c_str(), strSecretKey.length(), data.c_str(), data.length(), mac, mac_length);
+	std::string strSign = websocketpp::base64_encode(mac, mac_length);
+	free(mac);
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"op\":\"login\",\"args\":[\"%s\",\"%s\",\"%lld.000\",\"%s\"]}", strAPIKey.c_str(), m_strPassphrase.c_str(), timeStamp, strSign.c_str());
+	LOCAL_INFO("data=%s strSecretKey=%s strSign=%s", data.c_str(), strSecretKey.c_str(), strSign.c_str());
+	Request(szBuffer);
+}
+#endif 

@@ -2,7 +2,7 @@
 #include "exx_exchange.h"
 #include "exchange/exx/exx_http_api.h"
 #include "exchange/exx/exx_websocket_api.h"
-
+#ifdef _OPEN_EXX_
 CExxExchange::CExxExchange(std::string strAPIKey, std::string strSecretKey)
 {
 	m_pWebSocketAPI = new CExxWebSocketAPI(strAPIKey, strSecretKey);
@@ -240,3 +240,4 @@ void CExxExchange::Parse_CancelTrade(Json::Value& retObj, const std::string& str
 	if(retObj["code"].isInt() && retObj["code"].asInt() == 100)
 		m_dataCenter.DelTradeOrders(strCustomData);
 }
+#endif

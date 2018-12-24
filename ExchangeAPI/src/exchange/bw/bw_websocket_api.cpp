@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "bw_websocket_api.h"
 #include "exchange/bw/bw_exchange.h"
-
+#ifdef _OPEN_BW_
 CBWWebsocketAPI::CBWWebsocketAPI(std::string strAPIKey, std::string strSecretKey)
 {
 	SetKey(strAPIKey, strSecretKey);
@@ -29,3 +29,4 @@ void CBWWebsocketAPI::API_LatestExecutedOrder(eMarketType type)
 	_snprintf(szBuffer, 512, "{\"dataType\":\"%d_TRADE_%s\", \"dataSize\" : 20, \"action\" : \"ADD\"}", ((CBWExchange*)m_pExchange)->GetMarketID(type), m_pExchange->GetMarketString(type, false));
 	Request(szBuffer);
 }
+#endif

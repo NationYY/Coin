@@ -1,14 +1,16 @@
 #pragma once
 enum eHttpAPIType
 {
-	eHttpAPIType_MarketList,			//交易对列表
-	eHttpAPIType_Balance,				//余额
-	eHttpAPIType_Ticker,				//获取交易对行情
-	eHttpAPIType_EntrustDepth,			//交易深度
-	eHttpAPIType_Trade,					//挂单
-	eHttpAPIType_TradeOrderListState,	//挂单列表状态
-	eHttpAPIType_TradeOrderState,		//挂单状态
-	eHttpAPIType_CancelTrade,			//撤单
+	eHttpAPIType_MarketList,					//交易对列表
+	eHttpAPIType_Balance,						//余额
+	eHttpAPIType_Ticker,						//获取交易对行情
+	eHttpAPIType_EntrustDepth,					//交易深度
+	eHttpAPIType_Trade,							//挂单
+	eHttpAPIType_TradeOrderListState,			//挂单列表状态
+	eHttpAPIType_TradeOrderState,				//挂单状态
+	eHttpAPIType_CancelTrade,					//撤单
+	eHttpAPIType_FuturesAccountInfoByCurrency,	//单一币种合约账户信息
+	eHttpAPIType_FuturesTrade,					//合约下单
 	eHttpAPIType_Max,
 };
 
@@ -76,6 +78,15 @@ enum eFuturesCycle
 	eFuturesCycle_next_week,
 	eFuturesCycle_quarter
 };
+
+enum eFuturesTradeType
+{
+	eFuturesTradeType_OpenBull,	//开多
+	eFuturesTradeType_OpenBear,	//开空
+	eFuturesTradeType_CloseBull,//平多
+	eFuturesTradeType_CloseBear,//平空
+};
+
 struct SBalanceInfo
 {
 	SBalanceInfo()

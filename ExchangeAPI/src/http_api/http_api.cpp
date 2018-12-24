@@ -6,6 +6,8 @@
 #include "algorithm/hmac.h"
 #include "common/func_common.h"
 #include <time.h>
+#include <websocketpp/base64/base64.hpp>
+#include "log/local_log.h"
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	size_t realsize = size * nmemb;
@@ -31,10 +33,11 @@ CHttpAPI::~CHttpAPI()
 	}
 }
 
-void CHttpAPI::SetKey(std::string strAPIKey, std::string strSecretKey)
+void CHttpAPI::SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase)
 {
 	m_strAPIKey = strAPIKey;
 	m_strSecretKey = strSecretKey;
+	m_strPassphrase = strPassphrase;
 }
 
 void CHttpAPI::SetURL(std::string strURL)
@@ -299,6 +302,50 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 			pHeaders = curl_slist_append(pHeaders, header.c_str());
 			header = "Sign:";
 			header.append(out.c_str());
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+		}
+		break;
+	case eHttpConfirmationType_OKEx:
+		{
+			time_t tNow = time(NULL);
+			std::string strTimestamp = CFuncCommon::LocaltimeToISO8601(tNow);
+			std::string strSignSrc = strTimestamp;
+			if(reqInfo.reqType == eHttpReqType_Get)
+			{
+				strSignSrc += "GET/";
+				strSignSrc += reqInfo.strMethod;
+				AssembleParams(false, strGetParams, reqInfo.mapParams);
+				strSignSrc += strGetParams;
+			}
+			else if(reqInfo.reqType == eHttpReqType_Post)
+			{
+				strSignSrc += "POST/";
+				strSignSrc += reqInfo.strMethod;
+				AssembleParams(true, strPostParams, reqInfo.mapParams);
+				strSignSrc += strPostParams;
+			}
+			unsigned char *out = NULL;
+			unsigned int outSize = 0;
+			HmacEncode("sha256", m_strSecretKey.c_str(), m_strSecretKey.length(), strSignSrc.c_str(), strSignSrc.length(), out, outSize);
+			std::string sign = websocketpp::base64_encode(out, outSize);
+			std::string header;
+			curl_slist* pHeaders = NULL;
+			header = "OK-ACCESS-KEY:";
+			header.append(m_strAPIKey);
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			header = "OK-ACCESS-SIGN:";
+			header.append(sign);
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			header = "OK-ACCESS-TIMESTAMP:";
+			header.append(strTimestamp);
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			header = "OK-ACCESS-PASSPHRASE:";
+			header.append(m_strPassphrase);
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			header = "Accept:application/json";
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			header = "Content-type:application/json";
 			pHeaders = curl_slist_append(pHeaders, header.c_str());
 			curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
 		}

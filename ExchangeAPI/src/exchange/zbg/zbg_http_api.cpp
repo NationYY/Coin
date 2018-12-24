@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "zbg_http_api.h"
-
+#ifdef _OPEN_ZBG_
 
 CZbgHttpAPI::CZbgHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strContentType)
 {
@@ -31,3 +31,4 @@ void CZbgHttpAPI::API_Ticker(eMarketType type)
 {
 
 }
+#endif
