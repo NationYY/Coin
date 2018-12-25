@@ -25,8 +25,8 @@ void COkexHttpAPI::API_FuturesAccountInfoByCurrency(std::string& currency)
 	info.customData = ++m_futuresAccountInfoByCurrencyIndex;
 	RequestAsync(info);
 }
-
-void COkexHttpAPI::API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage)
+//CFuncCommon::ToString(CFuncCommon::GenUUID())
+void COkexHttpAPI::API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesTrade;
@@ -34,7 +34,7 @@ void COkexHttpAPI::API_FuturesTrade(eFuturesTradeType tradeType, std::string& st
 	info.strMethod = "api/futures/v3/order";
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
-	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, CFuncCommon::ToString(CFuncCommon::GenUUID()));
+	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
 	char szBuffer[128];
 	_snprintf(szBuffer, 128, "%s-USD-%s", strCoinType.c_str(), strFuturesCycle.c_str());
 	info.mapParams["instrument_id"] = SHttpParam(eHttpParamType_String, szBuffer);
@@ -78,5 +78,14 @@ void COkexHttpAPI::API_FuturesServerTime()
 	RequestAsync(info);
 }
 
-
+void COkexHttpAPI::API_FuturesOrderInfo(std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_FuturesTradeInfo;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/futures/v3/orders/" + strCoinType + "-USD-" + strFuturesCycle + "/" + orderID;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	RequestAsync(info);
+}
 #endif

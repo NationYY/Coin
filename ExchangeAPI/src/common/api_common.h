@@ -12,6 +12,7 @@ enum eHttpAPIType
 	eHttpAPIType_FuturesAccountInfoByCurrency,	//单一币种合约账户信息
 	eHttpAPIType_FuturesTrade,					//合约下单
 	eHttpAPIType_FuturesServerTime,				//合约服务器时间
+	eHttpAPIType_FuturesTradeInfo,				//查询合约单条订单信息
 	eHttpAPIType_Max,
 };
 

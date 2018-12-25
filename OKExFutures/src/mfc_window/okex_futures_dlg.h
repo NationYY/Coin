@@ -71,6 +71,40 @@ struct SFuturesAccountInfo
 		memset(this, 0, sizeof(SFuturesAccountInfo));
 	}
 };
+
+struct SFuturesTradeInfo
+{
+	std::string strClientOrderID;
+	time_t timeStamp;	//委托时间
+	std::string filledQTY;		//成交数量
+	std::string orderID;//订单ID;
+	double price;		//订单价格
+	std::string status;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交 ）
+	eFuturesTradeType tradeType;
+	time_t waitClientOrderIDTime;
+	SFuturesTradeInfo()
+	{
+		Reset();
+	}
+	void Reset()
+	{
+		strClientOrderID = "";
+		timeStamp = 0;
+		filledQTY = "0";
+		orderID = "";
+		price = 0.0;
+		status = "0";
+		tradeType = eFuturesTradeType_OpenBull;
+		waitClientOrderIDTime = 0;
+	}
+};
+
+struct SFuturesTradePairInfo
+{
+	SFuturesTradeInfo open;
+	SFuturesTradeInfo close;
+};
+
 // COKExFuturesDlg 对话框
 class COKExFuturesDlg : public CDialogEx
 {
@@ -102,10 +136,6 @@ private:
 	std::string m_apiKey;
 	std::string m_secretKey;
 	std::string m_passphrase;
-	std::string m_strKlineCycle;
-	std::string m_strCoinType;
-	std::string m_strFuturesCycle;
-	int m_nKlineCycle;
 	std::set<std::string> m_setAllTestFile;
 public:
 	afx_msg void OnBnClickedButtonStart();
@@ -114,6 +144,9 @@ public:
 	void OnRevTickerInfo(STickerData &data);
 	void Pong();
 	void OnLoginSuccess();
+	void OnTradeFail(std::string& clientOrderID);
+	void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
+	void UpdateTradeInfo(SFuturesTradeInfo& info);
 private:
 	void Test();
 	void OnBollUpdate();
@@ -128,6 +161,7 @@ private:
 	void __CheckTrade_ShouKouChannel();
 	void __CheckTradeOrder();
 	void __SetBollState(eBollTrend state, int nParam=0, double dParam=0.0);
+	bool __CheckCanTrade(eFuturesTradeType eType);
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -143,6 +177,9 @@ private:
 	bool m_bZhangKouUp;
 	SBollInfo m_curTickBoll;
 	STickerData m_curTickData;
+	int m_nZhangKouTradeCheckBar;
+	std::list<SFuturesTradePairInfo> m_listTradePairInfo;
+	bool m_bTest;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:
@@ -153,6 +190,14 @@ public:
 	int m_nShouKouCheckCycle;		//布林收口确认周期
 	int m_nZhangKouDoubleConfirmCycle;	//布林张口二次确认周期
 	int m_nShoukouDoubleConfirmCycle;	//布林收口二次确认周期
+	std::string m_strKlineCycle;		//布林线周期
+	std::string m_strCoinType;			//货币类型
+	std::string m_strFuturesCycle;		//合约周期
+	std::string m_strFuturesTradeSize;	//下单张数
+	int m_nKlineCycle;					//布林线周期对应秒数
+	std::string m_strLeverage;					//合约倍数
+	double m_stopLoss;					//止损比例
+	double m_moveStopProfit;			//移动止盈比例
 public:
 	afx_msg void OnBnClickedButtonTest();
 	afx_msg void OnDestroy();

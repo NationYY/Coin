@@ -15,7 +15,8 @@ public:
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) {};
 
 	void API_FuturesAccountInfoByCurrency(std::string& currency);
-	void API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage);
+	void API_FuturesOrderInfo(std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID);
+	void API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID);
 	void API_FuturesServerTime();
 public:
 	int m_futuresAccountInfoByCurrencyIndex;
