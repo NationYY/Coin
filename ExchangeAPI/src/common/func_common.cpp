@@ -128,9 +128,9 @@ void CFuncCommon::GetAllFileInDirectory(const char* szPath, std::set<std::string
 
 std::string CFuncCommon::LocaltimeToISO8601(time_t time)
 {
-	tm* pTM = localtime(&time);
+	//tm* pTM = localtime(&time);
 	char buf[36];
-	strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S.000Z", pTM);//gmtime(&time));
+	strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S.000Z", gmtime(&time));
 	return buf;
 }
 

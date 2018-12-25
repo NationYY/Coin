@@ -16,7 +16,7 @@ public:
 
 	void API_FuturesAccountInfoByCurrency(std::string& currency);
 	void API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage);
-
+	void API_FuturesServerTime();
 public:
 	int m_futuresAccountInfoByCurrencyIndex;
 };

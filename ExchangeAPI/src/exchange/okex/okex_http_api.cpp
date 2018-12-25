@@ -66,4 +66,17 @@ void COkexHttpAPI::API_FuturesTrade(eFuturesTradeType tradeType, std::string& st
 	info.mapParams["leverage"] = SHttpParam(eHttpParamType_String, leverage);
 	RequestAsync(info);
 }
+
+void COkexHttpAPI::API_FuturesServerTime()
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_FuturesServerTime;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/general/v3/time";
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	RequestAsync(info);
+}
+
+
 #endif
