@@ -22,6 +22,9 @@ enum eWebsocketAPIType
 	eWebsocketAPIType_LatestExecutedOrder,//最新成交的订单
 	eWebsocketAPIType_FuturesKline,	//合约K线
 	eWebsocketAPIType_FuturesTicker,//合约行情
+	eWebsocketAPIType_Login,		//登录
+	eWebsocketAPIType_FuturesOrderInfo,//合约个人交易信息
+	eWebsocketAPIType_FuturesAccountInfo,//合约个人账户信息
 	eWebsocketAPIType_Max,
 };
 

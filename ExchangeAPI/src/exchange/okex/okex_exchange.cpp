@@ -22,7 +22,7 @@ COkexExchange::~COkexExchange()
 }
 
 void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
-{
+{  
 	if(retObj.isArray() && retObj[0].isObject() && retObj[0]["channel"].isString() && retObj[0]["channel"].asString().find("ok_sub_spot") != std::string::npos && retObj[0]["channel"].asString().find("depth") != std::string::npos)
 	{
 		Json::Value& data = retObj[0]["data"];
@@ -67,6 +67,21 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 	{
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesTicker, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["event"].isString() && retObj["event"].asString() == "login" && retObj["success"].isBool() && retObj["success"].asBool())
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_Login, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "futures/order")
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesOrderInfo, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "futures/account")
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesAccountInfo, szExchangeName, retObj, strRet);
 	}
 	else
 		LOCAL_ERROR(strRet.c_str());

@@ -84,6 +84,10 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 			}
 		}
 		break;
+	case eHttpAPIType_FuturesServerTime:
+		{
+		}
+		break;
 	default:
 		break;
 	}
@@ -165,6 +169,29 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 	case eWebsocketAPIType_Pong:
 		{
 			g_pOKExFuturesDlg->Pong();
+		}
+		break;
+	case eWebsocketAPIType_Login:
+		{
+			g_pOKExFuturesDlg->OnLoginSuccess();
+		}
+		break;
+	case eWebsocketAPIType_FuturesOrderInfo:
+		{
+			LOCAL_ERROR(strRet.c_str());
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+			
+			}
+		}
+		break;
+	case eWebsocketAPIType_FuturesAccountInfo:
+		{
+			LOCAL_ERROR(strRet.c_str());
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+
+			}
 		}
 		break;
 	default:
@@ -371,6 +398,7 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 		OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_strCoinType, m_strFuturesCycle);
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
 		//OKEX_HTTP->API_FuturesAccountInfoByCurrency(m_strCoinType);
+		//OKEX_HTTP->API_FuturesServerTime();
 	}
 	m_bRun = true;
 }
@@ -1042,4 +1070,10 @@ void COKExFuturesDlg::__CheckTrade_ShouKouChannel()
 void COKExFuturesDlg::__CheckTradeOrder()
 {
 
+}
+
+void COKExFuturesDlg::OnLoginSuccess()
+{
+	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_strCoinType, m_strFuturesCycle);
+	OKEX_WEB_SOCKET->API_FuturesAccountInfoByCurrency(true, m_strCoinType);
 }

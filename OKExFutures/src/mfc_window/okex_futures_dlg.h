@@ -113,6 +113,7 @@ public:
 	void AddKlineData(SKlineData& data);
 	void OnRevTickerInfo(STickerData &data);
 	void Pong();
+	void OnLoginSuccess();
 private:
 	void Test();
 	void OnBollUpdate();

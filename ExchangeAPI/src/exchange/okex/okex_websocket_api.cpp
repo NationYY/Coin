@@ -53,16 +53,29 @@ void COkexWebsocketAPI::API_FuturesTickerData(bool bAdd, std::string& strCoinTyp
 
 void COkexWebsocketAPI::API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp)
 {
-	std::string strTime = CFuncCommon::LocaltimeToISO8601(timeStamp);
 	unsigned char * mac = NULL;
 	unsigned int mac_length = 0;
-	std::string data = strTime + "GET" + "/users/self/verify";
-	int ret = HmacEncode("sha256", strSecretKey.c_str(), strSecretKey.length(), data.c_str(), data.length(), mac, mac_length);
+	char szData[64] = {0};
+	_snprintf(szData, 64, "%lld.000GET/users/self/verify", timeStamp);
+	int ret = HmacEncode("sha256", strSecretKey.c_str(), strSecretKey.length(), szData, strlen(szData), mac, mac_length);
 	std::string strSign = websocketpp::base64_encode(mac, mac_length);
 	free(mac);
 	char szBuffer[512] = {0};
 	_snprintf(szBuffer, 512, "{\"op\":\"login\",\"args\":[\"%s\",\"%s\",\"%lld.000\",\"%s\"]}", strAPIKey.c_str(), m_strPassphrase.c_str(), timeStamp, strSign.c_str());
-	LOCAL_INFO("data=%s strSecretKey=%s strSign=%s", data.c_str(), strSecretKey.c_str(), strSign.c_str());
+	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_FuturesOrderInfo(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle)
+{
+	char szBuffer[512] = { 0 };
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/order:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
+	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_FuturesAccountInfoByCurrency(bool bAdd, std::string& strCoinType)
+{
+	char szBuffer[512] = { 0 };
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/account:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
 	Request(szBuffer);
 }
 #endif 
