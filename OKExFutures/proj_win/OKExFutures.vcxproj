@@ -63,7 +63,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);../../ExchangeAPI/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;ExchangeAPI_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;ExchangeAPI_d.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>

@@ -37,6 +37,7 @@ struct SKlineData
 
 struct STickerData
 {
+	bool bValid;
 	int volume;			//成交量(张)
 	double sell;		//卖一价格
 	double buy;			//买一价格
@@ -82,6 +83,7 @@ struct SFuturesTradeInfo
 	std::string status;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交 ）
 	eFuturesTradeType tradeType;
 	time_t waitClientOrderIDTime;
+	int stopProfit;
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -96,6 +98,7 @@ struct SFuturesTradeInfo
 		status = "0";
 		tradeType = eFuturesTradeType_OpenBull;
 		waitClientOrderIDTime = 0;
+		stopProfit = 0;
 	}
 };
 

@@ -160,6 +160,7 @@
     <ClInclude Include="..\src\algorithm\compress.h" />
     <ClInclude Include="..\src\algorithm\hmac.h" />
     <ClInclude Include="..\src\common\api_common.h" />
+    <ClInclude Include="..\src\common\dump.h" />
     <ClInclude Include="..\src\common\func_common.h" />
     <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\common\thread_safe_queue.h" />

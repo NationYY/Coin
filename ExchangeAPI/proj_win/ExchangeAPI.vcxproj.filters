@@ -123,5 +123,8 @@
     <ClInclude Include="..\src\log\local_action_log.h">
       <Filter>log</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\common\dump.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

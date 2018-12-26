@@ -67,23 +67,17 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	{
 	case eHttpAPIType_FuturesAccountInfoByCurrency:
 		{
-			if(retObj.isObject())
+			if(retObj.isObject() && retObj["equity"].isString() && retObj["margin"].isString())
 			{
-				if(retObj["code"].isString())
-					LOCAL_ERROR("http error = %s", strRet.c_str());
-				else
+				if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
 				{
-					LOCAL_ERROR(strRet.c_str());
-					if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
-					{
-						SFuturesAccountInfo data;
-						data.equity = stod(retObj["equity"].asString());
-						data.margin = stod(retObj["margin"].asString());
-					}
-
+					SFuturesAccountInfo data;
+					data.equity = stod(retObj["equity"].asString());
+					data.margin = stod(retObj["margin"].asString());
 				}
-
 			}
+			else
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
 	case eHttpAPIType_FuturesServerTime:
@@ -92,18 +86,16 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		break;
 	case eHttpAPIType_FuturesTrade:
 		{
-			if(retObj.isObject())
+			if(retObj.isObject() && retObj["error_code"].isInt() && retObj["error_code"].asInt() == 0)
 			{
-				if(retObj["error_code"].isInt() && retObj["client_oid"].isString())
-				{
-					if(retObj["error_code"].asInt() != 0)
-					{
-						g_pOKExFuturesDlg->OnTradeFail(retObj["client_oid"].asString());
-						LOCAL_ERROR("trade error = %s", strRet.c_str());
-					}
-					else
-						g_pOKExFuturesDlg->OnTradeSuccess(retObj["client_oid"].asString(), retObj["order_id"].asString());
-				}
+				if(retObj["client_oid"].isString())
+					g_pOKExFuturesDlg->OnTradeSuccess(retObj["client_oid"].asString(), retObj["order_id"].asString());
+			}
+			else
+			{
+				if(retObj["client_oid"].isString())
+					g_pOKExFuturesDlg->OnTradeFail(retObj["client_oid"].asString());
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 			}
 		}
 		break;
@@ -128,7 +120,20 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
 				g_pOKExFuturesDlg->UpdateTradeInfo(info);
+				CActionLog("trade", "http更新订单信息 open_order=%s filledQTY=%s price=%s status=%s tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
+			else
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+		}
+		break;
+	case eHttpAPIType_FuturesCancelOrder:
+		{
+			if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool() == true)
+			{
+				CActionLog("trade", "撤消订单成功 order=%s", retObj["order_id"].asString().c_str());
+			}
+			else
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
 	default:
@@ -171,14 +176,12 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 		{
 			char* szEnd = NULL;
 			time_t curTime = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
-			CActionLog("all_kline", "%s", strRet.c_str());
+			//CActionLog("all_kline", "%s", strRet.c_str());
 			if(curTime >= lastKlineTime)
 			{
-				//int volume = stoi(retObj[0]["data"][0][5].asString());
-				//double volumeByCurrency = stod(retObj[0]["data"][0][6].asString());
 				if(curTime > lastKlineTime && lastKlineTime != 0)
 				{
-					CActionLog("market", "%s", lastKlineRetStr.c_str());
+					//CActionLog("market", "%s", lastKlineRetStr.c_str());
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(lastKlineJson["data"][0]["candle"][0].asString());
 					data.openPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
@@ -198,7 +201,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 	case eWebsocketAPIType_FuturesTicker:
 		{
 			char* szEnd = NULL;
-			CActionLog("market", "%s", strRet.c_str());
+			//CActionLog("market", "%s", strRet.c_str());
 			STickerData data;
 			data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
 			data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
@@ -240,6 +243,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
 				g_pOKExFuturesDlg->UpdateTradeInfo(info);
+				CActionLog("trade", "ws更新订单信息 open_order=%s filledQTY=%s price=%s status=%s tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj[0]["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
 		}
 		break;
@@ -277,8 +281,8 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_nKlineCycle = 180;
 	m_strCoinType = "BTC";
 	m_strFuturesCycle = "190329";
-	m_strFuturesTradeSize = 1;
-	m_strLeverage = 10;
+	m_strFuturesTradeSize = "1";
+	m_strLeverage = "20";
 	m_bTest = false;
 	m_stopLoss = 0.04;
 	m_moveStopProfit = 0.005;
@@ -1031,7 +1035,15 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam
 
 void COKExFuturesDlg::OnBnClickedButtonTest()
 {
-	Test();
+	std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+	std::string price = "4000.00";
+	OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
+	SFuturesTradePairInfo info;
+	info.open.strClientOrderID = strClinetOrderID;
+	info.open.waitClientOrderIDTime = time(NULL);
+	info.open.tradeType = eFuturesTradeType_OpenBull;
+	m_listTradePairInfo.push_back(info);
+	//Test();
 }
 
 void COKExFuturesDlg::OnDestroy()
@@ -1052,6 +1064,7 @@ void COKExFuturesDlg::Pong()
 void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 {
 	m_curTickData = data;
+	m_curTickData.bValid = true;
 	if(KLINE_DATA_SIZE >= m_nBollCycle-1)
 	{
 		double totalClosePrice = 0.0;
@@ -1146,12 +1159,15 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					else
 					{
 						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
-						OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, CFuncCommon::Double2String(m_curTickData.buy+DOUBLE_PRECISION, m_nPriceDecimal), m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
+						std::string price = CFuncCommon::Double2String(m_curTickData.buy+DOUBLE_PRECISION, m_nPriceDecimal);
+						OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClinetOrderID;
 						info.open.waitClientOrderIDTime = time(NULL);
 						info.open.tradeType = eFuturesTradeType_OpenBull;
 						m_listTradePairInfo.push_back(info);
+
+						CActionLog("trade", "开多单%s张, 价格%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClinetOrderID.c_str());
 					}
 				}
 			}
@@ -1179,12 +1195,14 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					else
 					{
 						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
-						OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal), m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
+						std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal);
+						OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClinetOrderID;
 						info.open.waitClientOrderIDTime = time(NULL);
 						info.open.tradeType = eFuturesTradeType_OpenBear;
 						m_listTradePairInfo.push_back(info);
+						CActionLog("trade", "开空单%s张, 价格%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClinetOrderID.c_str());
 					}
 				}
 			}
@@ -1208,7 +1226,137 @@ void COKExFuturesDlg::__CheckTradeOrder()
 	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
 	while(itB != itE)
 	{
-		//if(itB->open.status)
+		//如果交易完成就删除
+		bool bOpenFinish = ((itB->open.status == "-1") || (itB->open.status == "2"));
+		bool bCloseFinish = ((itB->close.status == "-1") || (itB->close.status == "2"));
+		if(bOpenFinish && bCloseFinish)
+		{
+			std::string openPrice = CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal);
+			std::string closePrice = CFuncCommon::Double2String(itB->close.price+DOUBLE_PRECISION, m_nPriceDecimal);
+			CActionLog("trade", "删除已完成交易对 open_price=%s open_num=%s open_order=%s close_price=%s close_num=%s close_order=%s", openPrice.c_str(), itB->open.filledQTY.c_str(), itB->open.orderID.c_str(), closePrice.c_str(), itB->close.filledQTY.c_str(), itB->close.orderID.c_str());
+			itB = m_listTradePairInfo.erase(itB);
+			continue;
+		}
+		if(bOpenFinish && itB->open.filledQTY == "0" && itB->close.strClientOrderID == "")
+		{
+			CActionLog("trade", "删除未完成交易对 open_order=%s", itB->open.orderID.c_str());
+			itB = m_listTradePairInfo.erase(itB);			
+			continue;
+		}
+		//如果已进行平仓交易,等待平仓完成
+		//否则判断开仓的盈亏
+		if(itB->close.orderID != "" || itB->close.strClientOrderID != "")
+		{
+		
+		}
+		else if(itB->open.orderID != "") 
+		{
+			//多仓
+			if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+			{
+				if(m_curTickData.bValid)
+				{
+					//超过止损线 平仓
+					if(m_curTickData.last < itB->open.price && ((itB->open.price-m_curTickData.last)/itB->open.price >= m_stopLoss))
+					{
+						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal), m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
+						itB->close.strClientOrderID = strClinetOrderID;
+						itB->close.waitClientOrderIDTime = time(NULL);
+						itB->close.tradeType = eFuturesTradeType_CloseBull;
+						CActionLog("trade", "止损 open_order=%s", itB->open.orderID.c_str());
+					}
+					//盈利达到2倍移动平均线后开始设置止盈线, 回撤破止盈线就平仓
+					if(m_curTickData.last > itB->open.price)
+					{
+						if(itB->open.stopProfit)
+						{
+							//平仓
+							if(m_curTickData.last <= (itB->open.price*(1+itB->open.stopProfit*m_moveStopProfit)))
+							{
+								//如果open未交易完,先撤单
+								if(itB->open.status == "1")
+									OKEX_HTTP->API_FuturesCancelOrder(m_strCoinType, m_strFuturesCycle, itB->open.orderID);
+								if(itB->open.filledQTY != "0")
+								{
+									std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+									OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, CFuncCommon::Double2String(m_curTickData.sell + DOUBLE_PRECISION, m_nPriceDecimal), itB->open.filledQTY, m_strLeverage, strClinetOrderID);
+									itB->close.strClientOrderID = strClinetOrderID;
+									itB->close.waitClientOrderIDTime = time(NULL);
+									itB->close.tradeType = eFuturesTradeType_CloseBull;
+									CActionLog("trade", "止盈 open_order=%s", itB->open.orderID.c_str());
+								}
+							}
+							else
+							{
+								double up = (m_curTickData.last - itB->open.price)/itB->open.price;
+								int nowStep = int(up/m_moveStopProfit);
+								if(nowStep - itB->open.stopProfit >= 2)
+									itB->open.stopProfit = nowStep-1;
+							}
+						}
+						else
+						{
+							double up = (m_curTickData.last - itB->open.price)/itB->open.price;
+							if(up/m_moveStopProfit >= 2)
+								itB->open.stopProfit = 1;
+						}
+					}
+				}
+			}
+			else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
+			{
+				if(m_curTickData.bValid)
+				{
+					//超过止损线 平仓
+					if(m_curTickData.last > itB->open.price && ((m_curTickData.last-itB->open.price)/itB->open.price >= m_stopLoss))
+					{
+						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, CFuncCommon::Double2String(m_curTickData.buy + DOUBLE_PRECISION, m_nPriceDecimal), m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
+						itB->close.strClientOrderID = strClinetOrderID;
+						itB->close.waitClientOrderIDTime = time(NULL);
+						itB->close.tradeType = eFuturesTradeType_CloseBear;
+						CActionLog("trade", "止损 open_order=%s", itB->open.orderID.c_str());
+					}
+					//盈利达到2倍移动平均线后开始移动止赢
+					if(m_curTickData.last < itB->open.price)
+					{
+						if(itB->open.stopProfit)
+						{
+							//平仓
+							if(m_curTickData.last >= (itB->open.price*(1 + itB->open.stopProfit*m_moveStopProfit)))
+							{
+								//如果open未交易完,先撤单
+								if(itB->open.status == "1")
+									OKEX_HTTP->API_FuturesCancelOrder(m_strCoinType, m_strFuturesCycle, itB->open.orderID);
+								if(itB->open.filledQTY != "0")
+								{
+									std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+									OKEX_HTTP->API_FuturesTrade(eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, CFuncCommon::Double2String(m_curTickData.buy + DOUBLE_PRECISION, m_nPriceDecimal), itB->open.filledQTY, m_strLeverage, strClinetOrderID);
+									itB->close.strClientOrderID = strClinetOrderID;
+									itB->close.waitClientOrderIDTime = time(NULL);
+									itB->close.tradeType = eFuturesTradeType_CloseBear;
+									CActionLog("trade", "止盈 open_order=%s", itB->open.orderID.c_str());
+								}
+							}
+							else
+							{
+								double up = (itB->open.price - m_curTickData.last) / itB->open.price;
+								int nowStep = int(up / m_moveStopProfit);
+								if(nowStep - itB->open.stopProfit >= 2)
+									itB->open.stopProfit = nowStep - 1;
+							}
+						}
+						else
+						{
+							double up = (itB->open.price - m_curTickData.last) / itB->open.price;
+							if(up / m_moveStopProfit >= 2)
+								itB->open.stopProfit = 1;
+						}
+					}
+				}
+			}
+		}
 		++itB;
 	}
 }

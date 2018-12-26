@@ -58,10 +58,7 @@ void COkexHttpAPI::API_FuturesTrade(eFuturesTradeType tradeType, std::string& st
 	if(price == "-1")
 		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "1");
 	else
-	{
 		info.mapParams["price"] = SHttpParam(eHttpParamType_String, price);
-		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "0");
-	}
 	info.mapParams["size"] = SHttpParam(eHttpParamType_String, size);
 	info.mapParams["leverage"] = SHttpParam(eHttpParamType_String, leverage);
 	RequestAsync(info);
@@ -84,6 +81,17 @@ void COkexHttpAPI::API_FuturesOrderInfo(std::string& strCoinType, std::string& s
 	info.apiType = eHttpAPIType_FuturesTradeInfo;
 	info.reqType = eHttpReqType_Get;
 	info.strMethod = "api/futures/v3/orders/" + strCoinType + "-USD-" + strFuturesCycle + "/" + orderID;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	RequestAsync(info);
+}
+
+void COkexHttpAPI::API_FuturesCancelOrder(std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_FuturesCancelOrder;
+	info.reqType = eHttpReqType_Post;
+	info.strMethod = "api/futures/v3/cancel_order/" + strCoinType + "-USD-" + strFuturesCycle + "/" + orderID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	RequestAsync(info);
