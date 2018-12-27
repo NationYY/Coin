@@ -228,12 +228,13 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			{
 				SFuturesTradeInfo info;
 				info.strClientOrderID = "";
-				info.timeStamp = CFuncCommon::ISO8601ToTime(retObj[0]["timestamp"].asString());
-				info.filledQTY = retObj[0]["filled_qty"].asString();
-				info.orderID = retObj[0]["order_id"].asString();
-				info.price = stod(retObj[0]["price"].asString());
-				info.status = retObj[0]["status"].asString();
-				std::string tradeType = retObj[0]["type"].asString();
+				info.timeStamp = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
+				info.filledQTY = retObj["data"][0]["filled_qty"].asString();
+				info.orderID = retObj["data"][0]["order_id"].asString();
+				info.price = stod(retObj["data"][0]["price"].asString());
+				info.status = retObj["data"][0]["status"].asString();
+				info.size = retObj["data"][0]["size"].asString();
+				std::string tradeType = retObj["data"][0]["type"].asString();
 				if(tradeType == "1")
 					info.tradeType = eFuturesTradeType_OpenBull;
 				else if(tradeType == "2")
@@ -243,17 +244,18 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
 				g_pOKExFuturesDlg->UpdateTradeInfo(info);
-				CActionLog("trade", "ws更新订单信息 open_order=%s filledQTY=%s price=%s status=%s tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj[0]["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
+				CActionLog("trade", "ws更新订单信息 open_order=%s filledQTY=%s price=%s status=%s tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
 		}
 		break;
 	case eWebsocketAPIType_FuturesAccountInfo:
 		{
-			LOCAL_ERROR(strRet.c_str());
 			if(retObj.isObject() && retObj["data"].isArray())
 			{
 
 			}
+			else
+				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
 	default:
@@ -1068,7 +1070,7 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 	if(KLINE_DATA_SIZE >= m_nBollCycle-1)
 	{
 		double totalClosePrice = 0.0;
-		for(int i = KLINE_DATA_SIZE-2; i>=KLINE_DATA_SIZE-m_nBollCycle; --i)
+		for(int i = KLINE_DATA_SIZE-2; i>=KLINE_DATA_SIZE-m_nBollCycle+1; --i)
 		{
 			totalClosePrice += KLINE_DATA[i].closePrice;
 		}
@@ -1076,7 +1078,7 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		double ma = totalClosePrice/m_nBollCycle;
 
 		double totalDifClosePriceSQ = 0.0;
-		for(int i = KLINE_DATA_SIZE-2; i>=KLINE_DATA_SIZE-m_nBollCycle; --i)
+		for(int i = KLINE_DATA_SIZE-2; i>=KLINE_DATA_SIZE-m_nBollCycle+1; --i)
 		{
 			totalDifClosePriceSQ += ((KLINE_DATA[i].closePrice - ma)*(KLINE_DATA[i].closePrice - ma));
 		}
@@ -1134,10 +1136,12 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 void COKExFuturesDlg::__CheckTrade_ZhangKou()
 {
 	//确认张口后第一根柱子
-	if(m_nZhangKouTradeCheckBar == KLINE_DATA_SIZE)
+	LOCAL_INFO("__CheckTrade_ZhangKou");
+	if(m_nZhangKouTradeCheckBar == KLINE_DATA_SIZE-1)
 	{
 		if(m_bZhangKouUp)
 		{
+			LOCAL_INFO("__CheckTrade_ZhangKou up price=%.3f up=%.3f", m_curTickData.last, m_curTickBoll.up);
 			if(m_curTickData.last < m_curTickBoll.up)
 			{
 				//用买一价格挂多单
@@ -1174,6 +1178,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		}
 		else
 		{
+			LOCAL_INFO("__CheckTrade_ZhangKou down price=%.3f dn=%.3f", m_curTickData.last, m_curTickBoll.dn);
 			if(m_curTickData.last > m_curTickBoll.dn)
 			{
 				//用卖一价格挂空单
@@ -1478,6 +1483,7 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->open.price = info.price;
 			itB->open.status = info.status;
 			itB->open.tradeType = info.tradeType;
+			itB->open.size = info.size;
 			break;
 		}
 		else if(info.tradeType == itB->close.tradeType && itB->close.orderID == info.orderID)
@@ -1487,6 +1493,7 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->close.price = info.price;
 			itB->close.status = info.status;
 			itB->close.tradeType = info.tradeType;
+			itB->close.size = info.size;
 			break;
 		}
 		++itB;

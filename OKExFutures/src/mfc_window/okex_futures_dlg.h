@@ -84,6 +84,7 @@ struct SFuturesTradeInfo
 	eFuturesTradeType tradeType;
 	time_t waitClientOrderIDTime;
 	int stopProfit;
+	std::string size;
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -99,6 +100,7 @@ struct SFuturesTradeInfo
 		tradeType = eFuturesTradeType_OpenBull;
 		waitClientOrderIDTime = 0;
 		stopProfit = 0;
+		size = "0";
 	}
 };
 
