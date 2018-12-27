@@ -5,6 +5,7 @@
 #pragma once
 
 #include <clib/lib/util/config.h>
+#include "afxwin.h"
 enum eTimerType
 {
 	eTimerType_APIUpdate,
@@ -38,6 +39,7 @@ struct SKlineData
 struct STickerData
 {
 	bool bValid;
+	__int64 time;		//时间
 	int volume;			//成交量(张)
 	double sell;		//卖一价格
 	double buy;			//买一价格
@@ -152,6 +154,7 @@ public:
 	void OnTradeFail(std::string& clientOrderID);
 	void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 	void UpdateTradeInfo(SFuturesTradeInfo& info);
+	void SetHScroll();
 private:
 	void Test();
 	void OnBollUpdate();
@@ -167,6 +170,8 @@ private:
 	void __CheckTradeOrder();
 	void __SetBollState(eBollTrend state, int nParam=0, double dParam=0.0);
 	bool __CheckCanTrade(eFuturesTradeType eType);
+	void __InitConfigCtrl();
+	bool __SaveConfigCtrl();
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -203,7 +208,16 @@ public:
 	std::string m_strLeverage;					//合约倍数
 	double m_stopLoss;					//止损比例
 	double m_moveStopProfit;			//移动止盈比例
+	std::string m_strStopLoss;					//止损比例
+	std::string m_strMoveStopProfit;			//移动止盈比例
 public:
 	afx_msg void OnBnClickedButtonTest();
 	afx_msg void OnDestroy();
+	CComboBox m_combCoinType;
+	CComboBox m_combLeverage;
+	CEdit m_editFuturesCycle;
+	CEdit m_editFuturesTradeSize;
+	CEdit m_editStopLoss;
+	CEdit m_editMoveStopProfit;
+	CListBox m_ctrlListLog;
 };

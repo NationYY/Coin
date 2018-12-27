@@ -9,8 +9,6 @@
 #define LOCAL_INFO		CLocalLogger::GetInstancePt()->LogInfo
 #define LOCAL_FUNCTION		CLocalLogger::GetInstancePt()->LogFunction 
 #define MAX_UUID_CACHE_COUNT 10000
-
-
 #define MAX_LOCAL_LOG_CONTENT_LEN 2048
 
 //----------------------------------------------------------
@@ -26,6 +24,7 @@ enum LOG_TYPE
 	LOG_FUNCTION, //功能：程序中重要的操作使用此类型记录log
 	LOG_MAX_TYPE,
 };
+typedef int (*LOCAL_LOG_CALL_BACK_FUNC)(LOG_TYPE, const char* ); 
 class CLocalLogger
 {
 	DECLARE_SINGLETONPT(CLocalLogger)
@@ -51,6 +50,9 @@ public:
 	void SwapFront2Middle();
 
 	bool IsComplete(){ return m_completeFlag; };
+	void SetCallBackFunc(LOCAL_LOG_CALL_BACK_FUNC func){
+		m_cbFunc = func;
+	}
 private:
 	void ThreadWorker();
 	void BatchWriteLog();
@@ -73,4 +75,5 @@ private:
 	int m_nDay;
 	std::string m_logFilePath;
 	bool m_bFirst;
+	LOCAL_LOG_CALL_BACK_FUNC m_cbFunc;
 };

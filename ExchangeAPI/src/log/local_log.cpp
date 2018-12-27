@@ -8,7 +8,8 @@ std::string CLocalLogger::s_LogTypeTitle[LOG_MAX_TYPE] = {
 	"ERROR", "WARNING", "INFO", "FUNCTION"
 };
 
-CLocalLogger::CLocalLogger() :m_batchMode(false), m_quitFlag(false), m_completeFlag(true), m_bFirst(true)
+CLocalLogger::CLocalLogger() :m_batchMode(false), m_quitFlag(false), m_completeFlag(true), m_bFirst(true),
+ m_cbFunc(NULL)
 {
 
 }
@@ -55,7 +56,9 @@ void CLocalLogger::PushLogText(LOG_TYPE log_type, const char* log_text)
 		s_LogTypeTitle[log_type].c_str(), log_text);
 	context[sizeof(context)-1] = '\0';
 	OutputDebugString(context);
-	if (m_batchMode)
+	if(m_cbFunc)
+		m_cbFunc(log_type, context);
+	if(m_batchMode)
 	{
 		m_vecFront.push_back(context);
 	}
