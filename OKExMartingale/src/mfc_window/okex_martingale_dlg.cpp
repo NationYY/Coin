@@ -109,24 +109,23 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 {
 	switch(apiType)
 	{
-	case eWebsocketAPIType_FuturesKline:
+	case eWebsocketAPIType_SpotKline:
 		{
 			char* szEnd = NULL;
 			time_t curTime = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
-			//CActionLog("all_kline", "%s", strRet.c_str());
+			CActionLog("all_kline", "%s", strRet.c_str());
 			if(curTime >= lastKlineTime)
 			{
 				if(curTime > lastKlineTime && lastKlineTime != 0)
 				{
-					//CActionLog("market", "%s", lastKlineRetStr.c_str());
+					CActionLog("market", "%s", lastKlineRetStr.c_str());
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(lastKlineJson["data"][0]["candle"][0].asString());
 					data.openPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][1].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 					data.highPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][2].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 					data.lowPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][3].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 					data.closePrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][4].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.volume = stoi(lastKlineJson["data"][0]["candle"][5].asString());
-					data.volumeByCurrency = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][6].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.volume = lastKlineJson["data"][0]["candle"][5].asString();
 					g_pDlg->AddKlineData(data);
 				}
 				lastKlineTime = curTime;
@@ -135,12 +134,13 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			}
 		}
 		break;
-	case eWebsocketAPIType_FuturesTicker:
+	case eWebsocketAPIType_SpotTicker:
 		{
 			char* szEnd = NULL;
-			//CActionLog("market", "%s", strRet.c_str());
+			CActionLog("market", "%s", strRet.c_str());
 			STickerData data;
-			data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
+			data.baseVolume24h = retObj["data"][0]["base_volume_24h"].asString();
+			data.quoteVolume24h = retObj["data"][0]["quote_volume_24h"].asString();
 			data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 			data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 			data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
@@ -160,6 +160,40 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			g_pDlg->OnLoginSuccess();
 		}
 		break;
+	case eWebsocketAPIType_SpotOrderInfo:
+		{
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+				SSPotTradeInfo info;
+				info.orderID = retObj["data"][0]["order_id"].asString();
+				info.price = stod(retObj["data"][0]["price"].asString());
+				info.size = retObj["data"][0]["size"].asString();
+				info.side = retObj["data"][0]["side"].asString();
+				info.timeStamp = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
+				info.filledSize = retObj["data"][0]["filled_size"].asString();
+				info.filledNotional = retObj["data"][0]["filled_notional"].asString();
+				info.status = retObj["data"][0]["status"].asString();
+				g_pDlg->UpdateTradeInfo(info);
+			}
+			else
+				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());
+		}
+		break;
+	case eWebsocketAPIType_SpotAccountInfo:
+		{
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+				SSpotAccountInfo info;
+				info.balance = stod(retObj["data"][0]["balance"].asString());
+				info.hold = stod(retObj["data"][0]["hold"].asString());
+				info.available = stod(retObj["data"][0]["available"].asString());
+				info.currency = retObj["data"][0]["currency"].asString();
+				g_pDlg->UpdateAccountInfo(info);
+			}
+			else
+				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());
+		}
+		break;
 	default:
 		break;
 	}
@@ -172,6 +206,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_nBollCycle = 20;
 	m_nPriceDecimal = 3;
+	m_nVolumeDecimal = 4;
 	m_nZhangKouCheckCycle = 20;
 	m_nShouKouCheckCycle = 20;
 	m_nZhangKouTrendCheckCycle = 5;
@@ -184,10 +219,13 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_strKlineCycle = "candle180s";
 	m_nKlineCycle = 180;
 	m_strCoinType = "BTC";
-	m_strFuturesCycle = "190329";
-	m_strFuturesTradeSize = "1";
-	m_strLeverage = "20";
+	m_strCompetitorsCoinType = "USDT";
 	m_bTest = false;
+	m_eTradeState = eTradeState_WaitOpen;
+	m_martingaleStepCnt = 5;
+	m_martingaleMovePersent = 0.02;
+	m_tradeCharge = 0.0015;
+	m_fixedCompetitorsCoinCnt = -1;
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
@@ -325,8 +363,8 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		return;
 	if(OKEX_WEB_SOCKET)
 	{
-		//OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_strKlineCycle, m_strCoinType, m_strFuturesCycle);
-		//OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_SpotKlineData(true, m_strKlineCycle, m_strCoinType, m_strCompetitorsCoinType);
+		OKEX_WEB_SOCKET->API_SpotTickerData(true, m_strCoinType, m_strCompetitorsCoinType);
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
 	}
 	m_bRun = true;
@@ -359,6 +397,7 @@ void COKExMartingaleDlg::OnTimer(UINT_PTR nIDEvent)
 				pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 				pExchange->Run();
 			}
+			__CheckTrade();
 		}
 		break;
 	case eTimerType_Ping:
@@ -479,8 +518,8 @@ void COKExMartingaleDlg::Pong()
 
 void COKExMartingaleDlg::OnLoginSuccess()
 {
-	//OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_strCoinType, m_strFuturesCycle);
-	//OKEX_WEB_SOCKET->API_FuturesAccountInfoByCurrency(true, m_strCoinType);
+	OKEX_WEB_SOCKET->API_SpotOrderInfo(true, m_strCoinType, m_strCompetitorsCoinType);
+	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strCompetitorsCoinType);
 }
 
 
@@ -493,27 +532,25 @@ void COKExMartingaleDlg::CheckBollTrend()
 {
 	switch(m_eBollState)
 	{
-		case eBollTrend_Normal:
+	case eBollTrend_Normal:
 		__CheckTrend_Normal();
 		break;
-		case eBollTrend_ShouKou:
+	case eBollTrend_ShouKou:
 		__CheckTrend_ShouKou();
 		break;
-		case eBollTrend_ShouKouChannel:
+	case eBollTrend_ShouKouChannel:
 		__CheckTrend_ShouKouChannel();
 		break;
-		case eBollTrend_ZhangKou:
+	case eBollTrend_ZhangKou:
 		__CheckTrend_ZhangKou();
 		break;
-		default:
+	default:
 		break;
 	}
 }
 
 void COKExMartingaleDlg::__CheckTrend_Normal()
 {
-	if(KLINE_DATA[KLINE_DATA_SIZE - 1].time == 1545093000000)
-		int a = 3;
 	if(REAL_BOLL_DATA_SIZE >= m_nZhangKouCheckCycle)//判断张口
 	{
 		int minBar = 0;
@@ -911,6 +948,65 @@ void COKExMartingaleDlg::__SetBollState(eBollTrend state, int nParam, double dPa
 		break;
 	default:
 		break;
+	}
+
+}
+
+void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
+{
+	m_accountInfo = info;
+	m_accountInfo.bValid = true;
+}
+
+void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
+{
+
+
+}
+
+
+void COKExMartingaleDlg::__CheckTrade()
+{
+	if(!m_bRun)
+		return;
+	switch(m_eTradeState)
+	{
+	case eTradeState_WaitOpen:
+		{
+			if(KLINE_DATA_SIZE < m_nBollCycle)
+				break;
+			//张口向下或者张口向上的收口期不下单
+			if(m_eBollState == eBollTrend_ZhangKou && !m_bZhangKouUp)
+				break;
+			if(m_eBollState == eBollTrend_ShouKou && m_eLastBollState == eBollTrend_ZhangKou && m_bZhangKouUp)
+				break;
+			//确认资金分为多少份
+			int stepCnt = 0;
+			int m = 2;
+			for(int i = 0; i<m_martingaleStepCnt; ++i)
+			{
+				stepCnt += (int)pow(m, i);
+			}
+			//确认每份资金金额
+			m_eachStepCompetitorsValue = 0.0;
+			if(m_fixedCompetitorsCoinCnt < 0)
+				m_eachStepCompetitorsValue = m_accountInfo.available/(double)stepCnt;
+			else
+				m_eachStepCompetitorsValue = m_fixedCompetitorsCoinCnt/(double)stepCnt;
+			//开始下单
+			m_listTradePairs.clear();
+			for(int i = 0; i<m_martingaleStepCnt; ++i)
+			{
+				
+			}
+		}
+		break;
+	case eTradeState_Trading:
+		{
+		}
+		break;
+	default:
+	break;
 	}
 
 }

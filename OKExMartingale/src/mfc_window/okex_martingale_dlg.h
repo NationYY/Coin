@@ -20,6 +20,12 @@ enum eBollTrend
 	eBollTrend_ZhangKou,		//张口
 };
 
+enum eTradeState
+{
+	eTradeState_WaitOpen,
+	eTradeState_Trading
+};
+
 struct SKlineData
 {
 	__int64 time;		//时间
@@ -28,25 +34,28 @@ struct SKlineData
 	double highPrice;	//最高价
 	double lowPrice;	//最低价
 	double closePrice;	//收盘价
-	int volume;			//成交量(张)
-	double volumeByCurrency;//成交量(币)
-	SKlineData(){
-		memset(this, 0, sizeof(SKlineData));
+	std::string volume;	//成交量
+	SKlineData() :openPrice(0), highPrice(0), lowPrice(0), closePrice(0),
+	 volume("0"), time(0)
+	{
+		memset(szTime, 0, 20);
 	}
 };
 
 struct STickerData
 {
 	bool bValid;
-	__int64 time;		//时间
-	int volume;			//成交量(张)
-	double sell;		//卖一价格
-	double buy;			//买一价格
-	double high;		//24小时最高价格
-	double low;			//24小时最低价格
-	double last;		//最新成交价格
-	STickerData(){
-		memset(this, 0, sizeof(STickerData));
+	__int64 time;				//时间
+	std::string baseVolume24h;	//24小时成交量，按交易货币统计
+	std::string quoteVolume24h; //24小时成交量，按计价货币统计
+	double sell;				//卖一价格
+	double buy;					//买一价格
+	double high;				//24小时最高价格
+	double low;					//24小时最低价格
+	double last;				//最新成交价格
+	STickerData() :bValid(false), time(0), baseVolume24h("0"), quoteVolume24h("0"),
+	 sell(0), buy(0), high(0), low(0), last(0)
+	{
 	}
 };
 
@@ -65,15 +74,55 @@ struct SBollInfo
 	}
 };
 
-struct SFuturesAccountInfo
+struct SSpotAccountInfo
 {
-	double equity;	//账户权益
-	double margin;	//保证金
-	SFuturesAccountInfo(){
-		memset(this, 0, sizeof(SFuturesAccountInfo));
+	bool bValid;
+	std::string currency;	//币种
+	double balance;			//余额
+	double hold;			//冻结(不可用)
+	double available;		//可用于交易或资金划转的数量
+	SSpotAccountInfo() : bValid(false), currency(""), balance(0), hold(0), available(0)
+	{
 	}
 };
 
+struct SSPotTradeInfo
+{
+	std::string strClientOrderID;
+	std::string orderID;//订单ID;
+	double price;		//订单价格
+	std::string size;	//成交数量
+	std::string side;	//交易类型
+	time_t timeStamp;	//委托时间
+	std::string filledSize;//已成交数量
+	std::string filledNotional;//已成交金额
+	std::string status;	//订单状态(open:未成交 part_filled:部分成交 filled:已成交 cancelled:已撤销 failure:订单失败）
+	time_t waitClientOrderIDTime;
+	SSPotTradeInfo()
+	{
+		Reset();
+	}
+	void Reset()
+	{
+		strClientOrderID = "";
+		timeStamp = 0;
+		orderID = "";
+		price = 0.0;
+		status = "0";
+		waitClientOrderIDTime = 0;
+		size = "0";
+		side = "buy";
+		filledSize = "0";
+		filledNotional = "0";
+		status = "";
+	}
+};
+
+struct SSPotTradePairInfo
+{
+	SSPotTradeInfo open;
+	SSPotTradeInfo close;
+};
 
 // COKExMartingaleDlg 对话框
 class COKExMartingaleDlg : public CDialogEx
@@ -105,6 +154,8 @@ public:
 	void Pong();
 	void OnLoginSuccess();
 	void SetHScroll();
+	void UpdateAccountInfo(SSpotAccountInfo& info);
+	void UpdateTradeInfo(SSPotTradeInfo& info);
 private:
 	void OnBollUpdate();
 	void CheckBollTrend();
@@ -113,7 +164,7 @@ private:
 	void __CheckTrend_ShouKou();
 	void __CheckTrend_ShouKouChannel();
 	void __SetBollState(eBollTrend state, int nParam = 0, double dParam = 0.0);
-
+	void __CheckTrade();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonTest();
@@ -137,12 +188,17 @@ private:
 	int m_nZhangKouTradeCheckBar;
 	bool m_bTest;
 	STickerData m_curTickData;
+	SSpotAccountInfo m_accountInfo;
+	eTradeState m_eTradeState;
+	double m_eachStepCompetitorsValue;
+	std::list<SSPotTradePairInfo> m_listTradePairs;
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
 public:
 	int m_nBollCycle;				//布林线周期
 	int m_nPriceDecimal;			//价格小数点精度
+	int m_nVolumeDecimal;			//交易量小数点精度
 	int m_nZhangKouCheckCycle;		//布林张口确认周期
 	int m_nZhangKouTrendCheckCycle;	//布林张口趋势确认周期 必须是奇数
 	int m_nShouKouCheckCycle;		//布林收口确认周期
@@ -150,9 +206,11 @@ public:
 	int m_nShoukouDoubleConfirmCycle;	//布林收口二次确认周期
 	std::string m_strKlineCycle;		//布林线周期
 	std::string m_strCoinType;			//货币类型
-	std::string m_strFuturesCycle;		//合约周期
-	std::string m_strFuturesTradeSize;	//下单张数
 	int m_nKlineCycle;					//布林线周期对应秒数
-	std::string m_strLeverage;					//合约倍数
+	std::string m_strCompetitorsCoinType;//对手货币类型
+	int m_martingaleStepCnt;
+	double m_martingaleMovePersent;
+	double m_tradeCharge;
+	double m_fixedCompetitorsCoinCnt;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

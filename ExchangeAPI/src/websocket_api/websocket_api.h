@@ -85,5 +85,7 @@ public:
 	bool m_bConnect;
 	std::string m_futuresKlineCheck;
 	std::string m_futuresTickerCheck;
+	std::string m_spotKlineCheck;
+	std::string m_spotTickerCheck;
 };
 

@@ -668,7 +668,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 	if(REAL_BOLL_DATA_SIZE >= m_nZhangKouCheckCycle)//判断张口
 	{
 		int minBar = 0;
-		double minValue = 100.0;
+		double minValue = 100000.0;
 		for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
 		{
 			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
@@ -887,7 +887,7 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 	}
 	//寻找张口,从确定收口的柱子开始
 	int minBar = 0;
-	double minValue = 100.0;
+	double minValue = 100000.0;
 	for(int i = m_nShouKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
 	{
 		double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
@@ -948,7 +948,7 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 	if(BOLL_DATA_SIZE-1 > m_nShouKouChannelConfirmBar)
 	{
 		int minBar = 0;
-		double minValue = 100.0;
+		double minValue = 100000.0;
 		for(int i = BOLL_DATA_SIZE-1; i>=m_nShouKouChannelConfirmBar; --i)
 		{
 			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;

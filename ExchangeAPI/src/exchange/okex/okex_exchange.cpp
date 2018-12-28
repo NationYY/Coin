@@ -68,6 +68,17 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesTicker, szExchangeName, retObj, strRet);
 	}
+
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == m_pWebSocketAPI->m_spotKlineCheck)
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_SpotKline, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == m_pWebSocketAPI->m_spotTickerCheck)
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_SpotTicker, szExchangeName, retObj, strRet);
+	}
 	else if(retObj.isObject() && retObj["event"].isString() && retObj["event"].asString() == "login" && retObj["success"].isBool() && retObj["success"].asBool())
 	{
 		if(m_webSocketCallbakMessage)
@@ -82,6 +93,16 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 	{
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesAccountInfo, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "spot/account")
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_SpotAccountInfo, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "spot/order")
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_SpotOrderInfo, szExchangeName, retObj, strRet);
 	}
 	else
 		LOCAL_ERROR(strRet.c_str());

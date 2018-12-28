@@ -27,6 +27,10 @@ enum eWebsocketAPIType
 	eWebsocketAPIType_Login,		//登录
 	eWebsocketAPIType_FuturesOrderInfo,//合约个人交易信息
 	eWebsocketAPIType_FuturesAccountInfo,//合约个人账户信息
+	eWebsocketAPIType_SpotKline,	//现货K线
+	eWebsocketAPIType_SpotTicker,	//现货行情
+	eWebsocketAPIType_SpotOrderInfo,	//现货个人交易信息
+	eWebsocketAPIType_SpotAccountInfo,	//现货个人账户信息
 	eWebsocketAPIType_Max,
 };
 

@@ -48,7 +48,6 @@ void COkexWebsocketAPI::API_FuturesTickerData(bool bAdd, std::string& strCoinTyp
 	char szBuffer[512] = {0};
 	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/ticker:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
 	Request(szBuffer);
-
 }
 
 void COkexWebsocketAPI::API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp)
@@ -77,5 +76,37 @@ void COkexWebsocketAPI::API_FuturesAccountInfoByCurrency(bool bAdd, std::string&
 	char szBuffer[512] = { 0 };
 	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/account:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
 	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_SpotKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strCompetitorsCoinType)
+{
+	m_spotKlineCheck = "spot/";
+	m_spotKlineCheck.append(strKlineType);
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/%s:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(), strCompetitorsCoinType.c_str());
+	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_SpotTickerData(bool bAdd, std::string& strCoinType, std::string& strCompetitorsCoinType)
+{
+	m_spotTickerCheck = "spot/ticker";
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/ticker:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strCompetitorsCoinType.c_str());
+	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_SpotAccountInfoByCurrency(bool bAdd, std::string& strCoinType)
+{
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/account:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strCompetitorsCoinType)
+{
+	char szBuffer[512] = {0};
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/order:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strCompetitorsCoinType.c_str());
+	Request(szBuffer);
+
 }
 #endif 
