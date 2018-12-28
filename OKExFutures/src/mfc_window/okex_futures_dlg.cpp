@@ -30,14 +30,14 @@
 #define MAX_TRADE_CNT 5
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CExchange* pExchange = NULL;
-COKExFuturesDlg* g_pOKExFuturesDlg = NULL;
+COKExFuturesDlg* g_pDlg = NULL;
 
 int LocalLogCallBackFunc(LOG_TYPE type, const char* szLog)
 {
-	if(g_pOKExFuturesDlg->m_ctrlListLog.GetCount() > 1500)
-		g_pOKExFuturesDlg->m_ctrlListLog.ResetContent();
-	g_pOKExFuturesDlg->m_ctrlListLog.InsertString(0, szLog);
-	g_pOKExFuturesDlg->SetHScroll();
+	if(g_pDlg->m_ctrlListLog.GetCount() > 1500)
+		g_pDlg->m_ctrlListLog.ResetContent();
+	g_pDlg->m_ctrlListLog.InsertString(0, szLog);
+	g_pDlg->SetHScroll();
 	return 0;
 }
 class CAboutDlg : public CDialogEx
@@ -98,12 +98,12 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 			if(retObj.isObject() && retObj["error_code"].isInt() && retObj["error_code"].asInt() == 0)
 			{
 				if(retObj["client_oid"].isString())
-					g_pOKExFuturesDlg->OnTradeSuccess(retObj["client_oid"].asString(), retObj["order_id"].asString());
+					g_pDlg->OnTradeSuccess(retObj["client_oid"].asString(), retObj["order_id"].asString());
 			}
 			else
 			{
 				if(retObj["client_oid"].isString())
-					g_pOKExFuturesDlg->OnTradeFail(retObj["client_oid"].asString());
+					g_pDlg->OnTradeFail(retObj["client_oid"].asString());
 				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 			}
 		}
@@ -128,7 +128,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					info.tradeType = eFuturesTradeType_CloseBull;
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
-				g_pOKExFuturesDlg->UpdateTradeInfo(info);
+				g_pDlg->UpdateTradeInfo(info);
 				CActionLog("trade", "http更新订单信息 order=%s filledQTY=%s price=%s status=%s tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
 			else
@@ -152,26 +152,25 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 
 void local_websocket_callbak_open(const char* szExchangeName)
 {
-	//AfxMessageBox("连接成功");
 	LOCAL_INFO("连接成功");
-	g_pOKExFuturesDlg->m_tListenPong = 0;
-	if(g_pOKExFuturesDlg->m_bRun)
+	g_pDlg->m_tListenPong = 0;
+	if(g_pDlg->m_bRun)
 	{
-		g_pOKExFuturesDlg->m_bRun = false;
-		g_pOKExFuturesDlg->OnBnClickedButtonStart();
+		g_pDlg->m_bRun = false;
+		g_pDlg->OnBnClickedButtonStart();
 	}
 }
 
 void local_websocket_callbak_close(const char* szExchangeName)
 {
 	LOCAL_ERROR("断开连接");
-	g_pOKExFuturesDlg->m_tListenPong = 0;
+	g_pDlg->m_tListenPong = 0;
 }
 
 void local_websocket_callbak_fail(const char* szExchangeName)
 {
 	LOCAL_ERROR("连接失败");
-	g_pOKExFuturesDlg->m_tListenPong = 0;
+	g_pDlg->m_tListenPong = 0;
 }
 
 time_t lastKlineTime = 0;
@@ -193,13 +192,13 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					//CActionLog("market", "%s", lastKlineRetStr.c_str());
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(lastKlineJson["data"][0]["candle"][0].asString());
-					data.openPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.highPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.lowPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.closePrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
+					data.openPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.highPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.lowPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.closePrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 					data.volume = stoi(lastKlineJson["data"][0]["candle"][5].asString());
-					data.volumeByCurrency = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][6].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					g_pOKExFuturesDlg->AddKlineData(data);
+					data.volumeByCurrency = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][6].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					g_pDlg->AddKlineData(data);
 				}
 				lastKlineTime = curTime;
 				lastKlineRetStr = strRet;
@@ -213,23 +212,23 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			//CActionLog("market", "%s", strRet.c_str());
 			STickerData data;
 			data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
-			data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-			data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-			data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-			data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-			data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
+			data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+			data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+			data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+			data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+			data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 			data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
-			g_pOKExFuturesDlg->OnRevTickerInfo(data);
+			g_pDlg->OnRevTickerInfo(data);
 		}
 		break;
 	case eWebsocketAPIType_Pong:
 		{
-			g_pOKExFuturesDlg->Pong();
+			g_pDlg->Pong();
 		}
 		break;
 	case eWebsocketAPIType_Login:
 		{
-			g_pOKExFuturesDlg->OnLoginSuccess();
+			g_pDlg->OnLoginSuccess();
 		}
 		break;
 	case eWebsocketAPIType_FuturesOrderInfo:
@@ -253,7 +252,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					info.tradeType = eFuturesTradeType_CloseBull;
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
-				g_pOKExFuturesDlg->UpdateTradeInfo(info);
+				g_pDlg->UpdateTradeInfo(info);
 				CActionLog("trade", "ws更新订单信息 order=%s filledQTY=%s price=%s status=%s tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
 		}
@@ -276,7 +275,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(COKExFuturesDlg::IDD, pParent)
 {
-	g_pOKExFuturesDlg = this;
+	g_pDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_nBollCycle = 20;
 	m_nPriceDecimal = 3;
@@ -392,7 +391,6 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	CLocalActionLog::GetInstancePt()->start();
 
 	// TODO:  在此添加额外的初始化代码
-	//m_ctrlListLog.SetHorizontalExtent(1000); 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -610,25 +608,25 @@ void COKExFuturesDlg::Test()
 				{
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
-					data.openPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.highPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.lowPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.closePrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
+					data.openPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.highPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.lowPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.closePrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 					data.volume = stoi(retObj["data"][0]["candle"][5].asString());
-					data.volumeByCurrency = CFuncCommon::Round(stod(retObj["data"][0]["candle"][6].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					g_pOKExFuturesDlg->AddKlineData(data);
+					data.volumeByCurrency = CFuncCommon::Round(stod(retObj["data"][0]["candle"][6].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					g_pDlg->AddKlineData(data);
 				}
 				else if(strChannel == strTickChannel)
 				{
 					STickerData data;
 					data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
-					data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
-					data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pOKExFuturesDlg->m_nPriceDecimal);
+					data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
 					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
-					g_pOKExFuturesDlg->OnRevTickerInfo(data);
+					g_pDlg->OnRevTickerInfo(data);
 				}
 			}
 		}
@@ -1478,7 +1476,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 	{
 	case eFuturesTradeType_OpenBull:
 		{
-			if(m_listTradePairInfo.size() >= 5)
+			if(m_listTradePairInfo.size() >= MAX_TRADE_CNT)
 				return false;
 			std::list<SFuturesTradePairInfo>::reverse_iterator itBegin = m_listTradePairInfo.rbegin();
 			std::list<SFuturesTradePairInfo>::reverse_iterator itEnd = m_listTradePairInfo.rend();
@@ -1500,7 +1498,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 		break;
 	case eFuturesTradeType_OpenBear:
 		{
-			if(m_listTradePairInfo.size() >= 5)
+			if(m_listTradePairInfo.size() >= MAX_TRADE_CNT)
 				return false;
 			std::list<SFuturesTradePairInfo>::reverse_iterator itBegin = m_listTradePairInfo.rbegin();
 			std::list<SFuturesTradePairInfo>::reverse_iterator itEnd = m_listTradePairInfo.rend();
