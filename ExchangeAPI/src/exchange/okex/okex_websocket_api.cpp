@@ -78,20 +78,20 @@ void COkexWebsocketAPI::API_FuturesAccountInfoByCurrency(bool bAdd, std::string&
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_SpotKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strCompetitorsCoinType)
+void COkexWebsocketAPI::API_SpotKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strMoneyType)
 {
 	m_spotKlineCheck = "spot/";
 	m_spotKlineCheck.append(strKlineType);
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/%s:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(), strCompetitorsCoinType.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/%s:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(), strMoneyType.c_str());
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_SpotTickerData(bool bAdd, std::string& strCoinType, std::string& strCompetitorsCoinType)
+void COkexWebsocketAPI::API_SpotTickerData(bool bAdd, std::string& strCoinType, std::string& strMoneyType)
 {
 	m_spotTickerCheck = "spot/ticker";
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/ticker:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strCompetitorsCoinType.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/ticker:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strMoneyType.c_str());
 	Request(szBuffer);
 }
 
@@ -102,10 +102,10 @@ void COkexWebsocketAPI::API_SpotAccountInfoByCurrency(bool bAdd, std::string& st
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strCompetitorsCoinType)
+void COkexWebsocketAPI::API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strMoneyType)
 {
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/order:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strCompetitorsCoinType.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/order:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strMoneyType.c_str());
 	Request(szBuffer);
 
 }

@@ -14,6 +14,8 @@ enum eHttpAPIType
 	eHttpAPIType_FuturesServerTime,				//合约服务器时间
 	eHttpAPIType_FuturesTradeInfo,				//查询合约单条订单信息
 	eHttpAPIType_FuturesCancelOrder,			//合约撤单
+	eHttpAPIType_SpotTrade,						//现货下单
+	eHttpAPIType_SpotTradeInfo,					//查询现货单条订单信息
 	eHttpAPIType_Max,
 };
 

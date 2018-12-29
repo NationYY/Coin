@@ -13,13 +13,13 @@ public:
 	virtual void API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle);
 	virtual void API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle);
 
-	virtual void API_SpotKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strCompetitorsCoinType);
-	virtual void API_SpotTickerData(bool bAdd, std::string& strCoinType, std::string& strCompetitorsCoinType);
+	virtual void API_SpotKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strMoneyType);
+	virtual void API_SpotTickerData(bool bAdd, std::string& strCoinType, std::string& strMoneyType);
 
 	void API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp);
 
 	void API_FuturesOrderInfo(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle);
-	void API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strCompetitorsCoinType);
+	void API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strMoneyType);
 
 	void API_FuturesAccountInfoByCurrency(bool bAdd, std::string& strCoinType);
 	void API_SpotAccountInfoByCurrency(bool bAdd, std::string& strCoinType);

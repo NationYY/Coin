@@ -13,6 +13,7 @@
 #include "exchange/okex/okex_websocket_api.h"
 #include "exchange/okex/okex_http_api.h"
 #include "common/func_common.h"
+#include "api_callback.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -30,7 +31,6 @@
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CExchange* pExchange = NULL;
 COKExMartingaleDlg* g_pDlg = NULL;
-
 int LocalLogCallBackFunc(LOG_TYPE type, const char* szLog)
 {
 	if(g_pDlg->m_ctrlListLog.GetCount() > 1500)
@@ -70,14 +70,7 @@ END_MESSAGE_MAP()
 
 
 // COKExMartingaleDlg 对话框
-void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
-{
-	//switch(apiType)
-	//{
-	//default:
-	//	break;
-	//}
-}
+
 
 void local_websocket_callbak_open(const char* szExchangeName)
 {
@@ -166,10 +159,11 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			{
 				SSPotTradeInfo info;
 				info.orderID = retObj["data"][0]["order_id"].asString();
-				info.price = stod(retObj["data"][0]["price"].asString());
+				info.price = retObj["data"][0]["price"].asString();
 				info.size = retObj["data"][0]["size"].asString();
 				info.side = retObj["data"][0]["side"].asString();
-				info.timeStamp = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
+				info.strTimeStamp = retObj["data"][0]["timestamp"].asString();
+				info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
 				info.filledSize = retObj["data"][0]["filled_size"].asString();
 				info.filledNotional = retObj["data"][0]["filled_notional"].asString();
 				info.status = retObj["data"][0]["status"].asString();
@@ -219,13 +213,14 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_strKlineCycle = "candle180s";
 	m_nKlineCycle = 180;
 	m_strCoinType = "BTC";
-	m_strCompetitorsCoinType = "USDT";
+	m_strMoneyType = "USDT";
 	m_bTest = false;
 	m_eTradeState = eTradeState_WaitOpen;
 	m_martingaleStepCnt = 5;
 	m_martingaleMovePersent = 0.02;
 	m_tradeCharge = 0.0015;
-	m_fixedCompetitorsCoinCnt = -1;
+	m_fixedMoneyCnt = -1;
+	m_strInstrumentID = "btc-usdt";
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
@@ -363,8 +358,8 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		return;
 	if(OKEX_WEB_SOCKET)
 	{
-		OKEX_WEB_SOCKET->API_SpotKlineData(true, m_strKlineCycle, m_strCoinType, m_strCompetitorsCoinType);
-		OKEX_WEB_SOCKET->API_SpotTickerData(true, m_strCoinType, m_strCompetitorsCoinType);
+		OKEX_WEB_SOCKET->API_SpotKlineData(true, m_strKlineCycle, m_strCoinType, m_strMoneyType);
+		OKEX_WEB_SOCKET->API_SpotTickerData(true, m_strCoinType, m_strMoneyType);
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
 	}
 	m_bRun = true;
@@ -518,8 +513,8 @@ void COKExMartingaleDlg::Pong()
 
 void COKExMartingaleDlg::OnLoginSuccess()
 {
-	OKEX_WEB_SOCKET->API_SpotOrderInfo(true, m_strCoinType, m_strCompetitorsCoinType);
-	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strCompetitorsCoinType);
+	OKEX_WEB_SOCKET->API_SpotOrderInfo(true, m_strCoinType, m_strMoneyType);
+	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strMoneyType);
 }
 
 
@@ -958,13 +953,6 @@ void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
 	m_accountInfo.bValid = true;
 }
 
-void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
-{
-
-
-}
-
-
 void COKExMartingaleDlg::__CheckTrade()
 {
 	if(!m_bRun)
@@ -974,6 +962,10 @@ void COKExMartingaleDlg::__CheckTrade()
 	case eTradeState_WaitOpen:
 		{
 			if(KLINE_DATA_SIZE < m_nBollCycle)
+				break;
+			if(!m_curTickData.bValid)
+				break;
+			if(!m_accountInfo.bValid)
 				break;
 			//张口向下或者张口向上的收口期不下单
 			if(m_eBollState == eBollTrend_ZhangKou && !m_bZhangKouUp)
@@ -988,17 +980,40 @@ void COKExMartingaleDlg::__CheckTrade()
 				stepCnt += (int)pow(m, i);
 			}
 			//确认每份资金金额
-			m_eachStepCompetitorsValue = 0.0;
-			if(m_fixedCompetitorsCoinCnt < 0)
-				m_eachStepCompetitorsValue = m_accountInfo.available/(double)stepCnt;
+			m_eachStepMoney = 0.0;
+			if(m_fixedMoneyCnt < 0)
+				m_eachStepMoney = m_accountInfo.available/(double)stepCnt;
 			else
-				m_eachStepCompetitorsValue = m_fixedCompetitorsCoinCnt/(double)stepCnt;
+				m_eachStepMoney = m_fixedMoneyCnt/(double)stepCnt;
 			//开始下单
-			m_listTradePairs.clear();
+			m_vectorTradePairs.clear();
 			for(int i = 0; i<m_martingaleStepCnt; ++i)
 			{
-				
+				std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+				double price = m_curTickData.buy*(1-m_martingaleMovePersent*(i+1));
+				std::string strPrice = CFuncCommon::Double2String(price+DOUBLE_PRECISION, m_nPriceDecimal);
+				double money = m_eachStepMoney*pow(m,i);
+				std::string strCompetitors = CFuncCommon::Double2String(money+DOUBLE_PRECISION, m_nPriceDecimal);
+				double size = money / price;
+				std::string strSize = CFuncCommon::Double2String(size+DOUBLE_PRECISION, m_nVolumeDecimal);
+
+				SSPotTradePairInfo info;
+				info.open.strClientOrderID = strClinetOrderID;
+				info.open.waitClientOrderIDTime = time(NULL);
+				m_vectorTradePairs.push_back(info);
+				OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_buy, strPrice, strSize, strClinetOrderID);
 			}
+			m_eTradeState = eTradeState_WaitTradeOrder;
+		}
+		break;
+	case eTradeState_WaitTradeOrder:
+		{
+			for(int i = 0; i<(int)m_vectorTradePairs.size(); i++)
+			{
+				if(m_vectorTradePairs[i].open.orderID == "")
+					return;
+			}
+			m_eTradeState = eTradeState_Trading;
 		}
 		break;
 	case eTradeState_Trading:
@@ -1009,4 +1024,57 @@ void COKExMartingaleDlg::__CheckTrade()
 	break;
 	}
 
+}
+
+void COKExMartingaleDlg::OnTradeSuccess(std::string& strClientOrderID, std::string& serverOrderID)
+{
+	for(int i=0; i<(int)m_vectorTradePairs.size(); i++)
+	{
+		if(m_vectorTradePairs[i].open.strClientOrderID == strClientOrderID)
+		{
+			m_vectorTradePairs[i].open.orderID = serverOrderID;
+			m_vectorTradePairs[i].open.waitClientOrderIDTime = 0;
+			OKEX_HTTP->API_SpotOrderInfo(m_strInstrumentID, serverOrderID);
+			break;
+		}
+		if(m_vectorTradePairs[i].close.strClientOrderID == strClientOrderID)
+		{
+			m_vectorTradePairs[i].close.orderID = serverOrderID;
+			m_vectorTradePairs[i].close.waitClientOrderIDTime = 0;
+			OKEX_HTTP->API_SpotOrderInfo(m_strInstrumentID, serverOrderID);
+			break;
+		}
+	}
+}
+
+void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
+{
+	for(int i = 0; i<(int)m_vectorTradePairs.size(); i++)
+	{
+		if(info.side == m_vectorTradePairs[i].open.side && m_vectorTradePairs[i].open.orderID == info.orderID)
+		{
+			m_vectorTradePairs[i].open.price = info.price;
+			m_vectorTradePairs[i].open.size = info.size;
+			m_vectorTradePairs[i].open.side = info.side;
+			m_vectorTradePairs[i].open.strTimeStamp = info.strTimeStamp;
+			m_vectorTradePairs[i].open.timeStamp = info.timeStamp;
+			m_vectorTradePairs[i].open.filledSize = info.filledSize;
+			m_vectorTradePairs[i].open.filledNotional = info.filledNotional;
+			m_vectorTradePairs[i].open.status = info.status;
+			break;
+		}
+		else if(info.side == m_vectorTradePairs[i].close.side && m_vectorTradePairs[i].close.orderID == info.orderID)
+		{
+			m_vectorTradePairs[i].close.price = info.price;
+			m_vectorTradePairs[i].close.size = info.size;
+			m_vectorTradePairs[i].close.side = info.side;
+			m_vectorTradePairs[i].close.strTimeStamp = info.strTimeStamp;
+			m_vectorTradePairs[i].close.timeStamp = info.timeStamp;
+			m_vectorTradePairs[i].close.filledSize = info.filledSize;
+			m_vectorTradePairs[i].close.filledNotional = info.filledNotional;
+			m_vectorTradePairs[i].close.status = info.status;
+			break;
+		}
+
+	}
 }

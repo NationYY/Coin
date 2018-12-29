@@ -96,4 +96,36 @@ void COkexHttpAPI::API_FuturesCancelOrder(std::string& strCoinType, std::string&
 	info.bUTF8 = true;
 	RequestAsync(info);
 }
+
+void COkexHttpAPI::API_SpotTrade(std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_SpotTrade;
+	info.reqType = eHttpReqType_Post;
+	info.strMethod = "api/spot/v3/orders";
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
+	info.mapParams["type"] = SHttpParam(eHttpParamType_String, "limit");
+	if(tradeType == eTradeType_buy)
+		info.mapParams["side"] = SHttpParam(eHttpParamType_String, "buy");
+	else if(tradeType == eTradeType_sell)
+		info.mapParams["side"] = SHttpParam(eHttpParamType_String, "sell");
+	info.mapParams["instrument_id"] = SHttpParam(eHttpParamType_String, instrumentID);
+	info.mapParams["margin_trading"] = SHttpParam(eHttpParamType_String, "1");
+	info.mapParams["price"] = SHttpParam(eHttpParamType_String, price);
+	info.mapParams["size"] = SHttpParam(eHttpParamType_String, size);
+	RequestAsync(info);
+}
+
+void COkexHttpAPI::API_SpotOrderInfo(std::string& instrumentID, std::string& orderID)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_SpotTradeInfo;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/spot/v3/orders/" + orderID + "?instrument_id=" + instrumentID;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	RequestAsync(info);
+}
 #endif

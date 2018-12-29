@@ -46,5 +46,6 @@
     <ClInclude Include="..\src\stdafx.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\src\api_callback.h" />
   </ItemGroup>
 </Project>

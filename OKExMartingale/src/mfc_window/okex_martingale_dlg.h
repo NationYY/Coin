@@ -23,6 +23,7 @@ enum eBollTrend
 enum eTradeState
 {
 	eTradeState_WaitOpen,
+	eTradeState_WaitTradeOrder,
 	eTradeState_Trading
 };
 
@@ -90,9 +91,10 @@ struct SSPotTradeInfo
 {
 	std::string strClientOrderID;
 	std::string orderID;//订单ID;
-	double price;		//订单价格
+	std::string price;	//订单价格
 	std::string size;	//成交数量
 	std::string side;	//交易类型
+	std::string strTimeStamp;//委托时间
 	time_t timeStamp;	//委托时间
 	std::string filledSize;//已成交数量
 	std::string filledNotional;//已成交金额
@@ -107,7 +109,7 @@ struct SSPotTradeInfo
 		strClientOrderID = "";
 		timeStamp = 0;
 		orderID = "";
-		price = 0.0;
+		price = "0";
 		status = "0";
 		waitClientOrderIDTime = 0;
 		size = "0";
@@ -115,6 +117,7 @@ struct SSPotTradeInfo
 		filledSize = "0";
 		filledNotional = "0";
 		status = "";
+		strTimeStamp = "";
 	}
 };
 
@@ -156,6 +159,7 @@ public:
 	void SetHScroll();
 	void UpdateAccountInfo(SSpotAccountInfo& info);
 	void UpdateTradeInfo(SSPotTradeInfo& info);
+	void OnTradeSuccess(std::string& strClientOrderID, std::string& serverOrderID);
 private:
 	void OnBollUpdate();
 	void CheckBollTrend();
@@ -190,8 +194,8 @@ private:
 	STickerData m_curTickData;
 	SSpotAccountInfo m_accountInfo;
 	eTradeState m_eTradeState;
-	double m_eachStepCompetitorsValue;
-	std::list<SSPotTradePairInfo> m_listTradePairs;
+	double m_eachStepMoney;
+	std::vector<SSPotTradePairInfo> m_vectorTradePairs;
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -207,10 +211,11 @@ public:
 	std::string m_strKlineCycle;		//布林线周期
 	std::string m_strCoinType;			//货币类型
 	int m_nKlineCycle;					//布林线周期对应秒数
-	std::string m_strCompetitorsCoinType;//对手货币类型
-	int m_martingaleStepCnt;
-	double m_martingaleMovePersent;
-	double m_tradeCharge;
-	double m_fixedCompetitorsCoinCnt;
+	std::string m_strMoneyType;//对手货币类型
+	int m_martingaleStepCnt;			//马丁格尔交易次数
+	double m_martingaleMovePersent;		//马丁格尔交易跌幅
+	double m_tradeCharge;				//手续费
+	double m_fixedMoneyCnt;	//参与交易的对手币数量
+	std::string m_strInstrumentID;		//币对名称
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
