@@ -59,6 +59,21 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
+	case eHttpAPIType_SpotAccountInfoByCurrency:
+		{
+			if(retObj.isObject() && retObj["currency"].isString())
+			{
+				SSpotAccountInfo info;
+				info.balance = stod(retObj["balance"].asString());
+				info.hold = stod(retObj["hold"].asString());
+				info.available = stod(retObj["available"].asString());
+				info.currency = retObj["currency"].asString();
+				g_pDlg->UpdateAccountInfo(info);
+			}
+			else
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+		}
+		break;
 	default:
 		break;
 	}
@@ -125,17 +140,21 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 		{
 			if(retObj.isObject() && retObj["data"].isArray())
 			{
-				SSPotTradeInfo info;
-				info.orderID = retObj["data"][0]["order_id"].asString();
-				info.price = retObj["data"][0]["price"].asString();
-				info.size = retObj["data"][0]["size"].asString();
-				info.side = retObj["data"][0]["side"].asString();
-				info.strTimeStamp = retObj["data"][0]["timestamp"].asString();
-				info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-				info.filledSize = retObj["data"][0]["filled_size"].asString();
-				info.filledNotional = retObj["data"][0]["filled_notional"].asString();
-				info.status = retObj["data"][0]["status"].asString();
-				g_pDlg->UpdateTradeInfo(info);
+				for(int i = 0; i<retObj["data"].size(); ++i)
+				{
+					SSPotTradeInfo info;
+					info.orderID = retObj["data"][i]["order_id"].asString();
+					info.price = retObj["data"][i]["price"].asString();
+					info.size = retObj["data"][i]["size"].asString();
+					info.side = retObj["data"][i]["side"].asString();
+					info.strTimeStamp = retObj["data"][i]["timestamp"].asString();
+					info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+					info.filledSize = retObj["data"][i]["filled_size"].asString();
+					info.filledNotional = retObj["data"][i]["filled_notional"].asString();
+					info.status = retObj["data"][i]["status"].asString();
+					g_pDlg->UpdateTradeInfo(info);
+				}
+				
 			}
 			else
 				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());

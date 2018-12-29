@@ -22,7 +22,7 @@ public:
 
 	void API_SpotTrade(std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID);
 	void API_SpotOrderInfo(std::string& instrumentID, std::string& orderID);
-
+	void API_SpotAccountInfoByCurrency(std::string& strMoneyType);
 public:
 	int m_futuresAccountInfoByCurrencyIndex;
 };

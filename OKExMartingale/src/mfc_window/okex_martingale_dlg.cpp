@@ -81,8 +81,8 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	g_pDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_nBollCycle = 20;
-	m_nPriceDecimal = 3;
-	m_nVolumeDecimal = 4;
+	m_nPriceDecimal = 4;
+	m_nVolumeDecimal = 3;
 	m_nZhangKouCheckCycle = 20;
 	m_nShouKouCheckCycle = 20;
 	m_nZhangKouTrendCheckCycle = 5;
@@ -115,8 +115,8 @@ BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDOK, &COKExMartingaleDlg::OnBnClickedButtonStart)
-	ON_BN_CLICKED(IDCANCEL, &COKExMartingaleDlg::OnBnClickedButtonTest)
+	ON_BN_CLICKED(IDC_BUTTON1, &COKExMartingaleDlg::OnBnClickedButtonStart)
+	ON_BN_CLICKED(IDC_BUTTON2, &COKExMartingaleDlg::OnBnClickedButtonTest)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -238,6 +238,7 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 {
 	if(m_bRun)
 		return;
+	m_accountInfo.bValid = false;
 	if(OKEX_WEB_SOCKET)
 	{
 		OKEX_WEB_SOCKET->API_SpotKlineData(true, m_strKlineCycle, m_strCoinType, m_strMoneyType);
@@ -396,7 +397,7 @@ void COKExMartingaleDlg::Pong()
 void COKExMartingaleDlg::OnLoginSuccess()
 {
 	OKEX_WEB_SOCKET->API_SpotOrderInfo(true, m_strCoinType, m_strMoneyType);
-	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strMoneyType);
+	OKEX_HTTP->API_SpotAccountInfoByCurrency(m_strMoneyType);
 }
 
 
@@ -831,6 +832,11 @@ void COKExMartingaleDlg::__SetBollState(eBollTrend state, int nParam, double dPa
 
 void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
 {
+	if(!m_accountInfo.bValid)
+	{
+		m_accountInfo.bValid = true;
+		OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strMoneyType);
+	}
 	m_accountInfo = info;
 	m_accountInfo.bValid = true;
 }
@@ -843,8 +849,8 @@ void COKExMartingaleDlg::__CheckTrade()
 	{
 	case eTradeState_WaitOpen:
 		{
-			if(KLINE_DATA_SIZE < m_nBollCycle)
-				break;
+			//if(KLINE_DATA_SIZE < m_nBollCycle)
+			//	break;
 			if(!m_curTickData.bValid)
 				break;
 			if(!m_accountInfo.bValid)
@@ -872,13 +878,11 @@ void COKExMartingaleDlg::__CheckTrade()
 			for(int i = 0; i<m_martingaleStepCnt; ++i)
 			{
 				std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
-				double price = m_curTickData.buy*(1-m_martingaleMovePersent*(i+1));
+				double price = (m_curTickData.buy-1000)*(1-m_martingaleMovePersent*(i+1));
 				std::string strPrice = CFuncCommon::Double2String(price+DOUBLE_PRECISION, m_nPriceDecimal);
 				double money = m_eachStepMoney*pow(m,i);
-				std::string strCompetitors = CFuncCommon::Double2String(money+DOUBLE_PRECISION, m_nPriceDecimal);
 				double size = money / price;
 				std::string strSize = CFuncCommon::Double2String(size+DOUBLE_PRECISION, m_nVolumeDecimal);
-
 				SSPotTradePairInfo info;
 				info.open.strClientOrderID = strClinetOrderID;
 				info.open.waitClientOrderIDTime = time(NULL);

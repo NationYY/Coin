@@ -16,6 +16,7 @@ enum eHttpAPIType
 	eHttpAPIType_FuturesCancelOrder,			//合约撤单
 	eHttpAPIType_SpotTrade,						//现货下单
 	eHttpAPIType_SpotTradeInfo,					//查询现货单条订单信息
+	eHttpAPIType_SpotAccountInfoByCurrency,		//单一币种现货账户信息
 	eHttpAPIType_Max,
 };
 

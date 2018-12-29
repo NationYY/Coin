@@ -32,10 +32,27 @@ int CFuncCommon::EncodeConvert(char *from_charset, char *to_charset, char *inbuf
 
 std::string CFuncCommon::Double2String(double value, int decimal)
 {
-	std::stringstream ss;
-	ss.setf(std::ios::fixed);
-	ss << std::setprecision(decimal) << value;
-	return ss.str();
+	char szBuff[64] = {0};
+	if(decimal == 1)
+		sprintf(szBuff, "%.2f", value);
+	else if(decimal == 2)
+		sprintf(szBuff, "%.3f", value);
+	else if(decimal == 3)
+		sprintf(szBuff, "%.4f", value);
+	else if(decimal == 4)
+		sprintf(szBuff, "%.5f", value);
+	else if(decimal == 5)
+		sprintf(szBuff, "%.6f", value);
+	else if(decimal == 6)
+		sprintf(szBuff, "%.7f", value);
+	else if(decimal == 7)
+		sprintf(szBuff, "%.8f", value);
+	else if(decimal == 8)
+		sprintf(szBuff, "%.9f", value);
+	else if(decimal == 9)
+		sprintf(szBuff, "%.10f", value);
+	szBuff[strlen(szBuff)-1] = '\0';
+	return szBuff;
 }
 
 double CFuncCommon::Round(double value, int decimal)

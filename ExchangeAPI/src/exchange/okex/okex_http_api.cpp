@@ -128,4 +128,16 @@ void COkexHttpAPI::API_SpotOrderInfo(std::string& instrumentID, std::string& ord
 	info.bUTF8 = true;
 	RequestAsync(info);
 }
+
+void COkexHttpAPI::API_SpotAccountInfoByCurrency(std::string& strMoneyType)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_SpotAccountInfoByCurrency;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/spot/v3/accounts/" + strMoneyType;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	RequestAsync(info);
+
+}
 #endif
