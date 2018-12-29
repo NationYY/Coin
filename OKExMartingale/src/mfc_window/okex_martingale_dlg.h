@@ -5,6 +5,7 @@
 #pragma once
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
+#define DOUBLE_PRECISION 0.00000001
 enum eTimerType
 {
 	eTimerType_APIUpdate,
