@@ -1617,7 +1617,7 @@ void COKExFuturesDlg::__InitConfigCtrl()
 	else if(strTemp == "EOS")
 		m_combCoinType.SetCurSel(6);
 	else if(strTemp == "BCH")
-		m_combCoinType.SetCurSel(6);
+		m_combCoinType.SetCurSel(7);
 	strTemp = m_config.get("futures", "futuresCycle", "");
 	m_editFuturesCycle.SetWindowText(strTemp.c_str());
 

@@ -138,6 +138,32 @@ void COkexHttpAPI::API_SpotAccountInfoByCurrency(std::string& strMoneyType)
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	RequestAsync(info);
+}
 
+void COkexHttpAPI::API_SpotCancelOrder(std::string& instrumentID, std::string& orderID, std::string& clientOrderID)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_SpotCancelOrder;
+	info.reqType = eHttpReqType_Post;
+	info.strMethod = "api/spot/v3/cancel_orders/" + orderID;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
+	info.mapParams["instrument_id"] = SHttpParam(eHttpParamType_String, instrumentID);
+	RequestAsync(info);
+}
+
+void COkexHttpAPI::API_SpotInstruments(bool bSync, SHttpResponse& resInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_SpotInstruments;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/spot/v3/instruments";
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, resInfo);
 }
 #endif

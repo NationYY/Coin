@@ -101,6 +101,8 @@ struct SSPotTradeInfo
 	std::string filledNotional;//已成交金额
 	std::string status;	//订单状态(open:未成交 part_filled:部分成交 filled:已成交 cancelled:已撤销 failure:订单失败）
 	time_t waitClientOrderIDTime;
+	bool bBeginMoveStopProfit;
+	int stopProfit;
 	SSPotTradeInfo()
 	{
 		Reset();
@@ -119,6 +121,7 @@ struct SSPotTradeInfo
 		filledNotional = "0";
 		status = "";
 		strTimeStamp = "";
+		bBeginMoveStopProfit = false;
 	}
 };
 
@@ -161,6 +164,8 @@ public:
 	void UpdateAccountInfo(SSpotAccountInfo& info);
 	void UpdateTradeInfo(SSPotTradeInfo& info);
 	void OnTradeSuccess(std::string& strClientOrderID, std::string& serverOrderID);
+	void __InitConfigCtrl();
+	bool __SaveConfigCtrl();
 private:
 	void OnBollUpdate();
 	void CheckBollTrend();
@@ -197,6 +202,7 @@ private:
 	eTradeState m_eTradeState;
 	double m_eachStepMoney;
 	std::vector<SSPotTradePairInfo> m_vectorTradePairs;
+	int m_curOpenFinishIndex;		//当前open交易完成的序号
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -218,5 +224,13 @@ public:
 	double m_tradeCharge;				//手续费
 	double m_fixedMoneyCnt;	//参与交易的对手币数量
 	std::string m_strInstrumentID;		//币对名称
+	double m_moveStopProfit;			//头单移动止盈比例
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CComboBox m_combInstrumentID;
+	CEdit m_editMartingaleStepCnt;
+	CEdit m_editMartingaleMovePersent;
+	CEdit m_editTradeCharge;
+	CEdit m_editFixedMoneyCnt;
+	CEdit m_editMoveStopProfit;
+	CEdit m_editTotalMoney;
 };

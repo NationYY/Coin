@@ -92,8 +92,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_nZhangKouDoubleConfirmCycle = 2;
 	m_nShoukouDoubleConfirmCycle = 3;
 	m_tListenPong = 0;
-	m_strKlineCycle = "candle180s";
-	m_nKlineCycle = 180;
+	m_strInstrumentID = "btc-usdt";
 	m_strCoinType = "BTC";
 	m_strMoneyType = "USDT";
 	m_bTest = false;
@@ -102,13 +101,24 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_martingaleMovePersent = 0.02;
 	m_tradeCharge = 0.0015;
 	m_fixedMoneyCnt = -1;
-	m_strInstrumentID = "btc-usdt";
+	m_curOpenFinishIndex = -1;
+
+	m_moveStopProfit = 0.005;
+	m_strKlineCycle = "candle180s";
+	m_nKlineCycle = 180;
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST1, m_ctrlListLog);
+	DDX_Control(pDX, IDC_COMBO1, m_combInstrumentID);
+	DDX_Control(pDX, IDC_EDIT1, m_editMartingaleStepCnt);
+	DDX_Control(pDX, IDC_EDIT2, m_editMartingaleMovePersent);
+	DDX_Control(pDX, IDC_EDIT3, m_editTradeCharge);
+	DDX_Control(pDX, IDC_EDIT4, m_editFixedMoneyCnt);
+	DDX_Control(pDX, IDC_EDIT5, m_editMoveStopProfit);
+	DDX_Control(pDX, IDC_EDIT6, m_editTotalMoney);
 }
 
 BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialogEx)
@@ -152,13 +162,13 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
-
+	m_combInstrumentID.InsertString(0, "BTC-USDT");
 	if(!m_config.open("./config.ini"))
 		return FALSE;
 	m_apiKey = m_config.get("futures", "apiKey", "");
 	m_secretKey = m_config.get("futures", "secretKey", "");
 	m_passphrase = m_config.get("futures", "passphrase", "");
-
+	__InitConfigCtrl();
 	pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
 	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
@@ -236,8 +246,57 @@ HCURSOR COKExMartingaleDlg::OnQueryDragIcon()
 
 void COKExMartingaleDlg::OnBnClickedButtonStart()
 {
+	if(!__SaveConfigCtrl())
+		return;
 	if(m_bRun)
 		return;
+	bool bFound = false;
+	for(int i=0; i<3; ++i)
+	{
+		SHttpResponse resInfo;
+		OKEX_HTTP->API_SpotInstruments(false, resInfo);
+		bFound = false;
+		if(resInfo.retObj.isArray())
+		{
+			for(int j=0; j<(int)resInfo.retObj.size(); ++i)
+			{
+				if(resInfo.retObj[j]["instrument_id"].asString() == m_strInstrumentID)
+				{
+					std::string strMinSize = resInfo.retObj[j]["min_size"].asString();
+					int pos = strMinSize.find_first_of(".");
+					if(pos != std::string::npos)
+					{
+						m_nVolumeDecimal = strMinSize.size() - pos - 1;
+						bFound = true;
+					}
+					else
+					{
+						bFound = false;
+						break;
+					}
+					std::string strQuoteIncrement = resInfo.retObj[j]["quote_increment"].asString();
+					pos = strQuoteIncrement.find_first_of(".");
+					if(pos != std::string::npos)
+					{
+						m_nPriceDecimal = strQuoteIncrement.size() - pos - 1;
+						bFound = true;
+					}
+					else
+					{
+						bFound = false;
+						break;
+					}
+				}
+			}
+		}
+		if(bFound)
+			break;
+	}
+	if(!bFound)
+	{
+		MessageBox("未得到交易对详细信息");
+		return;
+	}
 	m_accountInfo.bValid = false;
 	if(OKEX_WEB_SOCKET)
 	{
@@ -839,6 +898,16 @@ void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
 	}
 	m_accountInfo = info;
 	m_accountInfo.bValid = true;
+	std::string totalMoney = CFuncCommon::Double2String(m_accountInfo.balance+DOUBLE_PRECISION, 5);
+	for(int i=totalMoney.size()-1; i>=0; --i)
+	{
+		if(totalMoney.at(i) == '0')
+			totalMoney.replace(i, i, '\0');
+		else
+			break;
+	}
+	
+	m_editTotalMoney.SetWindowText(totalMoney.c_str());
 }
 
 void COKExMartingaleDlg::__CheckTrade()
@@ -855,6 +924,7 @@ void COKExMartingaleDlg::__CheckTrade()
 				break;
 			if(!m_accountInfo.bValid)
 				break;
+			m_curOpenFinishIndex = -1;
 			//张口向下或者张口向上的收口期不下单
 			if(m_eBollState == eBollTrend_ZhangKou && !m_bZhangKouUp)
 				break;
@@ -878,7 +948,7 @@ void COKExMartingaleDlg::__CheckTrade()
 			for(int i = 0; i<m_martingaleStepCnt; ++i)
 			{
 				std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
-				double price = (m_curTickData.buy-1000)*(1-m_martingaleMovePersent*(i+1));
+				double price = m_curTickData.buy*(1-m_martingaleMovePersent*(i+1));
 				std::string strPrice = CFuncCommon::Double2String(price+DOUBLE_PRECISION, m_nPriceDecimal);
 				double money = m_eachStepMoney*pow(m,i);
 				double size = money / price;
@@ -904,10 +974,114 @@ void COKExMartingaleDlg::__CheckTrade()
 		break;
 	case eTradeState_Trading:
 		{
+			int m_lastOpenFinishIndex = m_curOpenFinishIndex;
+			double finishPrice = 0.0;
+			for(int i = 0; i < (int)m_vectorTradePairs.size(); i++)
+			{
+				if(m_vectorTradePairs[i].open.orderID != "" && m_vectorTradePairs[i].open.status == "filled")
+				{
+					m_curOpenFinishIndex = i;
+					finishPrice = stod(m_vectorTradePairs[i].open.price);
+				}
+			}
+			if(m_curOpenFinishIndex != m_lastOpenFinishIndex)
+			{
+				if(m_curOpenFinishIndex == 0)
+					m_vectorTradePairs[0].open.bBeginMoveStopProfit = true;
+				else
+				{
+					m_vectorTradePairs[0].open.bBeginMoveStopProfit = false;
+					finishPrice *= (1+m_martingaleMovePersent + m_curOpenFinishIndex*m_tradeCharge);
+					std::string strPrice = CFuncCommon::Double2String(finishPrice+DOUBLE_PRECISION, m_nPriceDecimal);
+					//先把当前挂的卖单撤销了
+					
+					for(int i=0; i<m_curOpenFinishIndex; ++i)
+					{
+						if(m_vectorTradePairs[i].close.orderID != "" && m_vectorTradePairs[i].close.status != "filled")
+						{
+							double closeFinish = stod(m_vectorTradePairs[i].close.filledSize);
+							if(!CFuncCommon::CheckEqual(closeFinish, 0.0))
+							{
+								double openFinish = stod(m_vectorTradePairs[i].open.filledSize);
+								openFinish -= closeFinish;
+								m_vectorTradePairs[i].open.filledSize = CFuncCommon::Double2String(openFinish+DOUBLE_PRECISION, m_nVolumeDecimal);
+							}
+							std::string strClientOrderID = "0";
+							OKEX_HTTP->API_SpotCancelOrder(m_strInstrumentID, m_vectorTradePairs[i].close.orderID, strClientOrderID);
+							m_vectorTradePairs[i].close.Reset();
+						}
+					}
+					//重新挂卖单
+					for(int i = 0; i <= m_curOpenFinishIndex; ++i)
+					{
+						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, strClinetOrderID);
+						m_vectorTradePairs[i].close.strClientOrderID = strClinetOrderID;
+						m_vectorTradePairs[i].close.waitClientOrderIDTime = time(NULL);
+					}
+				}
+			}
+			if(m_vectorTradePairs.size())
+			{
+				bool bAllFinish = true;
+				for(int i = 0; i < (int)m_vectorTradePairs.size(); i++)
+				{
+					if(m_vectorTradePairs[i].open.orderID != "" && m_vectorTradePairs[i].open.status != "filled")
+					{
+						bAllFinish = false;
+						break;
+					}
+				}
+				if(bAllFinish)
+					m_eTradeState = eTradeState_WaitOpen;
+				else
+				{
+					if(m_vectorTradePairs[0].open.bBeginMoveStopProfit)
+					{
+						double openPrice = stod(m_vectorTradePairs[0].open.price);
+						if(m_curTickData.last > openPrice)
+						{
+							double up = (m_curTickData.last - openPrice) / openPrice;
+							int nowStep = int(up / m_moveStopProfit);
+							if(nowStep - m_vectorTradePairs[0].open.stopProfit >= 2)
+								m_vectorTradePairs[0].open.stopProfit = nowStep - 1;
+						}
+						if(m_vectorTradePairs[0].open.stopProfit)
+						{
+							if(m_curTickData.last <= (openPrice*(1+m_vectorTradePairs[0].open.stopProfit*m_moveStopProfit+m_moveStopProfit/2)))
+							{
+								//把所有成交的open单子市价处理,其余撤单
+								std::string strPrice = CFuncCommon::Double2String((m_curTickData.last*0.8)+DOUBLE_PRECISION, m_nPriceDecimal);
+								for(int i=0; i<=(int)m_vectorTradePairs.size(); ++i)
+								{
+									if(m_vectorTradePairs[i].open.orderID != "")
+									{
+										//先市价处理
+										if(m_vectorTradePairs[i].open.status == "part_filled" || m_vectorTradePairs[i].open.status == "filled")
+										{
+											std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+											OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, strClinetOrderID);
+										}
+										//再撤销订单
+										if(m_vectorTradePairs[i].open.status != "filled")
+										{
+											std::string strClientOrderID = "0";
+											OKEX_HTTP->API_SpotCancelOrder(m_strInstrumentID, m_vectorTradePairs[i].open.orderID, strClientOrderID);
+										}
+									}
+								}
+								m_vectorTradePairs.clear();
+								m_eTradeState = eTradeState_WaitOpen;
+							}
+						}
+					}
+				}
+
+			}
 		}
 		break;
 	default:
-	break;
+		break;
 	}
 
 }
@@ -937,7 +1111,9 @@ void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
 {
 	for(int i = 0; i<(int)m_vectorTradePairs.size(); i++)
 	{
-		if(info.side == m_vectorTradePairs[i].open.side && m_vectorTradePairs[i].open.orderID == info.orderID)
+		if(info.side == m_vectorTradePairs[i].open.side &&
+		   m_vectorTradePairs[i].open.orderID == info.orderID && 
+		   m_vectorTradePairs[i].open.status != "filled")
 		{
 			m_vectorTradePairs[i].open.price = info.price;
 			m_vectorTradePairs[i].open.size = info.size;
@@ -949,7 +1125,9 @@ void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
 			m_vectorTradePairs[i].open.status = info.status;
 			break;
 		}
-		else if(info.side == m_vectorTradePairs[i].close.side && m_vectorTradePairs[i].close.orderID == info.orderID)
+		else if(info.side == m_vectorTradePairs[i].close.side &&
+				m_vectorTradePairs[i].close.orderID == info.orderID &&
+				m_vectorTradePairs[i].close.status != "filled")
 		{
 			m_vectorTradePairs[i].close.price = info.price;
 			m_vectorTradePairs[i].close.size = info.size;
@@ -963,4 +1141,94 @@ void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
 		}
 
 	}
+}
+
+void COKExMartingaleDlg::__InitConfigCtrl()
+{
+	std::string strTemp = m_config.get("futures", "instrument", "");
+	if(strTemp == "BTC-USDT")
+		m_combInstrumentID.SetCurSel(0);
+	strTemp = m_config.get("futures", "martingaleStepCnt", "");
+	m_editMartingaleStepCnt.SetWindowText(strTemp.c_str());
+
+	strTemp = m_config.get("futures", "martingaleMovePersent", "");
+	m_editMartingaleMovePersent.SetWindowText(strTemp.c_str());
+
+	strTemp = m_config.get("futures", "tradeCharge", "");
+	m_editTradeCharge.SetWindowText(strTemp.c_str());
+
+	strTemp = m_config.get("futures", "fixedMoneyCnt", "");
+	m_editFixedMoneyCnt.SetWindowText(strTemp.c_str());
+	
+	strTemp = m_config.get("futures", "moveStopProfit", "");
+	m_editMoveStopProfit.SetWindowText(strTemp.c_str());
+	
+}
+
+bool COKExMartingaleDlg::__SaveConfigCtrl()
+{
+	CString strInstrumentID;
+	m_combInstrumentID.GetWindowText(strInstrumentID);
+	if(strInstrumentID == "")
+	{
+		MessageBox("未选择交易对");
+		return false;
+	}
+	CString strMartingaleStepCnt;
+	m_editMartingaleStepCnt.GetWindowText(strMartingaleStepCnt);
+	if(strMartingaleStepCnt == "")
+	{
+		MessageBox("未填写马丁格尔交易次数");
+		return false;
+	}
+	CString strMartingaleMovePersent;
+	m_editMartingaleMovePersent.GetWindowText(strMartingaleMovePersent);
+	if(strMartingaleMovePersent == "")
+	{
+		MessageBox("未填写马丁格尔跌幅");
+		return false;
+	}
+	CString strTradeCharge;
+	m_editTradeCharge.GetWindowText(strTradeCharge);
+	if(strTradeCharge == "")
+	{
+		MessageBox("未填写交易手续费");
+		return false;
+	}
+	CString strFixedMoneyCnt;
+	m_editFixedMoneyCnt.GetWindowText(strFixedMoneyCnt);
+	if(strFixedMoneyCnt == "")
+	{
+		MessageBox("未填写固定货币数量");
+		return false;
+	}
+	CString strMoveStopProfit;
+	m_editMoveStopProfit.GetWindowText(strMoveStopProfit);
+	if(strMoveStopProfit == "")
+	{
+		MessageBox("未填写移动止盈系数");
+		return false;
+	}
+	
+	
+	m_strInstrumentID = strInstrumentID.GetBuffer();
+	int pos = m_strInstrumentID.find_first_of("-");
+	m_strCoinType = m_strInstrumentID.substr(0, pos);
+	m_strMoneyType = m_strInstrumentID.substr(pos+1);
+	m_martingaleStepCnt = atoi(strMartingaleStepCnt.GetBuffer());
+	m_martingaleMovePersent = stod(strMartingaleMovePersent.GetBuffer());
+	m_tradeCharge = stod(strTradeCharge.GetBuffer());
+	if(strFixedMoneyCnt == "0")
+		m_fixedMoneyCnt = -1;
+	else
+		m_fixedMoneyCnt = stod(strFixedMoneyCnt.GetBuffer());
+	m_moveStopProfit = stod(strMoveStopProfit.GetBuffer());
+	m_config.set_value("futures", "instrument", m_strInstrumentID.c_str());
+	m_config.set_value("futures", "martingaleStepCnt", strMartingaleStepCnt.GetBuffer());
+	m_config.set_value("futures", "martingaleMovePersent", strMartingaleMovePersent.GetBuffer());
+	m_config.set_value("futures", "tradeCharge", strTradeCharge.GetBuffer());
+	m_config.set_value("futures", "fixedMoneyCnt", strFixedMoneyCnt.GetBuffer());
+	m_config.set_value("futures", "moveStopProfit", strMoveStopProfit.GetBuffer());
+	m_config.save("./config.ini");
+	return true;
 }
