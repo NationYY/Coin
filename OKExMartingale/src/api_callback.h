@@ -140,7 +140,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 		{
 			if(retObj.isObject() && retObj["data"].isArray())
 			{
-				for(int i = 0; i<retObj["data"].size(); ++i)
+				for(int i = 0; i<(int)retObj["data"].size(); ++i)
 				{
 					SSPotTradeInfo info;
 					info.orderID = retObj["data"][i]["order_id"].asString();

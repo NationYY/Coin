@@ -278,7 +278,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	g_pDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_nBollCycle = 20;
-	m_nPriceDecimal = 3;
+	m_nPriceDecimal = 1;
 	m_nZhangKouCheckCycle = 20;
 	m_nShouKouCheckCycle = 20;
 	m_nZhangKouTrendCheckCycle = 5;
@@ -292,7 +292,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_nKlineCycle = 180;
 	m_strCoinType = "BTC";
 	m_strFuturesCycle = "190329";
-	m_strFuturesTradeSize = "1";
+	m_strFuturesTradeSize = "10";
 	m_strLeverage = "20";
 	m_bTest = false;
 	m_stopLoss = 0.04;
@@ -358,6 +358,7 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_combCoinType.InsertString(4, "BTG");
 	m_combCoinType.InsertString(5, "XRP");
 	m_combCoinType.InsertString(6, "EOS");
+	m_combCoinType.InsertString(7, "BCH");
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
 	if(!m_config.open("./config.ini"))
@@ -1615,7 +1616,8 @@ void COKExFuturesDlg::__InitConfigCtrl()
 		m_combCoinType.SetCurSel(5);
 	else if(strTemp == "EOS")
 		m_combCoinType.SetCurSel(6);
-
+	else if(strTemp == "BCH")
+		m_combCoinType.SetCurSel(6);
 	strTemp = m_config.get("futures", "futuresCycle", "");
 	m_editFuturesCycle.SetWindowText(strTemp.c_str());
 
