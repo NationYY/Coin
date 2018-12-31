@@ -1312,7 +1312,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							itB->close.price = m_curTickData.sell;
 							itB->close.status = 2;
 							itB->close.tradeType = eFuturesTradeType_CloseBull;
-							CActionLog("trade", "[%s]止损 order=%s price=%s filledQTY=%d", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
+							CActionLog("trade", "[%s]止损平多 order=%s price=%s filledQTY=%d", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
 						}
 						else
 						{
@@ -1321,7 +1321,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							itB->close.strClientOrderID = strClinetOrderID;
 							itB->close.waitClientOrderIDTime = time(NULL);
 							itB->close.tradeType = eFuturesTradeType_CloseBull;
-							CActionLog("trade", "止损 order=%s price=%s filledQTY=%d", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
+							CActionLog("trade", "止损平多 order=%s price=%s filledQTY=%d", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
 						}
 						
 					}
@@ -1348,7 +1348,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 										itB->close.price = m_curTickData.sell;
 										itB->close.status = 2;
 										itB->close.tradeType = eFuturesTradeType_CloseBull;
-										CActionLog("trade", "[%s]止盈 order=%s price=%s filledQTY=%d", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+										CActionLog("trade", "[%s]止盈平多 openClientOrder=%s, order=%s price=%s filledQTY=%d", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
 									}
 									else
 									{
@@ -1357,7 +1357,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 										itB->close.strClientOrderID = strClinetOrderID;
 										itB->close.waitClientOrderIDTime = time(NULL);
 										itB->close.tradeType = eFuturesTradeType_CloseBull;
-										CActionLog("trade", "止盈 order=%s price=%s filledQTY=%d", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+										CActionLog("trade", "止盈平多 openClientOrder=%s order=%s price=%s filledQTY=%d", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
 									}
 								}
 							}
@@ -1395,7 +1395,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							itB->close.price = m_curTickData.buy;
 							itB->close.status = 2;
 							itB->close.tradeType = eFuturesTradeType_CloseBear;
-							CActionLog("trade", "[%s]止损 order=%s price=%s filledQTY=%d", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
+							CActionLog("trade", "[%s]止损平空 openClientOrder=%s, order=%s price=%s filledQTY=%d", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
 						}
 						else
 						{
@@ -1404,7 +1404,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							itB->close.strClientOrderID = strClinetOrderID;
 							itB->close.waitClientOrderIDTime = time(NULL);
 							itB->close.tradeType = eFuturesTradeType_CloseBear;
-							CActionLog("trade", "止损 order=%s price=%s filledQTY=%d", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
+							CActionLog("trade", "止损平空 openClientOrder=%s, order=%s price=%s filledQTY=%d", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str());
 						}
 					}
 					//盈利达到2倍移动平均线后开始移动止赢
@@ -1413,7 +1413,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						if(itB->open.stopProfit)
 						{
 							//平仓
-							if(m_curTickData.last >= (itB->open.price*(1 + itB->open.stopProfit*m_moveStopProfit)))
+							if(m_curTickData.last >= (itB->open.price*(1 - itB->open.stopProfit*m_moveStopProfit)))
 							{
 								//如果open未交易完,先撤单
 								if(itB->open.status == "1")
@@ -1430,7 +1430,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 										itB->close.price = m_curTickData.buy;
 										itB->close.status = 2;
 										itB->close.tradeType = eFuturesTradeType_CloseBear;
-										CActionLog("trade", "[%s]止盈 order=%s price=%s filledQTY=%d", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+										CActionLog("trade", "[%s]止盈平空 order=%s price=%s filledQTY=%d", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
 									}
 									else
 									{
@@ -1439,7 +1439,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 										itB->close.strClientOrderID = strClinetOrderID;
 										itB->close.waitClientOrderIDTime = time(NULL);
 										itB->close.tradeType = eFuturesTradeType_CloseBear;
-										CActionLog("trade", "止盈 order=%s price=%s filledQTY=%d", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+										CActionLog("trade", "止盈平空 order=%s price=%s filledQTY=%d", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
 									}
 								}
 							}

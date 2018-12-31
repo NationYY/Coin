@@ -310,6 +310,7 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 
 void COKExMartingaleDlg::OnBnClickedButtonTest()
 {
+
 }
 
 
