@@ -165,6 +165,7 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combInstrumentID.InsertString(0, "BTC-USDT");
 	m_combInstrumentID.InsertString(1, "ETC-USDT");
 	m_combInstrumentID.InsertString(2, "EOS-USDT");
+	m_combInstrumentID.InsertString(3, "XRP-USDT");
 	if(!m_config.open("./config.ini"))
 		return FALSE;
 	m_apiKey = m_config.get("spot", "apiKey", "");
@@ -1141,7 +1142,7 @@ void COKExMartingaleDlg::__CheckTrade()
 				if(bAllFinish)
 				{
 					m_eTradeState = eTradeState_WaitOpen;
-					CActionLog("trade", "成功交易一个批次");
+					CActionLog("finish_trade", "成功交易一个批次");
 				}
 				else
 				{
@@ -1273,6 +1274,8 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 		m_combInstrumentID.SetCurSel(1);
 	else if(strTemp == "EOS-USDT")
 		m_combInstrumentID.SetCurSel(2);
+	else if(strTemp == "XRP-USDT")
+		m_combInstrumentID.SetCurSel(3);
 	strTemp = m_config.get("spot", "martingaleStepCnt", "");
 	m_editMartingaleStepCnt.SetWindowText(strTemp.c_str());
 
