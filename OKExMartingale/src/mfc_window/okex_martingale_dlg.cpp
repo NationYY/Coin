@@ -274,8 +274,8 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 					}
 					else
 					{
-						bFound = false;
-						break;
+						m_nVolumeDecimal = 0;
+						bFound = true;
 					}
 					std::string strQuoteIncrement = resInfo.retObj[j]["quote_increment"].asString();
 					pos = strQuoteIncrement.find_first_of(".");
@@ -286,11 +286,12 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 					}
 					else
 					{
-						bFound = false;
-						break;
+						m_nPriceDecimal = 0;
+						bFound = true;
 					}
 					LOCAL_INFO("VolumeDecimal=%d PriceDecimal=%d", m_nVolumeDecimal, m_nPriceDecimal);
-
+					if(bFound)
+						break;
 				}
 			}
 		}
@@ -302,6 +303,7 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		MessageBox("未得到交易对详细信息");
 		return;
 	}
+	//m_bTest = true;
 	m_accountInfo.bValid = false;
 	if(OKEX_WEB_SOCKET)
 	{

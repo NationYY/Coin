@@ -33,7 +33,9 @@ int CFuncCommon::EncodeConvert(char *from_charset, char *to_charset, char *inbuf
 std::string CFuncCommon::Double2String(double value, int decimal)
 {
 	char szBuff[64] = {0};
-	if(decimal == 1)
+	if(decimal == 0)
+		sprintf(szBuff, "%d", (int)value);
+	else if(decimal == 1)
 		sprintf(szBuff, "%.2f", value);
 	else if(decimal == 2)
 		sprintf(szBuff, "%.3f", value);
@@ -51,7 +53,8 @@ std::string CFuncCommon::Double2String(double value, int decimal)
 		sprintf(szBuff, "%.9f", value);
 	else if(decimal == 9)
 		sprintf(szBuff, "%.10f", value);
-	szBuff[strlen(szBuff)-1] = '\0';
+	if(decimal > 0)
+		szBuff[strlen(szBuff)-1] = '\0';
 	return szBuff;
 }
 
