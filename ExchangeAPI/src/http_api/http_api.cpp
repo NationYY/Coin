@@ -371,8 +371,8 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 	resInfo.strCustomData = reqInfo.strCustomData;
 	if(reqInfo.bUTF8)
 	{
-		char szRet[4096*5] = {0};
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 4096*5);
+		char szRet[4096*20] = {0};
+		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 4096*20);
 		Json::Reader reader;
 		reader.parse(szRet, resInfo.retObj);
 		resInfo.strRet = szRet;

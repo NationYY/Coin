@@ -5,7 +5,7 @@
 #include "string.h"
 #include <stdarg.h> 
 #include <stdio.h>
-
+#include<Windows.h>
 CActionLog::CActionLog(const char* type, const char* format, ...)
 {
 	time_t tNow = time(NULL);
@@ -44,6 +44,11 @@ void CLocalActionLog::push_log_text(std::string file_name, const char* log_text)
 	boost::mutex::scoped_lock sl(m_logMutex);
 	log_queue.push_back(str_log);
 	m_hasLogData.notify_one();
+	OutputDebugString("[");
+	OutputDebugString(file_name.c_str());
+	OutputDebugString("] ");
+	OutputDebugString(log_text);
+	OutputDebugString("\n");
 }
 void CLocalActionLog::start()
 {

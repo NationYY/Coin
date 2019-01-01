@@ -122,6 +122,7 @@ struct SSPotTradeInfo
 		status = "";
 		strTimeStamp = "";
 		bBeginMoveStopProfit = false;
+		stopProfit = 0;
 	}
 };
 
@@ -175,6 +176,7 @@ private:
 	void __CheckTrend_ShouKouChannel();
 	void __SetBollState(eBollTrend state, int nParam = 0, double dParam = 0.0);
 	void __CheckTrade();
+	void Test();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonTest();

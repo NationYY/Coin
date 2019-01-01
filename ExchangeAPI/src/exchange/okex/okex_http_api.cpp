@@ -118,7 +118,7 @@ void COkexHttpAPI::API_SpotTrade(std::string& instrumentID, eTradeType tradeType
 	RequestAsync(info);
 }
 
-void COkexHttpAPI::API_SpotOrderInfo(std::string& instrumentID, std::string& orderID)
+void COkexHttpAPI::API_SpotOrderInfo(std::string& instrumentID, std::string& orderID, std::string strCustomData)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotTradeInfo;
@@ -126,6 +126,7 @@ void COkexHttpAPI::API_SpotOrderInfo(std::string& instrumentID, std::string& ord
 	info.strMethod = "api/spot/v3/orders/" + orderID + "?instrument_id=" + instrumentID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
+	info.strCustomData = strCustomData;
 	RequestAsync(info);
 }
 
