@@ -475,6 +475,7 @@ void COKExMartingaleDlg::OnRevTickerInfo(STickerData &data)
 					m_vectorTradePairs[i].open.filledSize = CFuncCommon::Double2String(filledSize+DOUBLE_PRECISION, m_nVolumeDecimal);
 					m_vectorTradePairs[i].open.status = "part_filled";
 				}
+				CActionLog("trade", "ws更新订单信息 order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", m_vectorTradePairs[i].open.orderID.c_str(), m_vectorTradePairs[i].open.size.c_str(), m_vectorTradePairs[i].open.filledSize.c_str(), m_vectorTradePairs[i].open.price.c_str(), m_vectorTradePairs[i].open.status.c_str(), m_vectorTradePairs[i].open.side.c_str());
 				return;
 			}
 			price = stod(m_vectorTradePairs[i].close.price);
@@ -493,6 +494,7 @@ void COKExMartingaleDlg::OnRevTickerInfo(STickerData &data)
 					m_vectorTradePairs[i].close.filledSize = CFuncCommon::Double2String(filledSize+DOUBLE_PRECISION, m_nVolumeDecimal);
 					m_vectorTradePairs[i].close.status = "part_filled";
 				}
+				CActionLog("trade", "ws更新订单信息 order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", m_vectorTradePairs[i].open.orderID.c_str(), m_vectorTradePairs[i].open.size.c_str(), m_vectorTradePairs[i].open.filledSize.c_str(), m_vectorTradePairs[i].open.price.c_str(), m_vectorTradePairs[i].open.status.c_str(), m_vectorTradePairs[i].open.side.c_str());
 				return;
 			}
 		}
