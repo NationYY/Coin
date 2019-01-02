@@ -1023,7 +1023,7 @@ void COKExMartingaleDlg::__CheckTrade()
 					info.open.status = "open";
 					m_vectorTradePairs.push_back(info);
 					CActionLog("trade", "[%s]开买单, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strPrice.c_str(), strClinetOrderID.c_str());
-					CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClinetOrderID.c_str(), info.open.orderID.c_str(), info.open.filledSize.c_str(), info.open.price.c_str(), info.open.status.c_str(), info.open.side.c_str());
+					CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClinetOrderID.c_str(), info.open.orderID.c_str(), strSize.c_str(), info.open.filledSize.c_str(), info.open.price.c_str(), info.open.status.c_str(), info.open.side.c_str());
 				}
 				else
 				{
@@ -1100,6 +1100,8 @@ void COKExMartingaleDlg::__CheckTrade()
 					for(int i = 0; i <= m_curOpenFinishIndex; ++i)
 					{
 						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						double sellSize = stod(m_vectorTradePairs[i].open.filledSize)*(1-m_tradeCharge);
+						std::string strSellSize = CFuncCommon::Double2String(sellSize+DOUBLE_PRECISION, m_nPriceDecimal);
 						if(m_bTest)
 						{
 							m_vectorTradePairs[i].close.strClientOrderID = strClinetOrderID;
@@ -1113,13 +1115,13 @@ void COKExMartingaleDlg::__CheckTrade()
 							m_vectorTradePairs[i].close.filledNotional = "0";
 							m_vectorTradePairs[i].close.status = "open";
 							CActionLog("trade", "[%s]开卖单, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strPrice.c_str(), strClinetOrderID.c_str());
-							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClinetOrderID.c_str(), m_vectorTradePairs[i].open.orderID.c_str(), m_vectorTradePairs[i].open.filledSize.c_str(), m_vectorTradePairs[i].open.price.c_str(), m_vectorTradePairs[i].open.status.c_str(), m_vectorTradePairs[i].open.side.c_str());
+							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClinetOrderID.c_str(), m_vectorTradePairs[i].open.orderID.c_str(), strSellSize.c_str(), strSellSize.c_str(), m_vectorTradePairs[i].open.price.c_str(), m_vectorTradePairs[i].open.status.c_str(), m_vectorTradePairs[i].open.side.c_str());
 						}
 						else
 						{
 							m_vectorTradePairs[i].close.strClientOrderID = strClinetOrderID;
 							m_vectorTradePairs[i].close.waitClientOrderIDTime = time(NULL);
-							OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, strClinetOrderID);
+							OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_sell, strPrice, strSellSize, strClinetOrderID);
 							CActionLog("trade", "开卖单, price=%s, client_oid=%s", strPrice.c_str(), strClinetOrderID.c_str());
 						}
 					}
@@ -1164,23 +1166,27 @@ void COKExMartingaleDlg::__CheckTrade()
 							{
 								//把所有成交的open单子市价处理,其余撤单
 								std::string strPrice = CFuncCommon::Double2String((m_curTickData.last*0.8)+DOUBLE_PRECISION, m_nPriceDecimal);
-								for(int i=0; i<=(int)m_vectorTradePairs.size(); ++i)
+								std::string strLast = CFuncCommon::Double2String(m_curTickData.last+DOUBLE_PRECISION, m_nPriceDecimal);
+								for(int i=0; i<(int)m_vectorTradePairs.size(); ++i)
 								{
 									if(m_vectorTradePairs[i].open.orderID != "")
 									{
 										//先市价处理
 										if(m_vectorTradePairs[i].open.status == "part_filled" || m_vectorTradePairs[i].open.status == "filled")
 										{
+											double sellSize = stod(m_vectorTradePairs[i].open.filledSize)*(1 - m_tradeCharge);
+											std::string strSellSize = CFuncCommon::Double2String(sellSize + DOUBLE_PRECISION, m_nPriceDecimal);
+
 											std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
 											if(m_bTest)
 											{
-												CActionLog("trade", "[%s]头单止盈, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strPrice.c_str(), strClinetOrderID.c_str());
-												CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filled_size=%s, price=%s, status=filled, side=sell", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClinetOrderID.c_str(), CFuncCommon::ToString(CFuncCommon::GenUUID()), m_vectorTradePairs[i].open.filledSize.c_str(), strPrice.c_str());
+												CActionLog("trade", "[%s]止盈, last=%s, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strLast.c_str(), strPrice.c_str(), strClinetOrderID.c_str());
+												CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, size=%s, filled_size=%s, price=%s, status=filled, side=sell", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClinetOrderID.c_str(), CFuncCommon::ToString(CFuncCommon::GenUUID()), strSellSize.c_str(), strSellSize.c_str(), strPrice.c_str());
 											}
 											else
 											{
-												OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, strClinetOrderID);
-												CActionLog("trade", "头单止盈, price=%s, client_oid=%s", strPrice.c_str(), strClinetOrderID.c_str());
+												OKEX_HTTP->API_SpotTrade(m_strInstrumentID, eTradeType_sell, strPrice, strSellSize, strClinetOrderID);
+												CActionLog("trade", "头单止盈, last=%s, price=%s, client_oid=%s", strLast.c_str(), strPrice.c_str(), strClinetOrderID.c_str());
 											}	
 										}
 										//再撤销订单
@@ -1196,6 +1202,7 @@ void COKExMartingaleDlg::__CheckTrade()
 								}
 								m_vectorTradePairs.clear();
 								m_eTradeState = eTradeState_WaitOpen;
+								CActionLog("finish_trade", "成功止盈一个批次");
 							}
 						}
 					}

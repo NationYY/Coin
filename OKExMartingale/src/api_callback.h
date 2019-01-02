@@ -53,7 +53,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				info.filledNotional = retObj["filled_notional"].asString();
 				info.status = retObj["status"].asString();
 				g_pDlg->UpdateTradeInfo(info);
-				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s filled_size=%s price=%s status=%s side=%s", strCustomData.c_str(), info.orderID.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", strCustomData.c_str(), info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 			}
 			else
 				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
@@ -153,6 +153,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					info.filledNotional = retObj["data"][i]["filled_notional"].asString();
 					info.status = retObj["data"][i]["status"].asString();
 					g_pDlg->UpdateTradeInfo(info);
+					CActionLog("trade", "ws更新订单信息 order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 				}
 			}
 			else
