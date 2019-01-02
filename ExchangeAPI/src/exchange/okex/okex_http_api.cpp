@@ -154,6 +154,21 @@ void COkexHttpAPI::API_SpotCancelOrder(std::string& instrumentID, std::string& o
 	RequestAsync(info);
 }
 
+void COkexHttpAPI::API_FuturesInstruments(bool bSync, SHttpResponse& resInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_FuturesInstruments;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/futures/v3/instruments";
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, resInfo);
+
+}
+
 void COkexHttpAPI::API_SpotInstruments(bool bSync, SHttpResponse& resInfo)
 {
 	SHttpReqInfo info;

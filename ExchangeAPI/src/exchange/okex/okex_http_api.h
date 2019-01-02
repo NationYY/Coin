@@ -19,6 +19,7 @@ public:
 	void API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID);
 	void API_FuturesServerTime();
 	void API_FuturesCancelOrder(std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID);
+	void API_FuturesInstruments(bool bSync, SHttpResponse& resInfo);
 
 	void API_SpotTrade(std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID);
 	void API_SpotOrderInfo(std::string& instrumentID, std::string& orderID, std::string strCustomData);

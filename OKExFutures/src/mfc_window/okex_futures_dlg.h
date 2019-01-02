@@ -190,6 +190,7 @@ private:
 	int m_nZhangKouTradeCheckBar;
 	std::list<SFuturesTradePairInfo> m_listTradePairInfo;
 	bool m_bTest;
+	bool m_bStopWhenFinish;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:
@@ -220,4 +221,5 @@ public:
 	CEdit m_editStopLoss;
 	CEdit m_editMoveStopProfit;
 	CListBox m_ctrlListLog;
+	afx_msg void OnBnClickedButtonStopWhenFinish();
 };
