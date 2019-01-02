@@ -205,6 +205,10 @@ private:
 	double m_eachStepMoney;
 	std::vector<SSPotTradePairInfo> m_vectorTradePairs;
 	int m_curOpenFinishIndex;		//当前open交易完成的序号
+	time_t m_tOpenTime;
+	bool m_bStopWhenFinish;
+	bool m_bFirstAccount;
+	double m_beginMoney;
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -235,4 +239,6 @@ public:
 	CEdit m_editFixedMoneyCnt;
 	CEdit m_editMoveStopProfit;
 	CEdit m_editTotalMoney;
+	afx_msg void OnBnClickedButtonStopWhenFinish();
+	CEdit m_editProfit;
 };
