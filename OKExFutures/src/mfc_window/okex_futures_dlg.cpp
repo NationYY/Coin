@@ -297,7 +297,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_bTest = false;
 	m_stopLoss = 0.04;
 	m_moveStopProfit = 0.005;
-	m_bStopWhenFinish = true;
+	m_bStopWhenFinish = false;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
