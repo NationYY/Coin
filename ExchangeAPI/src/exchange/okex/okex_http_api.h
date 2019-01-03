@@ -19,13 +19,13 @@ public:
 	void API_FuturesTrade(eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID);
 	void API_FuturesServerTime();
 	void API_FuturesCancelOrder(std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID);
-	void API_FuturesInstruments(bool bSync, SHttpResponse& resInfo);
+	void API_FuturesInstruments(bool bSync, SHttpResponse* pResInfo = NULL);
 
-	void API_SpotTrade(std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID);
-	void API_SpotOrderInfo(std::string& instrumentID, std::string& orderID, std::string strCustomData);
+	void API_SpotTrade(bool bSync, std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
+	void API_SpotOrderInfo(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo = NULL);
 	void API_SpotAccountInfoByCurrency(std::string& strMoneyType);
-	void API_SpotCancelOrder(std::string& instrumentID, std::string& orderID, std::string& clientOrderID);
-	void API_SpotInstruments(bool bSync, SHttpResponse& resInfo);
+	void API_SpotCancelOrder(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo = NULL);
+	void API_SpotInstruments(bool bSync, SHttpResponse* pResInfo = NULL);
 public:
 	int m_futuresAccountInfoByCurrencyIndex;
 };

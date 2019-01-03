@@ -494,7 +494,7 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 	for(int i = 0; i<3; ++i)
 	{
 		SHttpResponse resInfo;
-		OKEX_HTTP->API_FuturesInstruments(false, resInfo);
+		OKEX_HTTP->API_FuturesInstruments(false, &resInfo);
 		bFound = false;
 		if(resInfo.retObj.isArray())
 		{

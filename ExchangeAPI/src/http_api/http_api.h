@@ -26,7 +26,7 @@ public:
 		m_callBackFunc = func;
 	}
 	void RequestAsync(SHttpReqInfo& info);
-	void Request(SHttpReqInfo& reqInfo, SHttpResponse& resInfo);
+	void Request(SHttpReqInfo& reqInfo, SHttpResponse* pResInfo);
 	virtual void API_Balance() = 0;
 	virtual void API_Ticker(eMarketType type) = 0;
 	virtual void API_EntrustDepth(eMarketType type) = 0;
@@ -36,7 +36,7 @@ public:
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) = 0;
 private:
 	void _ProcessHttp();
-	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resInfo);
+	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResInfo);
 	void _GetReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szGetParams, std::string& strResponse);
 	void _PostReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szPostParams, std::string& strResponse);
 protected:

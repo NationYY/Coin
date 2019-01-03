@@ -9,7 +9,8 @@
 CActionLog::CActionLog(const char* type, const char* format, ...)
 {
 	time_t tNow = time(NULL);
-	tm nowtm = *localtime(&tNow);
+	tm nowtm;
+	localtime_s(&nowtm, &tNow);
 	char context[6144] = { 0 };
 	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d ",
 			  (int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec);
@@ -63,7 +64,8 @@ void CLocalActionLog::start()
 void CLocalActionLog::loadFile(std::string logTableName)
 {
 	time_t now_t = time(NULL);
-	tm nowtm = *localtime(&now_t);
+	tm nowtm;
+	localtime_s(&nowtm, &now_t);
 	if (m_nDay != nowtm.tm_mday)
 	{
 		for (std::map<std::string, ofstream*>::iterator iter = map_file.begin(); iter != map_file.end(); ++iter)
@@ -132,7 +134,8 @@ CLocalActionLog::~CLocalActionLog()
 void CLocalActionLog::server_start()
 {
 	time_t now_t = time(NULL);
-	tm nowtm = *localtime(&now_t);
+	tm nowtm;
+	localtime_s(&nowtm, &now_t);
 	char context[512];
 	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d server started",
 		(int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec);
@@ -143,7 +146,8 @@ void CLocalActionLog::server_start()
 void CLocalActionLog::server_stop()
 {
 	time_t now_t = time(NULL);
-	tm nowtm = *localtime(&now_t);
+	tm nowtm;
+	localtime_s(&nowtm, &now_t);
 	char context[512];
 	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d server stoped",
 		(int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec);

@@ -158,7 +158,7 @@ void CHttpAPI::_ProcessHttp()
 			m_queueReqInfo.pop_front();
 		}
 		SHttpResponse resInfo;
-		_Request(pCurl, reqInfo, resInfo);
+		_Request(pCurl, reqInfo, &resInfo);
 		if(resInfo.apiType != eHttpAPIType_Max)
 		{
 			boost::mutex::scoped_lock sl(m_responseMutex);
@@ -221,12 +221,12 @@ void CHttpAPI::RequestAsync(SHttpReqInfo& info)
 	m_condReqInfo.notify_one();
 }
 
-void CHttpAPI::Request(SHttpReqInfo& reqInfo, SHttpResponse& resInfo)
+void CHttpAPI::Request(SHttpReqInfo& reqInfo, SHttpResponse* pResInfo)
 {
-	_Request(m_pMainCurl, reqInfo, resInfo);
+	_Request(m_pMainCurl, reqInfo, pResInfo);
 }
 
-void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resInfo)
+void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResInfo)
 {
 	std::string strGetParams = "";
 	std::string strPostParams = "";
@@ -366,22 +366,26 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse& resIn
 			AssembleParams(true, strPostParams, reqInfo.mapParams);
 		_PostReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strPostParams.c_str(), strResponse);
 	}
-	resInfo.apiType = reqInfo.apiType;
-	resInfo.customData = reqInfo.customData;
-	resInfo.strCustomData = reqInfo.strCustomData;
-	if(reqInfo.bUTF8)
+	if(pResInfo)
 	{
-		char szRet[4096*20] = {0};
-		CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 4096*20);
-		Json::Reader reader;
-		reader.parse(szRet, resInfo.retObj);
-		resInfo.strRet = szRet;
-	}
-	else
-	{
-		Json::Reader reader;
-		reader.parse(strResponse.c_str(), resInfo.retObj);
-		resInfo.strRet = strResponse;
+		pResInfo->apiType = reqInfo.apiType;
+		pResInfo->customData = reqInfo.customData;
+		pResInfo->strCustomData = reqInfo.strCustomData;
+		if(reqInfo.bUTF8)
+		{
+			char szRet[4096*20] = {0};
+			CFuncCommon::EncodeConvert("utf-8", "gb2312", (char*)strResponse.c_str(), strResponse.length(), szRet, 4096*20);
+			Json::Reader reader;
+			reader.parse(szRet, pResInfo->retObj);
+			pResInfo->strRet = szRet;
+		}
+		else
+		{
+			Json::Reader reader;
+			reader.parse(strResponse.c_str(), pResInfo->retObj);
+			pResInfo->strRet = strResponse;
+		}
+
 	}
 }
 

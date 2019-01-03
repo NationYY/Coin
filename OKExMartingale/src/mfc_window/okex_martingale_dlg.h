@@ -6,13 +6,6 @@
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
 #define DOUBLE_PRECISION 0.00000001
-enum eTimerType
-{
-	eTimerType_APIUpdate,
-	eTimerType_EntrustDepth,
-	eTimerType_Ping,
-};
-
 enum eBollTrend
 {
 	eBollTrend_Normal,			//空转
@@ -24,7 +17,6 @@ enum eBollTrend
 enum eTradeState
 {
 	eTradeState_WaitOpen,
-	eTradeState_WaitTradeOrder,
 	eTradeState_Trading
 };
 
@@ -90,7 +82,6 @@ struct SSpotAccountInfo
 
 struct SSPotTradeInfo
 {
-	std::string strClientOrderID;
 	std::string orderID;//订单ID;
 	std::string price;	//订单价格
 	std::string size;	//成交数量
@@ -100,7 +91,6 @@ struct SSPotTradeInfo
 	std::string filledSize;//已成交数量
 	std::string filledNotional;//已成交金额
 	std::string status;	//订单状态(open:未成交 part_filled:部分成交 filled:已成交 cancelled:已撤销 failure:订单失败）
-	time_t waitClientOrderIDTime;
 	bool bBeginMoveStopProfit;
 	int stopProfit;
 	SSPotTradeInfo()
@@ -109,12 +99,10 @@ struct SSPotTradeInfo
 	}
 	void Reset()
 	{
-		strClientOrderID = "";
 		timeStamp = 0;
 		orderID = "";
 		price = "0";
 		status = "0";
-		waitClientOrderIDTime = 0;
 		size = "0";
 		side = "buy";
 		filledSize = "0";
@@ -164,10 +152,11 @@ public:
 	void SetHScroll();
 	void UpdateAccountInfo(SSpotAccountInfo& info);
 	void UpdateTradeInfo(SSPotTradeInfo& info);
-	void OnTradeSuccess(std::string& strClientOrderID, std::string& serverOrderID);
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
 private:
+	void _Update30Sec();
+	void _LogicThread();
 	void OnBollUpdate();
 	void CheckBollTrend();
 	void __CheckTrend_Normal();
@@ -202,13 +191,15 @@ private:
 	STickerData m_curTickData;
 	SSpotAccountInfo m_accountInfo;
 	eTradeState m_eTradeState;
-	double m_eachStepMoney;
 	std::vector<SSPotTradePairInfo> m_vectorTradePairs;
 	int m_curOpenFinishIndex;		//当前open交易完成的序号
 	time_t m_tOpenTime;
 	bool m_bStopWhenFinish;
 	bool m_bFirstAccount;
 	double m_beginMoney;
+	boost::thread m_logicThread;
+	bool m_bExit;
+	time_t m_tLastUpdate30Sec;
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -231,7 +222,6 @@ public:
 	double m_fixedMoneyCnt;	//参与交易的对手币数量
 	std::string m_strInstrumentID;		//币对名称
 	double m_moveStopProfit;			//头单移动止盈比例
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CComboBox m_combInstrumentID;
 	CEdit m_editMartingaleStepCnt;
 	CEdit m_editMartingaleMovePersent;
