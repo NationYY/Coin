@@ -5,6 +5,7 @@
 #pragma once
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
+#include "afxcmn.h"
 #define DOUBLE_PRECISION 0.00000001
 enum eBollTrend
 {
@@ -91,6 +92,7 @@ struct SSPotTradeInfo
 	std::string filledSize;//已成交数量
 	std::string filledNotional;//已成交金额
 	std::string status;	//订单状态(open:未成交 part_filled:部分成交 filled:已成交 cancelled:已撤销 failure:订单失败）
+	std::string closeSize;//已卖出数量
 	bool bBeginMoveStopProfit;
 	int stopProfit;
 	SSPotTradeInfo()
@@ -107,6 +109,7 @@ struct SSPotTradeInfo
 		side = "buy";
 		filledSize = "0";
 		filledNotional = "0";
+		closeSize = "0";
 		status = "";
 		strTimeStamp = "";
 		bBeginMoveStopProfit = false;
@@ -166,7 +169,9 @@ private:
 	void __SetBollState(eBollTrend state, int nParam = 0, double dParam = 0.0);
 	void __CheckTrade();
 	void Test();
+	void TestCfg();
 	void _UpdateProfitShow();
+	void _UpdateTradeShow();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonTest();
@@ -189,6 +194,7 @@ private:
 	bool m_bZhangKouUp;
 	int m_nZhangKouTradeCheckBar;
 	bool m_bTest;
+	bool m_bTestCfg;
 	STickerData m_curTickData;
 	SSpotAccountInfo m_coinAccountInfo;
 	SSpotAccountInfo m_moneyAccountInfo;
@@ -228,7 +234,8 @@ public:
 	CEdit m_editFixedMoneyCnt;
 	CEdit m_editMoveStopProfit;
 	CEdit m_editCoin;
-
+	double m_maxPrice;
+	double m_minPrice;
 	afx_msg void OnBnClickedButtonStopWhenFinish();
 	CEdit m_editProfit;
 	CStatic m_staticCoin;
@@ -236,4 +243,9 @@ public:
 	CEdit m_editMoney;
 	CEdit m_editCost;
 	afx_msg void OnBnClickedButtonUpdateCost();
+	CListCtrl m_listCtrlOpen;
+	CListCtrl m_listCtrlClose;
+	afx_msg void OnDestroy();
+	CStatic m_staticPrice;
+	CStatic m_staticLimitPrice;
 };

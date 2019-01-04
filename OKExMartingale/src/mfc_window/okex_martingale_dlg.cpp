@@ -123,6 +123,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_tLastUpdate30Sec = 0;
 	m_strKlineCycle = "candle180s";
 	m_nKlineCycle = 180;
+	m_bTestCfg = false;
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
@@ -140,6 +141,10 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_MONEY, m_staticMoney);
 	DDX_Control(pDX, IDC_EDIT9, m_editMoney);
 	DDX_Control(pDX, IDC_EDIT8, m_editCost);
+	DDX_Control(pDX, IDC_LIST3, m_listCtrlOpen);
+	DDX_Control(pDX, IDC_LIST2, m_listCtrlClose);
+	DDX_Control(pDX, IDC_STATIC_PRICE, m_staticPrice);
+	DDX_Control(pDX, IDC_STATIC_LIMIT_PRICE, m_staticLimitPrice);
 }
 
 BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialogEx)
@@ -151,6 +156,7 @@ BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON3, &COKExMartingaleDlg::OnBnClickedButtonStopWhenFinish)
 	ON_BN_CLICKED(IDC_BUTTON4, &COKExMartingaleDlg::OnBnClickedButtonUpdateCost)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -189,13 +195,24 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combInstrumentID.InsertString(1, "ETC-USDT");
 	m_combInstrumentID.InsertString(2, "EOS-USDT");
 	m_combInstrumentID.InsertString(3, "XRP-USDT");
+
+	m_listCtrlOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 80);
+	m_listCtrlOpen.InsertColumn(1, "成交量", LVCFMT_CENTER, 100);
+	m_listCtrlOpen.InsertColumn(2, "售出量", LVCFMT_CENTER, 75);
+	m_listCtrlOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 80);
+	m_listCtrlOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
+	m_listCtrlClose.InsertColumn(0, "价格", LVCFMT_CENTER, 80);
+	m_listCtrlClose.InsertColumn(1, "成交量", LVCFMT_CENTER, 100);
+	m_listCtrlClose.InsertColumn(2, "状态", LVCFMT_CENTER, 80);
+	m_listCtrlClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
 	if(!m_config.open("./config.ini"))
 		return FALSE;
 	m_apiKey = m_config.get("spot", "apiKey", "");
 	m_secretKey = m_config.get("spot", "secretKey", "");
 	m_passphrase = m_config.get("spot", "passphrase", "");
 	__InitConfigCtrl();
-	
 	m_logicThread = boost::thread(boost::bind(&COKExMartingaleDlg::_LogicThread, this));
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -511,6 +528,21 @@ void COKExMartingaleDlg::OnRevTickerInfo(STickerData &data)
 		__CheckTrade();
 	}
 	_UpdateProfitShow();
+	if(!CFuncCommon::CheckEqual(m_minPrice, 0.0) && !CFuncCommon::CheckEqual(m_maxPrice, 0.0))
+	{
+		if(m_curTickData.last < m_minPrice)
+			m_minPrice = m_curTickData.last;
+		if(m_curTickData.last > m_maxPrice)
+			m_maxPrice = m_curTickData.last;
+		CString szLimitPrice;
+		szLimitPrice.Format("max:%s   min:%s", CFuncCommon::Double2String(m_maxPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str(), CFuncCommon::Double2String(m_minPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+		m_staticLimitPrice.SetWindowText(szLimitPrice.GetBuffer());
+	}
+	std::string price = CFuncCommon::Double2String(m_curTickData.last+DOUBLE_PRECISION, m_nPriceDecimal);
+	price += "[";
+	price += CFuncCommon::FormatTimeStr(m_curTickData.time).c_str();
+	price += "]";
+	m_staticPrice.SetWindowText(price.c_str());
 }
 
 void COKExMartingaleDlg::Pong()
@@ -986,7 +1018,9 @@ void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
 			moneyNum = szTemp;
 		}
 		m_editMoney.SetWindowText(moneyNum.c_str());
-		m_staticMoney.SetWindowText(m_strMoneyType.c_str());
+		std::string strMoney = m_strMoneyType;
+		strMoney += ":";
+		m_staticMoney.SetWindowText(strMoney.c_str());
 	}
 	else if(info.currency == m_strCoinType)
 	{
@@ -1012,7 +1046,9 @@ void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
 			coinNum = szTemp;
 		}
 		m_editCoin.SetWindowText(coinNum.c_str());
-		m_staticCoin.SetWindowText(m_strCoinType.c_str());
+		std::string strCoin = m_strCoinType;
+		strCoin += ":";
+		m_staticCoin.SetWindowText(strCoin.c_str());
 	}
 	_UpdateProfitShow();
 }
@@ -1025,6 +1061,7 @@ void COKExMartingaleDlg::__CheckTrade()
 	{
 	case eTradeState_WaitOpen:
 		{
+			m_maxPrice = m_minPrice = 0.0;
 			if(m_bStopWhenFinish)
 				break;
 			//if(KLINE_DATA_SIZE < m_nBollCycle)
@@ -1052,6 +1089,7 @@ void COKExMartingaleDlg::__CheckTrade()
 			else
 				eachStepMoney = m_fixedMoneyCnt/(double)stepCnt;
 			//开始下单
+			m_minPrice = m_maxPrice = m_curTickData.last;
 			m_vectorTradePairs.clear();
 			for(int i = 0; i<m_martingaleStepCnt; ++i)
 			{
@@ -1153,6 +1191,14 @@ void COKExMartingaleDlg::__CheckTrade()
 								{
 									double openFinish = stod(m_vectorTradePairs[i].open.filledSize);
 									openFinish -= closeFinish;
+									if(m_vectorTradePairs[i].open.closeSize == "0")
+										m_vectorTradePairs[i].open.closeSize = m_vectorTradePairs[i].close.filledSize;
+									else
+									{
+										double oldClose = stod(m_vectorTradePairs[i].open.closeSize);;
+										oldClose += closeFinish;
+										m_vectorTradePairs[i].open.closeSize = CFuncCommon::Double2String(oldClose+DOUBLE_PRECISION, m_nVolumeDecimal);
+									}
 									m_vectorTradePairs[i].open.filledSize = CFuncCommon::Double2String(openFinish+DOUBLE_PRECISION, m_nVolumeDecimal);
 								}
 								if(m_bTest)
@@ -1675,6 +1721,39 @@ void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
 		}
 
 	}
+	_UpdateTradeShow();
+}
+
+void COKExMartingaleDlg::_UpdateTradeShow()
+{
+	m_listCtrlOpen.DeleteAllItems();
+	m_listCtrlClose.DeleteAllItems();
+	CString szFormat;
+	for(int i = 0; i<(int)m_vectorTradePairs.size(); i++)
+	{
+		if(m_vectorTradePairs[i].open.orderID != "")
+		{
+			m_listCtrlOpen.InsertItem(i, "");
+			szFormat.Format("%s", m_vectorTradePairs[i].open.price.c_str());
+			m_listCtrlOpen.SetItemText(i, 0, szFormat);
+			szFormat.Format("%s/%s", m_vectorTradePairs[i].open.filledSize.c_str(), m_vectorTradePairs[i].open.size.c_str());
+			m_listCtrlOpen.SetItemText(i, 1, szFormat);
+			szFormat.Format("%s", m_vectorTradePairs[i].open.closeSize.c_str());
+			m_listCtrlOpen.SetItemText(i, 2, szFormat);
+			szFormat.Format("%s", m_vectorTradePairs[i].open.status.c_str());
+			m_listCtrlOpen.SetItemText(i, 3, szFormat);
+		}
+		if(m_vectorTradePairs[i].close.orderID != "")
+		{
+			m_listCtrlClose.InsertItem(i, "");
+			szFormat.Format("%s", m_vectorTradePairs[i].close.price.c_str());
+			m_listCtrlClose.SetItemText(i, 0, szFormat);
+			szFormat.Format("%s/%s", m_vectorTradePairs[i].close.filledSize.c_str(), m_vectorTradePairs[i].close.size.c_str());
+			m_listCtrlClose.SetItemText(i, 1, szFormat);
+			szFormat.Format("%s", m_vectorTradePairs[i].close.status.c_str());
+			m_listCtrlClose.SetItemText(i, 2, szFormat);
+		}
+	}
 }
 
 void COKExMartingaleDlg::__InitConfigCtrl()
@@ -1780,8 +1859,125 @@ void COKExMartingaleDlg::Test()
 	m_nPriceDecimal = 2;
 	m_nVolumeDecimal = 3;
 	m_bTest = true;
+	m_bTestCfg = true;
+}
+
+void COKExMartingaleDlg::OnBnClickedButtonStopWhenFinish()
+{
+	m_bStopWhenFinish = true;
+}
+
+
+void COKExMartingaleDlg::_LogicThread()
+{
+	pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
+	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
+	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
+	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
+	pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
+	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pExchange->Run();
+
+	clib::string log_path = "log/";
+	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
+
+	CLocalLogger& _localLogger = CLocalLogger::GetInstance();
+	_localLogger.SetBatchMode(true);
+	_localLogger.SetLogPath(log_path.c_str());
+	_localLogger.Start();
+	_localLogger.SetCallBackFunc(LocalLogCallBackFunc);
+
+	CLocalActionLog::GetInstancePt()->set_log_path(log_path.c_str());
+	CLocalActionLog::GetInstancePt()->start();
+
+	while(!m_bExit)
+	{
+		CLocalLogger::GetInstancePt()->SwapFront2Middle();
+		_Update30Sec();
+		if(OKEX_CHANGE)
+			OKEX_CHANGE->Update();
+		if(m_tListenPong && time(NULL) - m_tListenPong > 15)
+		{
+			m_tListenPong = 0;
+			delete pExchange;
+			pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
+			pExchange->SetHttpCallBackMessage(local_http_callbak_message);
+			pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
+			pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
+			pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
+			pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+			pExchange->Run();
+		}
+		if(m_bTestCfg || m_bTest)
+			TestCfg();
+		else
+			__CheckTrade();
+		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+	}
+
+}
+
+void COKExMartingaleDlg::_Update30Sec()
+{
+	time_t tNow = time(NULL);
+	if(m_tLastUpdate30Sec == 0)
+		m_tLastUpdate30Sec = tNow;
+	if(tNow - m_tLastUpdate30Sec < 30)
+		return;
+	m_tLastUpdate30Sec = tNow;
+	if(OKEX_WEB_SOCKET->Ping())
+		m_tListenPong = time(NULL);
+}
+
+void COKExMartingaleDlg::OnBnClickedButtonUpdateCost()
+{
+	m_beginMoney = 0.0;
+	CString szCost;
+	m_editCost.GetWindowText(szCost);
+	m_beginMoney = stod(szCost.GetBuffer());
+	m_config.set_value("spot", "beginMoney", szCost.GetBuffer());
+	m_config.save("./config.ini");
+}
+
+
+void COKExMartingaleDlg::_UpdateProfitShow()
+{
+	if(m_coinAccountInfo.bValid && m_moneyAccountInfo.bValid && m_curTickData.bValid)
+	{
+		double now = m_coinAccountInfo.balance * m_curTickData.last + m_moneyAccountInfo.balance;
+		std::string profit = CFuncCommon::Double2String(now - m_beginMoney + DOUBLE_PRECISION, 7);
+		{
+			char szTemp[128];
+			strcpy(szTemp, profit.c_str());
+			for(int i = strlen(szTemp) - 1; i >= 0; --i)
+			{
+				if(szTemp[i] == '0')
+					szTemp[i] = '\0';
+				else if(szTemp[i] == '.')
+				{
+					szTemp[i] = '\0';
+					break;
+				}
+				else
+					break;
+			}
+			profit = szTemp;
+		}
+		m_editProfit.SetWindowText(profit.c_str());
+	}
+}
+
+void COKExMartingaleDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
 	m_bExit = true;
 	m_logicThread.join();
+}
+
+
+void COKExMartingaleDlg::TestCfg()
+{
 	std::set<std::string>::iterator itB = m_setAllTestFile.begin();
 	std::set<std::string>::iterator itE = m_setAllTestFile.end();
 	char* szEnd = NULL;
@@ -1839,108 +2035,10 @@ void COKExMartingaleDlg::Test()
 					g_pDlg->OnRevTickerInfo(data);
 				}
 			}
+			_UpdateTradeShow();
 		}
 		stream.close();
 		++itB;
 	}
-}
 
-void COKExMartingaleDlg::OnBnClickedButtonStopWhenFinish()
-{
-	m_bStopWhenFinish = true;
-}
-
-
-void COKExMartingaleDlg::_LogicThread()
-{
-	pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
-	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
-	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
-	pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
-	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
-	pExchange->Run();
-
-	clib::string log_path = "log/";
-	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
-
-	CLocalLogger& _localLogger = CLocalLogger::GetInstance();
-	_localLogger.SetBatchMode(true);
-	_localLogger.SetLogPath(log_path.c_str());
-	_localLogger.Start();
-	_localLogger.SetCallBackFunc(LocalLogCallBackFunc);
-
-	CLocalActionLog::GetInstancePt()->set_log_path(log_path.c_str());
-	CLocalActionLog::GetInstancePt()->start();
-
-	while(!m_bExit)
-	{
-		CLocalLogger::GetInstancePt()->SwapFront2Middle();
-		_Update30Sec();
-		if(OKEX_CHANGE)
-			OKEX_CHANGE->Update();
-		if(m_tListenPong && time(NULL) - m_tListenPong > 15)
-		{
-			m_tListenPong = 0;
-			delete pExchange;
-			pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
-			pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-			pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
-			pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
-			pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
-			pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
-			pExchange->Run();
-		}
-		__CheckTrade();
-		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-	}
-
-}
-
-void COKExMartingaleDlg::_Update30Sec()
-{
-	time_t tNow = time(NULL);
-	if(m_tLastUpdate30Sec == 0)
-		m_tLastUpdate30Sec = tNow;
-	if(tNow - m_tLastUpdate30Sec < 30)
-		return;
-	m_tLastUpdate30Sec = tNow;
-	if(OKEX_WEB_SOCKET->Ping())
-		m_tListenPong = time(NULL);
-}
-
-void COKExMartingaleDlg::OnBnClickedButtonUpdateCost()
-{
-	m_beginMoney = 0.0;
-	CString szCost;
-	m_editCost.GetWindowText(szCost);
-	m_beginMoney = stod(szCost.GetBuffer());
-}
-
-
-void COKExMartingaleDlg::_UpdateProfitShow()
-{
-	if(m_coinAccountInfo.bValid && m_moneyAccountInfo.bValid && m_curTickData.bValid)
-	{
-		double now = m_coinAccountInfo.balance * m_curTickData.last + m_moneyAccountInfo.balance;
-		std::string profit = CFuncCommon::Double2String(now - m_beginMoney + DOUBLE_PRECISION, 7);
-		{
-			char szTemp[128];
-			strcpy(szTemp, profit.c_str());
-			for(int i = strlen(szTemp) - 1; i >= 0; --i)
-			{
-				if(szTemp[i] == '0')
-					szTemp[i] = '\0';
-				else if(szTemp[i] == '.')
-				{
-					szTemp[i] = '\0';
-					break;
-				}
-				else
-					break;
-			}
-			profit = szTemp;
-		}
-		m_editProfit.SetWindowText(profit.c_str());
-	}
 }
