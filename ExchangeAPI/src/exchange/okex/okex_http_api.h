@@ -21,9 +21,9 @@ public:
 	void API_FuturesCancelOrder(std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID);
 	void API_FuturesInstruments(bool bSync, SHttpResponse* pResInfo = NULL);
 
-	void API_SpotTrade(bool bSync, std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
+	void API_SpotTrade(bool bSync, std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, const char* clientOrderID, SHttpResponse* pResInfo = NULL);
 	void API_SpotOrderInfo(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo = NULL);
-	void API_SpotAccountInfoByCurrency(std::string& strMoneyType);
+	void API_SpotAccountInfoByCurrency(bool bSync, std::string& strMoneyType, SHttpResponse* pResInfo = NULL);
 	void API_SpotCancelOrder(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo = NULL);
 	void API_SpotInstruments(bool bSync, SHttpResponse* pResInfo = NULL);
 public:

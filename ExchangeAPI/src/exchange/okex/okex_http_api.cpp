@@ -97,7 +97,7 @@ void COkexHttpAPI::API_FuturesCancelOrder(std::string& strCoinType, std::string&
 	RequestAsync(info);
 }
 
-void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, std::string& clientOrderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, const char* clientOrderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotTrade;
@@ -135,7 +135,7 @@ void COkexHttpAPI::API_SpotOrderInfo(bool bSync, std::string& instrumentID, std:
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_SpotAccountInfoByCurrency(std::string& strMoneyType)
+void COkexHttpAPI::API_SpotAccountInfoByCurrency(bool bSync, std::string& strMoneyType, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotAccountInfoByCurrency;
@@ -143,7 +143,10 @@ void COkexHttpAPI::API_SpotAccountInfoByCurrency(std::string& strMoneyType)
 	info.strMethod = "api/spot/v3/accounts/" + strMoneyType;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
-	RequestAsync(info);
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
 }
 
 void COkexHttpAPI::API_SpotCancelOrder(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo)

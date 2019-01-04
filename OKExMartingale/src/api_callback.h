@@ -26,26 +26,12 @@ void local_websocket_callbak_fail(const char* szExchangeName)
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
-	switch(apiType)
+	LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+	/*switch(apiType)
 	{
-	case eHttpAPIType_SpotAccountInfoByCurrency:
-		{
-			if(retObj.isObject() && retObj["currency"].isString())
-			{
-				SSpotAccountInfo info;
-				info.balance = stod(retObj["balance"].asString());
-				info.hold = stod(retObj["hold"].asString());
-				info.available = stod(retObj["available"].asString());
-				info.currency = retObj["currency"].asString();
-				g_pDlg->UpdateAccountInfo(info);
-			}
-			else
-				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
-		}
-		break;
 	default:
 		break;
-	}
+	}*/
 }
 
 time_t lastKlineTime = 0;

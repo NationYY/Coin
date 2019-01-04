@@ -166,6 +166,7 @@ private:
 	void __SetBollState(eBollTrend state, int nParam = 0, double dParam = 0.0);
 	void __CheckTrade();
 	void Test();
+	void _UpdateProfitShow();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonTest();
@@ -189,13 +190,13 @@ private:
 	int m_nZhangKouTradeCheckBar;
 	bool m_bTest;
 	STickerData m_curTickData;
-	SSpotAccountInfo m_accountInfo;
+	SSpotAccountInfo m_coinAccountInfo;
+	SSpotAccountInfo m_moneyAccountInfo;
 	eTradeState m_eTradeState;
 	std::vector<SSPotTradePairInfo> m_vectorTradePairs;
 	int m_curOpenFinishIndex;		//当前open交易完成的序号
 	time_t m_tOpenTime;
 	bool m_bStopWhenFinish;
-	bool m_bFirstAccount;
 	double m_beginMoney;
 	boost::thread m_logicThread;
 	bool m_bExit;
@@ -218,17 +219,21 @@ public:
 	std::string m_strMoneyType;//对手货币类型
 	int m_martingaleStepCnt;			//马丁格尔交易次数
 	double m_martingaleMovePersent;		//马丁格尔交易跌幅
-	double m_tradeCharge;				//手续费
 	double m_fixedMoneyCnt;	//参与交易的对手币数量
 	std::string m_strInstrumentID;		//币对名称
 	double m_moveStopProfit;			//头单移动止盈比例
 	CComboBox m_combInstrumentID;
 	CEdit m_editMartingaleStepCnt;
 	CEdit m_editMartingaleMovePersent;
-	CEdit m_editTradeCharge;
 	CEdit m_editFixedMoneyCnt;
 	CEdit m_editMoveStopProfit;
-	CEdit m_editTotalMoney;
+	CEdit m_editCoin;
+
 	afx_msg void OnBnClickedButtonStopWhenFinish();
 	CEdit m_editProfit;
+	CStatic m_staticCoin;
+	CStatic m_staticMoney;
+	CEdit m_editMoney;
+	CEdit m_editCost;
+	afx_msg void OnBnClickedButtonUpdateCost();
 };
