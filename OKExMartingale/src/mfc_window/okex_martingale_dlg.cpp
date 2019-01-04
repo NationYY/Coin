@@ -1469,7 +1469,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										}
 										else
 										{
-											if(pairsInfo.close.status == "cancelled")
+											if(pairsInfo.close.status == "cancelled" || pairsInfo.close.status == "filled")
 											{
 												m_eTradeState = eTradeState_WaitOpen;
 												CActionLog("finish_trade", "[成功交易] 单批次");
@@ -1777,9 +1777,11 @@ void COKExMartingaleDlg::Test()
 	m_coinAccountInfo.bValid = true;
 	m_coinAccountInfo.balance = 0;
 	m_coinAccountInfo.available = 0;
-	m_nPriceDecimal = 4;
+	m_nPriceDecimal = 2;
 	m_nVolumeDecimal = 3;
 	m_bTest = true;
+	m_bExit = true;
+	m_logicThread.join();
 	std::set<std::string>::iterator itB = m_setAllTestFile.begin();
 	std::set<std::string>::iterator itE = m_setAllTestFile.end();
 	char* szEnd = NULL;
