@@ -1908,10 +1908,14 @@ void COKExMartingaleDlg::_LogicThread()
 			pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 			pExchange->Run();
 		}
-		if(m_bTestCfg || m_bTest)
+		if(m_bTestCfg)
 			TestCfg();
 		else
+		{
 			__CheckTrade();
+			if(m_bTest)
+				_UpdateTradeShow();
+		}
 		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 	}
 
