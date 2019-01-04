@@ -307,6 +307,8 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		MessageBox("未得到交易对详细信息");
 		return;
 	}
+	m_bTest = true;
+	m_bRun = true;
 	m_coinAccountInfo.bValid = false;
 	m_moneyAccountInfo.bValid = false;
 	{
@@ -354,8 +356,6 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		OKEX_WEB_SOCKET->API_SpotTickerData(true, m_strCoinType, m_strMoneyType);
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
 	}
-	m_bTest = true;
-	m_bRun = true;
 }
 
 
