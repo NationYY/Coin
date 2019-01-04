@@ -1073,7 +1073,7 @@ void COKExMartingaleDlg::__CheckTrade()
 					info.open.filledNotional = "0";
 					info.open.status = "open";
 					m_vectorTradePairs.push_back(info);
-					CActionLog("trade", "[开买单][%s] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), info.open.orderID.c_str(), info.open.size.c_str(), info.open.filledSize.c_str(), info.open.price.c_str(), info.open.status.c_str(), info.open.side.c_str());
+					CActionLog("trade", "[新批次 开买单][%s] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), info.open.orderID.c_str(), info.open.size.c_str(), info.open.filledSize.c_str(), info.open.price.c_str(), info.open.status.c_str(), info.open.side.c_str());
 				}
 				else
 				{
@@ -1105,7 +1105,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									info.filledNotional = _retObj["filled_notional"].asString();
 									info.status = _retObj["status"].asString();
 									g_pDlg->UpdateTradeInfo(info);
-									CActionLog("trade", "[开买单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+									CActionLog("trade", "[新批次 开买单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 									API_OK
 								}
 							API_CHECK
@@ -1158,7 +1158,7 @@ void COKExMartingaleDlg::__CheckTrade()
 								if(m_bTest)
 								{
 									m_vectorTradePairs[i].close.status = "cancelled";
-									CActionLog("trade", "[撤销订单成功][%s] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str());
+									CActionLog("trade", "[新批次成交 老订单撤销成功][%s] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str());
 								}
 								else
 								{
@@ -1187,7 +1187,7 @@ void COKExMartingaleDlg::__CheckTrade()
 													g_pDlg->UpdateTradeInfo(info);
 													if(info.status == "cancelled")
 													{
-														CActionLog("trade", "[撤销订单成功] order=%s", m_vectorTradePairs[i].close.orderID.c_str());
+														CActionLog("trade", "[新批次成交 老订单撤销成功] order=%s", m_vectorTradePairs[i].close.orderID.c_str());
 														API_OK
 													}
 												}
@@ -1220,7 +1220,7 @@ void COKExMartingaleDlg::__CheckTrade()
 							m_vectorTradePairs[i].close.filledSize = "0";
 							m_vectorTradePairs[i].close.filledNotional = "0";
 							m_vectorTradePairs[i].close.status = "open";
-							CActionLog("trade", "[开卖单][%s] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str(), m_vectorTradePairs[i].close.size.c_str(), m_vectorTradePairs[i].close.filledSize.c_str(), m_vectorTradePairs[i].close.price.c_str(), m_vectorTradePairs[i].close.status.c_str(), m_vectorTradePairs[i].close.side.c_str());
+							CActionLog("trade", "[新批次成交 开卖单][%s] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str(), m_vectorTradePairs[i].close.size.c_str(), m_vectorTradePairs[i].close.filledSize.c_str(), m_vectorTradePairs[i].close.price.c_str(), m_vectorTradePairs[i].close.status.c_str(), m_vectorTradePairs[i].close.side.c_str());
 						}
 						else
 						{
@@ -1249,7 +1249,7 @@ void COKExMartingaleDlg::__CheckTrade()
 											info.filledNotional = _retObj["filled_notional"].asString();
 											info.status = _retObj["status"].asString();
 											g_pDlg->UpdateTradeInfo(info);
-											CActionLog("trade", "[开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+											CActionLog("trade", "[新批次成交 开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 											API_OK
 										}
 									API_CHECK
@@ -1278,7 +1278,7 @@ void COKExMartingaleDlg::__CheckTrade()
 							{
 								std::string strClientOrderID = "0";
 								if(m_bTest)
-									CActionLog("trade", "[撤销订单成功][%s] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
+									CActionLog("trade", "[超时未成交 撤销订单成功][%s] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
 								else
 								{
 									BEGIN_API_CHECK
@@ -1287,7 +1287,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										Json::Value& retObj = resInfo.retObj;
 										if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 										{
-											CActionLog("trade", "[撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
+											CActionLog("trade", "[超时未成交 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
 											API_OK
 										}
 									API_CHECK
@@ -1359,7 +1359,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									if(m_bTest)
 									{
 										pairsInfo.open.status = "cancelled";
-										CActionLog("trade", "[撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
+										CActionLog("trade", "[最后一单 撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
 									}
 									else
 									{
@@ -1389,7 +1389,7 @@ void COKExMartingaleDlg::__CheckTrade()
 														g_pDlg->UpdateTradeInfo(info);
 														if(info.status == "cancelled")
 														{
-															CActionLog("trade", "[撤销订单成功] order=%s", pairsInfo.open.orderID.c_str());
+															CActionLog("trade", "[最后一单 撤销订单成功] order=%s", pairsInfo.open.orderID.c_str());
 															API_OK
 														}
 													}
@@ -1413,7 +1413,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										pairsInfo.close.filledSize = "0";
 										pairsInfo.close.filledNotional = "0";
 										pairsInfo.close.status = "open";
-										CActionLog("trade", "[开卖单[%s]] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.close.orderID.c_str(), pairsInfo.close.size.c_str(), pairsInfo.close.filledSize.c_str(), pairsInfo.close.price.c_str(), pairsInfo.close.status.c_str(), pairsInfo.close.side.c_str());
+										CActionLog("trade", "[最后一单 开卖单[%s]] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.close.orderID.c_str(), pairsInfo.close.size.c_str(), pairsInfo.close.filledSize.c_str(), pairsInfo.close.price.c_str(), pairsInfo.close.status.c_str(), pairsInfo.close.side.c_str());
 									}
 									else
 									{
@@ -1442,7 +1442,7 @@ void COKExMartingaleDlg::__CheckTrade()
 														info.filledNotional = _retObj["filled_notional"].asString();
 														info.status = _retObj["status"].asString();
 														g_pDlg->UpdateTradeInfo(info);
-														CActionLog("trade", "[开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+														CActionLog("trade", "[最后一单 开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 														API_OK
 													}
 												API_CHECK
@@ -1512,7 +1512,7 @@ void COKExMartingaleDlg::__CheckTrade()
 													m_vectorTradePairs[i].close.filledSize = "0";
 													m_vectorTradePairs[i].close.filledNotional = "0";
 													m_vectorTradePairs[i].close.status = "open";
-													CActionLog("trade", "[开卖单[%s]] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str(), m_vectorTradePairs[i].close.size.c_str(), m_vectorTradePairs[i].close.filledSize.c_str(), m_vectorTradePairs[i].close.price.c_str(), m_vectorTradePairs[i].close.status.c_str(), m_vectorTradePairs[i].close.side.c_str());
+													CActionLog("trade", "[止盈 开卖单[%s]] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str(), m_vectorTradePairs[i].close.size.c_str(), m_vectorTradePairs[i].close.filledSize.c_str(), m_vectorTradePairs[i].close.price.c_str(), m_vectorTradePairs[i].close.status.c_str(), m_vectorTradePairs[i].close.side.c_str());
 												}
 												else
 												{
@@ -1541,7 +1541,7 @@ void COKExMartingaleDlg::__CheckTrade()
 																	info.filledNotional = _retObj["filled_notional"].asString();
 																	info.status = _retObj["status"].asString();
 																	g_pDlg->UpdateTradeInfo(info);
-																	CActionLog("trade", "[开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+																	CActionLog("trade", "[止盈 开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 																	API_OK
 																}
 															API_CHECK
@@ -1582,7 +1582,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										if(m_vectorTradePairs[i].open.status != "filled")
 										{
 											if(m_bTest)
-												CActionLog("trade", "[撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
+												CActionLog("trade", "[止盈 撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
 											else
 											{
 												BEGIN_API_CHECK
@@ -1591,7 +1591,7 @@ void COKExMartingaleDlg::__CheckTrade()
 													Json::Value& retObj = resInfo.retObj;
 													if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 													{
-														CActionLog("trade", "[撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
+														CActionLog("trade", "[止盈 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
 														API_OK
 													}
 												API_CHECK
@@ -1604,7 +1604,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										if(m_vectorTradePairs[i].close.status != "filled")
 										{
 											if(m_bTest)
-												CActionLog("trade", "[撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str());
+												CActionLog("trade", "[止盈 撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].close.orderID.c_str());
 											else
 											{
 												BEGIN_API_CHECK
@@ -1613,7 +1613,7 @@ void COKExMartingaleDlg::__CheckTrade()
 													Json::Value& retObj = resInfo.retObj;
 													if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 													{
-														CActionLog("trade", "[撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
+														CActionLog("trade", "[止盈 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
 														API_OK
 													}
 												API_CHECK
