@@ -1316,6 +1316,8 @@ void COKExMartingaleDlg::__CheckTrade()
 							break;
 						}
 					}
+					if(m_curOpenFinishIndex == -1)
+						bAllFinish = false;
 					if(bAllFinish)
 					{
 						//所有批次的订单都完成了
@@ -1327,148 +1329,152 @@ void COKExMartingaleDlg::__CheckTrade()
 						}
 						else
 						{
-							SSPotTradePairInfo& pairsInfo = m_vectorTradePairs[m_curOpenFinishIndex+1];
-							//下一单未成交
-							if(pairsInfo.open.status == "open")
+							//只有前一单的卖单成交完了才判断下一单的情况
+							if(m_vectorTradePairs[m_curOpenFinishIndex].close.orderID != "" && m_vectorTradePairs[m_curOpenFinishIndex].close.status == "filled")
 							{
-								if(m_bTest)
-									CActionLog("trade", "[撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(),pairsInfo.open.orderID.c_str());
-								else
-								{
-									BEGIN_API_CHECK
-										SHttpResponse resInfo;
-										OKEX_HTTP->API_SpotCancelOrder(false, m_strInstrumentID, pairsInfo.open.orderID, &resInfo);
-										Json::Value& retObj = resInfo.retObj;
-										if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
-										{
-											CActionLog("trade", "[撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
-											API_OK
-										}
-									API_CHECK
-									END_API_CHECK
-								}
-								m_eTradeState = eTradeState_WaitOpen;
-								CActionLog("finish_trade", "[成功交易] 单批次");
-								LOCAL_INFO("成功交易一个批次");
-							}
-							else if(pairsInfo.open.status == "cancelled" || pairsInfo.open.status == "part_filled")
-							{
-								//如果未成交先撤单
-								if(pairsInfo.open.status == "part_filled")
+								SSPotTradePairInfo& pairsInfo = m_vectorTradePairs[m_curOpenFinishIndex + 1];
+								//下一单未成交
+								if(pairsInfo.open.status == "open")
 								{
 									if(m_bTest)
-									{
-										pairsInfo.open.status = "cancelled";
 										CActionLog("trade", "[最后一单 撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
-									}
 									else
 									{
-
 										BEGIN_API_CHECK
 											SHttpResponse resInfo;
 											OKEX_HTTP->API_SpotCancelOrder(false, m_strInstrumentID, pairsInfo.open.orderID, &resInfo);
 											Json::Value& retObj = resInfo.retObj;
 											if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 											{
-												BEGIN_API_CHECK
-													SHttpResponse _resInfo;
-													OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, pairsInfo.open.orderID, &_resInfo);
-													Json::Value& _retObj = _resInfo.retObj;
-													if(_retObj.isObject() && _retObj["order_id"].isString())
-													{
-														SSPotTradeInfo info;
-														info.orderID = _retObj["order_id"].asString();
-														info.price = _retObj["price"].asString();
-														info.size = _retObj["size"].asString();
-														info.side = _retObj["side"].asString();
-														info.strTimeStamp = _retObj["timestamp"].asString();
-														info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-														info.filledSize = _retObj["filled_size"].asString();
-														info.filledNotional = _retObj["filled_notional"].asString();
-														info.status = _retObj["status"].asString();
-														g_pDlg->UpdateTradeInfo(info);
-														if(info.status == "cancelled")
+												CActionLog("trade", "[最后一单 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
+												API_OK
+											}
+										API_CHECK
+										END_API_CHECK
+									}
+									m_eTradeState = eTradeState_WaitOpen;
+									CActionLog("finish_trade", "[成功交易] 单批次");
+									LOCAL_INFO("成功交易一个批次");
+								}
+								else if(pairsInfo.open.status == "cancelled" || pairsInfo.open.status == "part_filled")
+								{
+									//如果未成交先撤单
+									if(pairsInfo.open.status == "part_filled")
+									{
+										if(m_bTest)
+										{
+											pairsInfo.open.status = "cancelled";
+											CActionLog("trade", "[最后一单 撤销订单成功[%s]] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
+										}
+										else
+										{
+
+											BEGIN_API_CHECK
+												SHttpResponse resInfo;
+												OKEX_HTTP->API_SpotCancelOrder(false, m_strInstrumentID, pairsInfo.open.orderID, &resInfo);
+												Json::Value& retObj = resInfo.retObj;
+												if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
+												{
+													BEGIN_API_CHECK
+														SHttpResponse _resInfo;
+														OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, pairsInfo.open.orderID, &_resInfo);
+														Json::Value& _retObj = _resInfo.retObj;
+														if(_retObj.isObject() && _retObj["order_id"].isString())
 														{
-															CActionLog("trade", "[最后一单 撤销订单成功] order=%s", pairsInfo.open.orderID.c_str());
+															SSPotTradeInfo info;
+															info.orderID = _retObj["order_id"].asString();
+															info.price = _retObj["price"].asString();
+															info.size = _retObj["size"].asString();
+															info.side = _retObj["side"].asString();
+															info.strTimeStamp = _retObj["timestamp"].asString();
+															info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+															info.filledSize = _retObj["filled_size"].asString();
+															info.filledNotional = _retObj["filled_notional"].asString();
+															info.status = _retObj["status"].asString();
+															g_pDlg->UpdateTradeInfo(info);
+															if(info.status == "cancelled")
+															{
+																CActionLog("trade", "[最后一单 撤销订单成功] order=%s", pairsInfo.open.orderID.c_str());
+																API_OK
+															}
+														}
+													API_CHECK
+													END_API_CHECK
+													API_OK
+												}
+											API_CHECK
+											END_API_CHECK
+										}
+										//直接用卖一价挂卖单
+										std::string strPrice = CFuncCommon::Double2String(m_curTickData.sell + DOUBLE_PRECISION, m_nPriceDecimal);
+										if(m_bTest)
+										{
+											pairsInfo.close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+											pairsInfo.close.price = strPrice;
+											pairsInfo.close.size = pairsInfo.open.filledSize;
+											pairsInfo.close.side = "sell";
+											pairsInfo.close.timeStamp = time(NULL);
+											pairsInfo.close.strTimeStamp = CFuncCommon::FormatTimeStr(m_curTickData.time);
+											pairsInfo.close.filledSize = "0";
+											pairsInfo.close.filledNotional = "0";
+											pairsInfo.close.status = "open";
+											CActionLog("trade", "[最后一单 开卖单[%s]] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.close.orderID.c_str(), pairsInfo.close.size.c_str(), pairsInfo.close.filledSize.c_str(), pairsInfo.close.price.c_str(), pairsInfo.close.status.c_str(), pairsInfo.close.side.c_str());
+										}
+										else
+										{
+											BEGIN_API_CHECK
+												SHttpResponse resInfo;
+												OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, pairsInfo.open.filledSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+												Json::Value& retObj = resInfo.retObj;
+												if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
+												{
+													std::string strOrderID = retObj["order_id"].asString();
+													BEGIN_API_CHECK
+														SHttpResponse _resInfo;
+														OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, strOrderID, &_resInfo);
+														Json::Value& _retObj = _resInfo.retObj;
+														if(_retObj.isObject() && _retObj["order_id"].isString())
+														{
+															pairsInfo.close.orderID = strOrderID;
+															SSPotTradeInfo info;
+															info.orderID = _retObj["order_id"].asString();
+															info.price = _retObj["price"].asString();
+															info.size = _retObj["size"].asString();
+															info.side = _retObj["side"].asString();
+															info.strTimeStamp = _retObj["timestamp"].asString();
+															info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+															info.filledSize = _retObj["filled_size"].asString();
+															info.filledNotional = _retObj["filled_notional"].asString();
+															info.status = _retObj["status"].asString();
+															g_pDlg->UpdateTradeInfo(info);
+															CActionLog("trade", "[最后一单 开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
 															API_OK
 														}
-													}
-												API_CHECK
-												END_API_CHECK
-												API_OK
-											}
-										API_CHECK
-										END_API_CHECK
-									}
-									//直接用卖一价挂卖单
-									std::string strPrice = CFuncCommon::Double2String(m_curTickData.sell + DOUBLE_PRECISION, m_nPriceDecimal);
-									if(m_bTest)
-									{
-										pairsInfo.close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
-										pairsInfo.close.price = strPrice;
-										pairsInfo.close.size = pairsInfo.open.filledSize;
-										pairsInfo.close.side = "sell";
-										pairsInfo.close.timeStamp = time(NULL);
-										pairsInfo.close.strTimeStamp = CFuncCommon::FormatTimeStr(m_curTickData.time);
-										pairsInfo.close.filledSize = "0";
-										pairsInfo.close.filledNotional = "0";
-										pairsInfo.close.status = "open";
-										CActionLog("trade", "[最后一单 开卖单[%s]] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.close.orderID.c_str(), pairsInfo.close.size.c_str(), pairsInfo.close.filledSize.c_str(), pairsInfo.close.price.c_str(), pairsInfo.close.status.c_str(), pairsInfo.close.side.c_str());
-									}
-									else
-									{
-										BEGIN_API_CHECK
-											SHttpResponse resInfo;
-											OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, pairsInfo.open.filledSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
-											Json::Value& retObj = resInfo.retObj;
-											if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
-											{
-												std::string strOrderID = retObj["order_id"].asString();
-												BEGIN_API_CHECK
-													SHttpResponse _resInfo;
-													OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, strOrderID, &_resInfo);
-													Json::Value& _retObj = _resInfo.retObj;
-													if(_retObj.isObject() && _retObj["order_id"].isString())
-													{
-														pairsInfo.close.orderID = strOrderID;
-														SSPotTradeInfo info;
-														info.orderID = _retObj["order_id"].asString();
-														info.price = _retObj["price"].asString();
-														info.size = _retObj["size"].asString();
-														info.side = _retObj["side"].asString();
-														info.strTimeStamp = _retObj["timestamp"].asString();
-														info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-														info.filledSize = _retObj["filled_size"].asString();
-														info.filledNotional = _retObj["filled_notional"].asString();
-														info.status = _retObj["status"].asString();
-														g_pDlg->UpdateTradeInfo(info);
-														CActionLog("trade", "[最后一单 开卖单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
-														API_OK
-													}
-												API_CHECK
-												END_API_CHECK
+													API_CHECK
+													END_API_CHECK
 
-												API_OK
-											}
-										API_CHECK
-										END_API_CHECK
-									}
-								}
-								else
-								{
-									if(pairsInfo.close.orderID == "")
-									{
-										m_eTradeState = eTradeState_WaitOpen;
-										CActionLog("finish_trade", "[成功交易] 单批次");
-										LOCAL_INFO("成功交易一个批次");
+													API_OK
+												}
+											API_CHECK
+											END_API_CHECK
+										}
 									}
 									else
 									{
-										if(pairsInfo.close.status == "cancelled")
+										if(pairsInfo.close.orderID == "")
 										{
 											m_eTradeState = eTradeState_WaitOpen;
 											CActionLog("finish_trade", "[成功交易] 单批次");
 											LOCAL_INFO("成功交易一个批次");
+										}
+										else
+										{
+											if(pairsInfo.close.status == "cancelled")
+											{
+												m_eTradeState = eTradeState_WaitOpen;
+												CActionLog("finish_trade", "[成功交易] 单批次");
+												LOCAL_INFO("成功交易一个批次");
+											}
 										}
 									}
 								}
@@ -1884,6 +1890,7 @@ void COKExMartingaleDlg::_LogicThread()
 			pExchange->Run();
 		}
 		__CheckTrade();
+		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 	}
 
 }
