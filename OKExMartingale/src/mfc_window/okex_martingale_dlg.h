@@ -207,6 +207,8 @@ private:
 	boost::thread m_logicThread;
 	bool m_bExit;
 	time_t m_tLastUpdate30Sec;
+	int m_nStopProfitTimes;
+	int m_nFinishTimes;
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -248,4 +250,6 @@ public:
 	afx_msg void OnDestroy();
 	CStatic m_staticPrice;
 	CStatic m_staticLimitPrice;
+	CStatic m_staticStopProfitTimes;
+	CStatic m_staticFinishTimes;
 };
