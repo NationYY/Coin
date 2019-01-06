@@ -545,7 +545,7 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 	{
 		if(data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time != m_nKlineCycle)
 		{
-			LOCAL_ERROR("差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time);
+			CActionLog("boll", "差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time);
 			KLINE_DATA.clear();
 			BOLL_DATA.clear();
 		}
@@ -813,7 +813,7 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 		{
 			if(BOLL_DATA[BOLL_DATA_SIZE-1].up < BOLL_DATA[BOLL_DATA_SIZE-2].up)
 			{
-				LOCAL_INFO("张口不成立");
+				CActionLog("boll", "张口不成立");
 				__SetBollState(m_eLastBollState);
 			}
 
@@ -822,7 +822,7 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 		{
 			if(BOLL_DATA[BOLL_DATA_SIZE-1].dn > BOLL_DATA[BOLL_DATA_SIZE-2].dn)
 			{
-				LOCAL_INFO("张口不成立");
+				CActionLog("boll", "张口不成立");
 				__SetBollState(m_eLastBollState);
 			}
 		}
@@ -1085,20 +1085,20 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam
 				}
 				szInfo.Append(_szInfo);
 			}
-			LOCAL_INFO(szInfo.GetBuffer());
+			CActionLog("boll", szInfo.GetBuffer());
 		}
 		break;
 	case eBollTrend_ShouKou:
 		{
 			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time);
-			LOCAL_INFO("收口产生>>>> 确认时间[%s]", strConfirmTime.c_str());
+			CActionLog("boll", "收口产生>>>> 确认时间[%s]", strConfirmTime.c_str());
 			m_nShouKouConfirmBar = KLINE_DATA_SIZE-1;
 		}
 		break;
 	case eBollTrend_ShouKouChannel:
 		{
 			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time);
-			LOCAL_INFO("收口通道===== 确认时间[%s] %s", strConfirmTime.c_str(), (nParam==0 ? "趋势判断" : "超时判断"));
+			CActionLog("boll", "收口通道===== 确认时间[%s] %s", strConfirmTime.c_str(), (nParam==0 ? "趋势判断" : "超时判断"));
 			m_nShouKouChannelConfirmBar = KLINE_DATA_SIZE-1;
 		}
 		break;
@@ -1548,11 +1548,11 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 					bullCount++;
 				else if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
 					bearCount++;
-				if(bullCount + bearCount >= 2)
+				if(bullCount + bearCount >= 3)
 					break;
 				itBegin++;
 			}
-			if(bullCount >= 2)
+			if(bullCount >= 3)
 				return false;
 		}
 		break;
@@ -1570,11 +1570,11 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 					bullCount++;
 				else if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
 					bearCount++;
-				if(bullCount + bearCount >= 2)
+				if(bullCount + bearCount >= 3)
 					break;
 				itBegin++;
 			}
-			if(bearCount >= 2)
+			if(bearCount >= 3)
 				return false;
 		}
 		break;

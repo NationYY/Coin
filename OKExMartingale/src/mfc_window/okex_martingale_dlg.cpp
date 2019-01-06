@@ -907,19 +907,19 @@ void COKExMartingaleDlg::__CheckTrend_ShouKouChannel()
 				{
 					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
 						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
 						up++;
 					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
 						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
 						down++;
 				}
-				if(up == check && KLINE_DATA[KLINE_DATA_SIZE - 1].closePrice > BOLL_DATA[BOLL_DATA_SIZE - 1].up)
+				if(up == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
 				{
 					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
 					return;
 				}
-				else if(down == check && KLINE_DATA[KLINE_DATA_SIZE - 1].closePrice < BOLL_DATA[BOLL_DATA_SIZE - 1].dn)
+				else if(down == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
 				{
 					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
 					return;
@@ -1249,6 +1249,8 @@ void COKExMartingaleDlg::__CheckTrade()
 														CActionLog("trade", "[新批次成交 老订单撤销成功] order=%s", m_vectorTradePairs[i].close.orderID.c_str());
 														API_OK
 													}
+													else
+														boost::this_thread::sleep(boost::posix_time::seconds(1));
 												}
 												else
 													boost::this_thread::sleep(boost::posix_time::seconds(1));
@@ -1371,6 +1373,8 @@ void COKExMartingaleDlg::__CheckTrade()
 														CActionLog("trade", "[超时未成交 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_vectorTradePairs[i].open.orderID.c_str());
 														API_OK
 													}
+													else
+														boost::this_thread::sleep(boost::posix_time::seconds(1));
 												}
 												else
 													boost::this_thread::sleep(boost::posix_time::seconds(1));
@@ -1497,6 +1501,8 @@ void COKExMartingaleDlg::__CheckTrade()
 																CActionLog("trade", "[最后一单 撤销订单成功] order=%s", pairsInfo.open.orderID.c_str());
 																API_OK
 															}
+															else
+																boost::this_thread::sleep(boost::posix_time::seconds(1));
 														}
 														else
 															boost::this_thread::sleep(boost::posix_time::seconds(1));
