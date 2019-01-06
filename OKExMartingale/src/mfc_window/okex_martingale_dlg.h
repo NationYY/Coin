@@ -93,7 +93,7 @@ struct SSPotTradeInfo
 	std::string filledNotional;//已成交金额
 	std::string status;	//订单状态(open:未成交 part_filled:部分成交 filled:已成交 cancelled:已撤销 failure:订单失败）
 	std::string closeSize;//已卖出数量
-	bool bBeginMoveStopProfit;
+	bool bBeginStopProfit;
 	int stopProfit;
 	SSPotTradeInfo()
 	{
@@ -112,7 +112,7 @@ struct SSPotTradeInfo
 		closeSize = "0";
 		status = "";
 		strTimeStamp = "";
-		bBeginMoveStopProfit = false;
+		bBeginStopProfit = false;
 		stopProfit = 0;
 	}
 };
@@ -229,12 +229,13 @@ public:
 	double m_martingaleMovePersent;		//马丁格尔交易跌幅
 	double m_fixedMoneyCnt;	//参与交易的对手币数量
 	std::string m_strInstrumentID;		//币对名称
-	double m_moveStopProfit;			//头单移动止盈比例
+	double m_stopProfitFactor;			//头单止盈系数
+	bool m_bStopProfitMove;
 	CComboBox m_combInstrumentID;
 	CEdit m_editMartingaleStepCnt;
 	CEdit m_editMartingaleMovePersent;
 	CEdit m_editFixedMoneyCnt;
-	CEdit m_editMoveStopProfit;
+	CEdit m_editStopProfitFactor;
 	CEdit m_editCoin;
 	double m_maxPrice;
 	double m_minPrice;
@@ -252,4 +253,8 @@ public:
 	CStatic m_staticLimitPrice;
 	CStatic m_staticStopProfitTimes;
 	CStatic m_staticFinishTimes;
+	CButton m_btnStopProfitMove;
+	CButton m_btnStopProfitFix;
+	afx_msg void OnBnClickedStopProfitMove();
+	afx_msg void OnBnClickedRadioStopProfitFix();
 };

@@ -569,7 +569,7 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 			totalDifClosePriceSQ += ((KLINE_DATA[i].closePrice - ma)*(KLINE_DATA[i].closePrice - ma));
 		}
 		double md = sqrt(totalDifClosePriceSQ/m_nBollCycle);
-		double addValue = 0.0;
+		/*double addValue = 0.0;
 		double scaleValue = 10;
 		if(m_nPriceDecimal == 1)
 		{
@@ -590,15 +590,15 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 		{
 			addValue = 0.00005;
 			scaleValue = 10000;
-		}
+		}*/
 			
 		SBollInfo info;
 		info.mb = ma;
 		info.up = info.mb + 2*md;
 		info.dn = info.mb - 2*md;
-		info.mb = CFuncCommon::Round(int((info.mb+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
-		info.up = CFuncCommon::Round(int((info.up+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
-		info.dn = CFuncCommon::Round(int((info.dn+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
+		info.mb = CFuncCommon::Round(info.mb+DOUBLE_PRECISION, m_nPriceDecimal);
+		info.up = CFuncCommon::Round(info.up+DOUBLE_PRECISION, m_nPriceDecimal);
+		info.dn = CFuncCommon::Round(info.dn+DOUBLE_PRECISION, m_nPriceDecimal);
 		info.time = data.time;
 		tm* pTM = localtime(&info.time);
 		_snprintf(info.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", pTM->tm_year+1900, pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
@@ -987,52 +987,70 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 {
 	//寻找张口,从确定收口通道的柱子开始
-	if(BOLL_DATA_SIZE-1 > m_nShouKouChannelConfirmBar)
+	if(m_eLastBollState == eBollTrend_ShouKou || m_eLastBollState == eBollTrend_ZhangKou)
 	{
-		int minBar = 0;
-		double minValue = 100000.0;
-		for(int i = BOLL_DATA_SIZE-1; i>=m_nShouKouChannelConfirmBar; --i)
+		int checkBarNum = 0;
+		if(m_eLastBollState == eBollTrend_ShouKou)
 		{
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset < minValue)
+			checkBarNum = m_nShouKouConfirmBar;
+			if(BOLL_DATA_SIZE-1-m_nShouKouConfirmBar > m_nBollCycle)
+				checkBarNum = m_nBollCycle;
+			else
+				checkBarNum = BOLL_DATA_SIZE-1-m_nShouKouConfirmBar;
+		}
+		else
+			checkBarNum = m_nBollCycle;
+		if(checkBarNum > 0)
+		{
+			int minBar = 0;
+			double minValue = 100000.0;
+			int cnt = 0;
+			for(int i = BOLL_DATA_SIZE-1; i>=0; --i)
 			{
-				minValue = offset;
-				minBar = i;
+				double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+				if(offset < minValue)
+				{
+					minValue = offset;
+					minBar = i;
+				}
+				cnt++;
+				if(cnt == checkBarNum)
+					break;
 			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if(offset / minValue > 2.5)
-		{
-			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-			return;
-		}
-		else if(offset / minValue > 1.5)
-		{
-			int check = m_nZhangKouTrendCheckCycle/2 + 1;
-			if(KLINE_DATA_SIZE >= check)
+			double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
+			if(offset / minValue > 2.5)
 			{
-				int up = 0;
-				int down = 0;
-				for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
+				__SetBollState(eBollTrend_ZhangKou, 0, minValue);
+				return;
+			}
+			else if(offset / minValue > 1.5)
+			{
+				int check = m_nZhangKouTrendCheckCycle/2 + 1;
+				if(KLINE_DATA_SIZE >= check)
 				{
-					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
-						down++;
-				}
-				if(up == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
-				{
-					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-					return;
-				}
-				else if(down == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
-				{
-					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-					return;
+					int up = 0;
+					int down = 0;
+					for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
+					{
+						if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
+							up++;
+						else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+							up++;
+						else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
+							down++;
+						else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+							down++;
+					}
+					if(up == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
+					{
+						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+						return;
+					}
+					else if(down == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
+					{
+						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+						return;
+					}
 				}
 			}
 		}
