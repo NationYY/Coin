@@ -381,7 +381,6 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 			return;
 		}
 	}
-	
 	if(OKEX_WEB_SOCKET)
 	{
 		OKEX_WEB_SOCKET->API_SpotKlineData(true, m_strKlineCycle, m_strCoinType, m_strMoneyType);
@@ -447,29 +446,6 @@ void COKExMartingaleDlg::AddKlineData(SKlineData& data)
 			totalDifClosePriceSQ += ((KLINE_DATA[i].closePrice - ma)*(KLINE_DATA[i].closePrice - ma));
 		}
 		double md = sqrt(totalDifClosePriceSQ / m_nBollCycle);
-		/*double addValue = 0.0;
-		double scaleValue = 10;
-		if(m_nPriceDecimal == 1)
-		{
-			addValue = 0.05;
-			scaleValue = 10;
-		}
-		else if(m_nPriceDecimal == 2)
-		{
-			addValue = 0.005;
-			scaleValue = 100;
-		}
-		else if(m_nPriceDecimal == 3)
-		{
-			addValue = 0.0005;
-			scaleValue = 1000;
-		}
-		else if(m_nPriceDecimal == 4)
-		{
-			addValue = 0.00005;
-			scaleValue = 10000;
-		}*/
-
 		SBollInfo info;
 		info.mb = ma;
 		info.up = info.mb + 2 * md;
@@ -1373,7 +1349,10 @@ void COKExMartingaleDlg::__CheckTrade()
 						}
 					}
 					//ÖØÐÂ¹ÒÂôµ¥
-					finishPrice *= (1+m_martingaleMovePersent+(m_martingaleMovePersent/double(m_martingaleStepCnt-1))*m_curOpenFinishIndex);
+					double scale = m_curOpenFinishIndex/double(m_martingaleStepCnt-1);
+					if(scale > 0.5)
+						scale = 0.5;
+					finishPrice *= (1+m_martingaleMovePersent+(m_martingaleMovePersent*scale));
 					std::string strPrice = CFuncCommon::Double2String(finishPrice+DOUBLE_PRECISION, m_nPriceDecimal);
 					for(int i = 0; i <= m_curOpenFinishIndex; ++i)
 					{
@@ -2359,10 +2338,10 @@ void COKExMartingaleDlg::TestCfg()
 				{
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
-					data.openPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.highPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.lowPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.closePrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.openPrice = stod(retObj["data"][0]["candle"][1].asString());
+					data.highPrice = stod(retObj["data"][0]["candle"][2].asString());
+					data.lowPrice = stod(retObj["data"][0]["candle"][3].asString());
+					data.closePrice = stod(retObj["data"][0]["candle"][4].asString());
 					data.volume = stoi(retObj["data"][0]["candle"][5].asString());
 					g_pDlg->AddKlineData(data);
 				}
@@ -2371,11 +2350,11 @@ void COKExMartingaleDlg::TestCfg()
 					STickerData data;
 					data.baseVolume24h = retObj["data"][0]["base_volume_24h"].asString();
 					data.quoteVolume24h = retObj["data"][0]["quote_volume_24h"].asString();
-					data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.sell = stod(retObj["data"][0]["best_ask"].asString());
+					data.buy = stod(retObj["data"][0]["best_bid"].asString());
+					data.high = stod(retObj["data"][0]["high_24h"].asString());
+					data.low = stod(retObj["data"][0]["low_24h"].asString());
+					data.last = stod(retObj["data"][0]["last"].asString());
 					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
 					g_pDlg->OnRevTickerInfo(data);
 				}

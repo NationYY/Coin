@@ -184,6 +184,11 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 		{
 			char* szEnd = NULL;
 			time_t curTime = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
+			if(g_pDlg->m_bFirstKLine)
+			{
+				g_pDlg->m_bFirstKLine = false;
+				g_pDlg->ComplementedKLine(curTime, g_pDlg->m_nBollCycle);
+			}
 			CActionLog("all_kline", "%s", strRet.c_str());
 			if(curTime >= lastKlineTime)
 			{
@@ -192,12 +197,12 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					CActionLog("market", "%s", lastKlineRetStr.c_str());
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(lastKlineJson["data"][0]["candle"][0].asString());
-					data.openPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.highPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.lowPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.closePrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.openPrice = stod(lastKlineJson["data"][0]["candle"][1].asString());
+					data.highPrice = stod(lastKlineJson["data"][0]["candle"][2].asString());
+					data.lowPrice =stod(lastKlineJson["data"][0]["candle"][3].asString());
+					data.closePrice = stod(lastKlineJson["data"][0]["candle"][4].asString());
 					data.volume = stoi(lastKlineJson["data"][0]["candle"][5].asString());
-					data.volumeByCurrency = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][6].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.volumeByCurrency =stod(lastKlineJson["data"][0]["candle"][6].asString());
 					g_pDlg->AddKlineData(data);
 				}
 				lastKlineTime = curTime;
@@ -212,11 +217,11 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			CActionLog("market", "%s", strRet.c_str());
 			STickerData data;
 			data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
-			data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+			data.sell = stod(retObj["data"][0]["best_ask"].asString());
+			data.buy = stod(retObj["data"][0]["best_bid"].asString());
+			data.high = stod(retObj["data"][0]["high_24h"].asString());
+			data.low = stod(retObj["data"][0]["low_24h"].asString());
+			data.last = stod(retObj["data"][0]["last"].asString());
 			data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
 			g_pDlg->OnRevTickerInfo(data);
 		}
@@ -298,6 +303,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_stopLoss = 0.04;
 	m_moveStopProfit = 0.005;
 	m_bStopWhenFinish = false;
+	m_bFirstKLine = true;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -559,8 +565,9 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 		if(data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time != m_nKlineCycle)
 		{
 			CActionLog("boll", "差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time);
-			KLINE_DATA.clear();
-			BOLL_DATA.clear();
+			ComplementedKLine(data.time, (data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time - m_nKlineCycle)/m_nKlineCycle);
+			//KLINE_DATA.clear();
+			//BOLL_DATA.clear();
 		}
 	}
 	tm* pTM = localtime(&data.time);
@@ -665,23 +672,23 @@ void COKExFuturesDlg::Test()
 				{
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
-					data.openPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][1].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.highPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][2].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.lowPrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][3].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.closePrice = CFuncCommon::Round(stod(retObj["data"][0]["candle"][4].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.openPrice = stod(retObj["data"][0]["candle"][1].asString());
+					data.highPrice = stod(retObj["data"][0]["candle"][2].asString());
+					data.lowPrice = stod(retObj["data"][0]["candle"][3].asString());
+					data.closePrice = stod(retObj["data"][0]["candle"][4].asString());
 					data.volume = stoi(retObj["data"][0]["candle"][5].asString());
-					data.volumeByCurrency = CFuncCommon::Round(stod(retObj["data"][0]["candle"][6].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.volumeByCurrency = stod(retObj["data"][0]["candle"][6].asString());
 					g_pDlg->AddKlineData(data);
 				}
 				else if(strChannel == strTickChannel)
 				{
 					STickerData data;
 					data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
-					data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString())+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+					data.sell = stod(retObj["data"][0]["best_ask"].asString());
+					data.buy = stod(retObj["data"][0]["best_bid"].asString());
+					data.high = stod(retObj["data"][0]["high_24h"].asString());
+					data.low = stod(retObj["data"][0]["low_24h"].asString());
+					data.last = stod(retObj["data"][0]["last"].asString());
 					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
 					g_pDlg->OnRevTickerInfo(data);
 				}
@@ -1191,7 +1198,7 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		totalDifClosePriceSQ += (data.last - ma)*(data.last - ma);
 
 		double md = sqrt(totalDifClosePriceSQ/m_nBollCycle);
-		double addValue = 0.0;
+		/*double addValue = 0.0;
 		double scaleValue = 10;
 		if(m_nPriceDecimal == 1)
 		{
@@ -1212,15 +1219,15 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		{
 			addValue = 0.00005;
 			scaleValue = 10000;
-		}
+		}*/
 
 		m_curTickBoll.Reset();
 		m_curTickBoll.mb = ma;
 		m_curTickBoll.up = m_curTickBoll.mb + 2*md;
 		m_curTickBoll.dn = m_curTickBoll.mb - 2*md;
-		m_curTickBoll.mb = CFuncCommon::Round(int((m_curTickBoll.mb+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
-		m_curTickBoll.up = CFuncCommon::Round(int((m_curTickBoll.up+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
-		m_curTickBoll.dn = CFuncCommon::Round(int((m_curTickBoll.dn+addValue)*scaleValue)/scaleValue+DOUBLE_PRECISION, m_nPriceDecimal);
+		m_curTickBoll.mb = CFuncCommon::Round(m_curTickBoll.mb+DOUBLE_PRECISION, m_nPriceDecimal);
+		m_curTickBoll.up = CFuncCommon::Round(m_curTickBoll.up+DOUBLE_PRECISION, m_nPriceDecimal);
+		m_curTickBoll.dn = CFuncCommon::Round(m_curTickBoll.dn+DOUBLE_PRECISION, m_nPriceDecimal);
 		switch(m_eBollState)
 		{
 		case eBollTrend_ShouKou:
@@ -1244,7 +1251,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 	if(m_bStopWhenFinish)
 		return;
 	//确认张口后第一根柱子
-	if(m_nZhangKouTradeCheckBar == KLINE_DATA_SIZE-1)
+	if(KLINE_DATA_SIZE-1-m_nZhangKouTradeCheckBar <= 1)
 	{
 		if(m_bZhangKouUp)
 		{
@@ -1892,4 +1899,43 @@ void COKExFuturesDlg::SetHScroll()
 void COKExFuturesDlg::OnBnClickedButtonStopWhenFinish()
 {
 	m_bStopWhenFinish = true;
+}
+
+void COKExFuturesDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
+{
+	time_t endTick = tNowKlineTick - m_nKlineCycle;
+	time_t beginTick = endTick - (kLineCnt-1)*m_nKlineCycle;
+	std::string strFrom = CFuncCommon::LocaltimeToISO8601(beginTick);
+	std::string strTo = CFuncCommon::LocaltimeToISO8601(endTick);
+	std::string strKlineCycle = CFuncCommon::ToString(m_nKlineCycle);
+	SHttpResponse resInfo;
+	OKEX_HTTP->API_GetFuturesSomeKline(false, m_strCoinType, m_strFuturesCycle, strKlineCycle, strFrom, strTo, &resInfo);
+	Json::Value& retObj = resInfo.retObj;
+	if(retObj.isArray())
+	{
+		for(int i = retObj.size()-1; i>=0; --i)
+		{
+			SKlineData data;
+			data.time = retObj[i][0].asInt64()/1000;
+			data.lowPrice = retObj[i][1].asDouble();
+			data.highPrice = retObj[i][2].asDouble();
+			data.openPrice = retObj[i][3].asDouble();
+			data.closePrice = retObj[i][4].asDouble();
+			data.volume = retObj[i][5].asInt();
+			data.volumeByCurrency = retObj[i][6].asDouble();
+			CString strlocalLog;
+			strlocalLog.Format("{\"table\":\"futures/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-USD-%s\"}]}", 
+			m_strKlineCycle.c_str(), CFuncCommon::LocaltimeToISO8601(data.time).c_str(),
+			CFuncCommon::Double2String(data.openPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+			CFuncCommon::Double2String(data.highPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+			CFuncCommon::Double2String(data.lowPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+			CFuncCommon::Double2String(data.closePrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+			data.volume,
+			CFuncCommon::Double2String(data.volumeByCurrency+DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+			m_strCoinType.c_str(),
+			m_strFuturesCycle.c_str());
+			CActionLog("market", "%s", strlocalLog.GetBuffer());
+			g_pDlg->AddKlineData(data);
+		}
+	}
 }

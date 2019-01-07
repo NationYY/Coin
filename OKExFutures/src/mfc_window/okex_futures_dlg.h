@@ -156,6 +156,7 @@ public:
 	void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 	void UpdateTradeInfo(SFuturesTradeInfo& info);
 	void SetHScroll();
+	void ComplementedKLine(time_t tNowKlineTick, int kLineCnt);
 private:
 	void Test();
 	void OnBollUpdate();
@@ -177,6 +178,7 @@ private:
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
+	bool m_bFirstKLine;
 private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;

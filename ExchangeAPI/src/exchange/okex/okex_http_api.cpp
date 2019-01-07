@@ -179,6 +179,24 @@ void COkexHttpAPI::API_FuturesInstruments(bool bSync, SHttpResponse* pResInfo)
 		Request(info, pResInfo);
 }
 
+void COkexHttpAPI::API_GetFuturesSomeKline(bool bSync, std::string& strCoinType, std::string& strFuturesCycle, std::string& strKlineCycle, std::string& strFrom, std::string& strTo, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_GetFuturesSomeKline;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/futures/v3/instruments/" + strCoinType + "-USD-" + strFuturesCycle + "/candles";
+	info.mapParams["start"] = SHttpParam(eHttpParamType_String, strFrom);
+	info.mapParams["end"] = SHttpParam(eHttpParamType_String, strTo);
+	info.mapParams["granularity"] = SHttpParam(eHttpParamType_String, strKlineCycle);
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+	
+}
+
 void COkexHttpAPI::API_SpotInstruments(bool bSync, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
