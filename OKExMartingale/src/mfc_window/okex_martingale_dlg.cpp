@@ -569,6 +569,74 @@ void COKExMartingaleDlg::Pong()
 
 void COKExMartingaleDlg::OnLoginSuccess()
 {
+	if(m_vectorTradePairs.size() && !m_bTest)
+	{
+		for(int i=0; i<(int)m_vectorTradePairs.size(); ++i)
+		{
+			if(m_vectorTradePairs[i].open.orderID != "" && m_vectorTradePairs[i].open.status != "filled" && m_vectorTradePairs[i].open.status != "cancelled")
+			{
+				BEGIN_API_CHECK
+					SHttpResponse _resInfo;
+					OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, m_vectorTradePairs[i].open.orderID, &_resInfo);
+					Json::Value& _retObj = _resInfo.retObj;
+					if(_retObj.isObject() && _retObj["order_id"].isString())
+					{
+						SSPotTradeInfo info;
+						info.orderID = _retObj["order_id"].asString();
+						info.price = _retObj["price"].asString();
+						info.size = _retObj["size"].asString();
+						info.side = _retObj["side"].asString();
+						info.strTimeStamp = _retObj["timestamp"].asString();
+						info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+						info.filledSize = _retObj["filled_size"].asString();
+						info.filledNotional = _retObj["filled_notional"].asString();
+						info.status = _retObj["status"].asString();
+						g_pDlg->UpdateTradeInfo(info);
+						CActionLog("trade", "[断线 订单更新] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+						API_OK
+					}
+					else
+					{
+						_checkStr = _resInfo.strRet;
+						boost::this_thread::sleep(boost::posix_time::seconds(1));
+					}
+				API_CHECK
+				END_API_CHECK
+			
+			}
+			if(m_vectorTradePairs[i].close.orderID != "" && m_vectorTradePairs[i].close.status != "filled" && m_vectorTradePairs[i].close.status != "cancelled")
+			{
+				BEGIN_API_CHECK
+					SHttpResponse _resInfo;
+					OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, m_vectorTradePairs[i].close.orderID, &_resInfo);
+					Json::Value& _retObj = _resInfo.retObj;
+					if(_retObj.isObject() && _retObj["order_id"].isString())
+					{
+						SSPotTradeInfo info;
+						info.orderID = _retObj["order_id"].asString();
+						info.price = _retObj["price"].asString();
+						info.size = _retObj["size"].asString();
+						info.side = _retObj["side"].asString();
+						info.strTimeStamp = _retObj["timestamp"].asString();
+						info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+						info.filledSize = _retObj["filled_size"].asString();
+						info.filledNotional = _retObj["filled_notional"].asString();
+						info.status = _retObj["status"].asString();
+						g_pDlg->UpdateTradeInfo(info);
+						CActionLog("trade", "[断线 订单更新] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+						API_OK
+					}
+					else
+					{
+						_checkStr = _resInfo.strRet;
+						boost::this_thread::sleep(boost::posix_time::seconds(1));
+					}
+				API_CHECK
+				END_API_CHECK
+			}
+		}
+		
+	}
 	OKEX_WEB_SOCKET->API_SpotOrderInfo(true, m_strCoinType, m_strMoneyType);
 	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strCoinType);
 	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strMoneyType);
