@@ -310,6 +310,8 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_editStopLoss);
 	DDX_Control(pDX, IDC_EDIT4, m_editMoveStopProfit);
 	DDX_Control(pDX, IDC_LIST2, m_ctrlListLog);
+	DDX_Control(pDX, IDC_LIST1, m_listCtrlOrderOpen);
+	DDX_Control(pDX, IDC_LIST3, m_listCtrlOrderClose);
 }
 
 BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
@@ -363,6 +365,17 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_combCoinType.InsertString(7, "BCH");
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
+
+	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
+	m_listCtrlOrderOpen.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
+	m_listCtrlOrderOpen.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
+	m_listCtrlOrderOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
+
+	m_listCtrlOrderClose.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
+	m_listCtrlOrderClose.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
+	m_listCtrlOrderClose.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
+	m_listCtrlOrderClose.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
+
 	if(!m_config.open("./config.ini"))
 		return FALSE;
 	m_apiKey = m_config.get("futures", "apiKey", "");
@@ -1674,7 +1687,90 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 		}
 		++itB;
 	}
+	_UpdateTradeShow();
 }
+
+void COKExFuturesDlg::_UpdateTradeShow()
+{
+	m_listCtrlOrderOpen.DeleteAllItems();
+	m_listCtrlOrderClose.DeleteAllItems();
+	CString szFormat;
+	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
+	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
+	int i=0;
+	while(itB != itE)
+	{
+		if(itB->open.orderID != "")
+		{
+			m_listCtrlOrderOpen.InsertItem(i, "");
+			szFormat.Format("%s", CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
+			switch(itB->open.tradeType)
+			{
+			case eFuturesTradeType_OpenBull:
+				m_listCtrlOrderOpen.SetItemText(i, 1, "开多");
+				break;
+			case eFuturesTradeType_OpenBear:
+				m_listCtrlOrderOpen.SetItemText(i, 1, "开空");
+				break;
+			case eFuturesTradeType_CloseBull:
+				m_listCtrlOrderOpen.SetItemText(i, 1, "平多");
+				break;
+			case eFuturesTradeType_CloseBear:
+				m_listCtrlOrderOpen.SetItemText(i, 1, "平空");
+				break;
+			default:
+				break;
+			}
+			szFormat.Format("%s/%s", itB->open.filledQTY.c_str(), itB->open.size.c_str());
+			m_listCtrlOrderOpen.SetItemText(i, 2, szFormat);
+			if(itB->open.status == "-1")
+				m_listCtrlOrderOpen.SetItemText(i, 3, "cancelled");
+			else if(itB->open.status == "0")
+				m_listCtrlOrderOpen.SetItemText(i, 3, "open");
+			else if(itB->open.status == "1")
+				m_listCtrlOrderOpen.SetItemText(i, 3, "part_filled");
+			else if(itB->open.status == "2")
+				m_listCtrlOrderOpen.SetItemText(i, 3, "filled");
+		}
+		if(itB->close.orderID != "")
+		{
+			m_listCtrlOrderClose.InsertItem(i, "");
+			szFormat.Format("%s", CFuncCommon::Double2String(itB->close.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
+			switch(itB->close.tradeType)
+			{
+			case eFuturesTradeType_OpenBull:
+				m_listCtrlOrderClose.SetItemText(i, 1, "开多");
+				break;
+			case eFuturesTradeType_OpenBear:
+				m_listCtrlOrderClose.SetItemText(i, 1, "开空");
+				break;
+			case eFuturesTradeType_CloseBull:
+				m_listCtrlOrderClose.SetItemText(i, 1, "平多");
+				break;
+			case eFuturesTradeType_CloseBear:
+				m_listCtrlOrderClose.SetItemText(i, 1, "平空");
+				break;
+			default:
+				break;
+			}
+			szFormat.Format("%s/%s", itB->close.filledQTY.c_str(), itB->close.size.c_str());
+			m_listCtrlOrderClose.SetItemText(i, 2, szFormat);
+			if(itB->close.status == "-1")
+				m_listCtrlOrderClose.SetItemText(i, 3, "cancelled");
+			else if(itB->close.status == "0")
+				m_listCtrlOrderClose.SetItemText(i, 3, "open");
+			else if(itB->close.status == "1")
+				m_listCtrlOrderClose.SetItemText(i, 3, "part_filled");
+			else if(itB->close.status == "2")
+				m_listCtrlOrderClose.SetItemText(i, 3, "filled");
+		}
+		++itB;
+		++i;
+	}
+}
+
 
 void COKExFuturesDlg::__InitConfigCtrl()
 {

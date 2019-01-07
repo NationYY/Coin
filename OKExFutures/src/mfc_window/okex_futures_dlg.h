@@ -6,6 +6,7 @@
 
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
+#include "afxcmn.h"
 enum eTimerType
 {
 	eTimerType_APIUpdate,
@@ -172,6 +173,7 @@ private:
 	bool __CheckCanTrade(eFuturesTradeType eType);
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
+	void _UpdateTradeShow();
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -222,4 +224,6 @@ public:
 	CEdit m_editMoveStopProfit;
 	CListBox m_ctrlListLog;
 	afx_msg void OnBnClickedButtonStopWhenFinish();
+	CListCtrl m_listCtrlOrderOpen;
+	CListCtrl m_listCtrlOrderClose;
 };

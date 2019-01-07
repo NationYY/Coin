@@ -1260,7 +1260,10 @@ void COKExMartingaleDlg::__CheckTrade()
 							API_OK
 						}
 						else
+						{
 							_checkStr = resInfo.strRet;
+							boost::this_thread::sleep(boost::posix_time::seconds(1));
+						}
 					API_CHECK
 					END_API_CHECK
 				}
@@ -1443,6 +1446,9 @@ void COKExMartingaleDlg::__CheckTrade()
 					time_t tNow = time(NULL);
 					if(tNow - m_tOpenTime > 10*60)
 					{
+						bool bCancelAll = false;
+						if(m_vectorTradePairs[0].open.status == "open")
+							bCancelAll = true;
 						for(int i = 0; i<(int)m_vectorTradePairs.size(); ++i)
 						{
 							if(m_vectorTradePairs[i].open.orderID != "")
@@ -1499,7 +1505,7 @@ void COKExMartingaleDlg::__CheckTrade()
 								}
 							}
 						}
-						if(m_vectorTradePairs[0].open.status == "open")
+						if(bCancelAll)
 						{
 							CActionLog("trade", "³¬Ê±Î´³É½»");
 							m_vectorTradePairs.clear();
