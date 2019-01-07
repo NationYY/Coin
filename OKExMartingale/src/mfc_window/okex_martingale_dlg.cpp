@@ -31,6 +31,7 @@
 
 #define BEGIN_API_CHECK {\
 							int _checkIndex = 0;\
+							std::string _checkStr = "";\
 							for(; _checkIndex<3; ++_checkIndex)\
 							{
 #define API_OK	break;
@@ -1181,12 +1182,17 @@ void COKExMartingaleDlg::__CheckTrade()
 									API_OK
 								}
 								else
+								{
+									_checkStr = _resInfo.strRet;
 									boost::this_thread::sleep(boost::posix_time::seconds(1));
+								}
 							API_CHECK
 							END_API_CHECK
 
 							API_OK
 						}
+						else
+							_checkStr = resInfo.strRet;
 					API_CHECK
 					END_API_CHECK
 				}
@@ -1276,12 +1282,17 @@ void COKExMartingaleDlg::__CheckTrade()
 														boost::this_thread::sleep(boost::posix_time::seconds(1));
 												}
 												else
+												{
+													_checkStr = _resInfo.strRet;
 													boost::this_thread::sleep(boost::posix_time::seconds(1));
+												}
 											API_CHECK
 											END_API_CHECK
 
 											API_OK
 										}
+										else
+											_checkStr = resInfo.strRet;
 									API_CHECK
 									END_API_CHECK
 								}
@@ -1339,12 +1350,17 @@ void COKExMartingaleDlg::__CheckTrade()
 											API_OK
 										}
 										else
+										{
+											_checkStr = _resInfo.strRet;
 											boost::this_thread::sleep(boost::posix_time::seconds(1));
+										}
 									API_CHECK
 									END_API_CHECK
 
 									API_OK
 								}
+								else
+									_checkStr = resInfo.strRet;
 							API_CHECK
 							END_API_CHECK
 						}
@@ -1400,11 +1416,16 @@ void COKExMartingaleDlg::__CheckTrade()
 														boost::this_thread::sleep(boost::posix_time::seconds(1));
 												}
 												else
+												{
+													_checkStr = _resInfo.strRet;
 													boost::this_thread::sleep(boost::posix_time::seconds(1));
+												}
 											API_CHECK
 											END_API_CHECK
 											API_OK
 										}
+										else
+											_checkStr = resInfo.strRet;
 									API_CHECK
 									END_API_CHECK
 								}
@@ -1473,6 +1494,8 @@ void COKExMartingaleDlg::__CheckTrade()
 												CActionLog("trade", "[最后一单 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
 												API_OK
 											}
+											else
+												_checkStr = resInfo.strRet;
 										API_CHECK
 										END_API_CHECK
 									}
@@ -1528,11 +1551,16 @@ void COKExMartingaleDlg::__CheckTrade()
 																boost::this_thread::sleep(boost::posix_time::seconds(1));
 														}
 														else
+														{
+															_checkStr = _resInfo.strRet;
 															boost::this_thread::sleep(boost::posix_time::seconds(1));
+														}
 													API_CHECK
 													END_API_CHECK
 													API_OK
 												}
+												else
+													_checkStr = resInfo.strRet;
 											API_CHECK
 											END_API_CHECK
 										}
@@ -1582,12 +1610,17 @@ void COKExMartingaleDlg::__CheckTrade()
 															API_OK
 														}
 														else
+														{
+															_checkStr = _resInfo.strRet;
 															boost::this_thread::sleep(boost::posix_time::seconds(1));
+														}
 													API_CHECK
 													END_API_CHECK
 
 													API_OK
 												}
+												else
+													_checkStr = resInfo.strRet;
 											API_CHECK
 											END_API_CHECK
 										}
@@ -1695,12 +1728,17 @@ void COKExMartingaleDlg::__CheckTrade()
 																			API_OK
 																		}
 																		else
+																		{
+																			_checkStr = _resInfo.strRet;
 																			boost::this_thread::sleep(boost::posix_time::seconds(1));
+																		}
 																	API_CHECK
 																	END_API_CHECK
 
 																	API_OK
 																}
+																else
+																	_checkStr = resInfo.strRet;
 															API_CHECK
 															END_API_CHECK
 														}
@@ -1758,11 +1796,19 @@ void COKExMartingaleDlg::__CheckTrade()
 														API_OK
 													}
 													else
+													{
+														_checkStr = _resInfo.strRet;
 														boost::this_thread::sleep(boost::posix_time::seconds(1));
+													}
 												API_CHECK
 												END_API_CHECK
 
 												API_OK
+											}
+											else
+											{
+												_checkStr = resInfo.strRet;
+												boost::this_thread::sleep(boost::posix_time::seconds(1));
 											}
 										API_CHECK
 										END_API_CHECK
@@ -1811,6 +1857,8 @@ void COKExMartingaleDlg::__CheckTrade()
 														CActionLog("trade", "[止盈 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
 														API_OK
 													}
+													else
+														_checkStr = resInfo.strRet;
 												API_CHECK
 												END_API_CHECK
 											}
@@ -1833,6 +1881,8 @@ void COKExMartingaleDlg::__CheckTrade()
 														CActionLog("trade", "[止盈 撤销订单成功] order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), pairsInfo.open.orderID.c_str());
 														API_OK
 													}
+													else
+														_checkStr = resInfo.strRet;
 												API_CHECK
 												END_API_CHECK
 											}
