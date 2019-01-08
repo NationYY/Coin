@@ -27,7 +27,6 @@ public:
 	void API_SpotAccountInfoByCurrency(bool bSync, std::string& strMoneyType, SHttpResponse* pResInfo = NULL);
 	void API_SpotCancelOrder(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo = NULL);
 	void API_SpotInstruments(bool bSync, SHttpResponse* pResInfo = NULL);
-	
 public:
 	int m_futuresAccountInfoByCurrencyIndex;
 };

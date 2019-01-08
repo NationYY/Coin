@@ -206,6 +206,7 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combInstrumentID.InsertString(2, "EOS-USDT");
 	m_combInstrumentID.InsertString(3, "XRP-USDT");
 	m_combInstrumentID.InsertString(4, "ETH-USDT");
+	m_combInstrumentID.InsertString(5, "TRX-USDT");
 
 	m_listCtrlOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
 	m_listCtrlOpen.InsertColumn(1, "成交量", LVCFMT_CENTER, 100);
@@ -344,18 +345,7 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	m_coinAccountInfo.bValid = false;
 	m_moneyAccountInfo.bValid = false;
 	{
-		SHttpResponse resInfo;
-		OKEX_HTTP->API_SpotAccountInfoByCurrency(false, m_strMoneyType, &resInfo);
-		if(resInfo.retObj.isObject() && resInfo.retObj["currency"].isString())
-		{
-			SSpotAccountInfo info;
-			info.balance = stod(resInfo.retObj["balance"].asString());
-			info.hold = stod(resInfo.retObj["hold"].asString());
-			info.available = stod(resInfo.retObj["available"].asString());
-			info.currency = resInfo.retObj["currency"].asString();
-			g_pDlg->UpdateAccountInfo(info);
-		}
-		else
+		if(!_CheckMoney(m_strMoneyType))
 		{
 			std::string msg = "未查询到币种信息[" + m_strMoneyType + "]";
 			MessageBox(msg.c_str());
@@ -363,18 +353,7 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		}
 	}
 	{
-		SHttpResponse resInfo;
-		OKEX_HTTP->API_SpotAccountInfoByCurrency(false, m_strCoinType, &resInfo);
-		if(resInfo.retObj.isObject() && resInfo.retObj["currency"].isString())
-		{
-			SSpotAccountInfo info;
-			info.balance = stod(resInfo.retObj["balance"].asString());
-			info.hold = stod(resInfo.retObj["hold"].asString());
-			info.available = stod(resInfo.retObj["available"].asString());
-			info.currency = resInfo.retObj["currency"].asString();
-			g_pDlg->UpdateAccountInfo(info);
-		}
-		else
+		if(!_CheckMoney(m_strCoinType))
 		{
 			std::string msg = "未查询到币种信息[" + m_strCoinType + "]";
 			MessageBox(msg.c_str());
@@ -1162,6 +1141,13 @@ void COKExMartingaleDlg::__CheckTrade()
 			{
 				stepCnt += (int)pow(2, i);
 			}
+			bool bReCheckMoney = false;
+ReCheckMoney:
+			if(bReCheckMoney)
+			{
+				boost::this_thread::sleep(boost::posix_time::seconds(3));
+				_CheckMoney(m_strMoneyType);
+			}
 			//确认每份资金金额
 			double eachStepMoney = 0.0;
 			if(m_fixedMoneyCnt < 0)
@@ -1177,73 +1163,85 @@ void COKExMartingaleDlg::__CheckTrade()
 				double money = eachStepMoney*(int)pow(2,i);
 				double size = money / price;
 				std::string strSize = CFuncCommon::Double2String(size+DOUBLE_PRECISION, m_nVolumeDecimal);
-				if(m_bTest)
-				{
-					SSPotTradePairInfo info;
-					info.open.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
-					info.open.price = strPrice;
-					info.open.size = strSize;
-					info.open.side = "buy";
-					info.open.timeStamp = time(NULL);
-					info.open.strTimeStamp = CFuncCommon::FormatTimeStr(m_curTickData.time);
-					info.open.filledSize = "0";
-					info.open.filledNotional = "0";
-					info.open.status = "open";
-					m_vectorTradePairs.push_back(info);
-					CActionLog("trade", "[新批次 开买单][%s] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), info.open.orderID.c_str(), info.open.size.c_str(), info.open.filledSize.c_str(), info.open.price.c_str(), info.open.status.c_str(), info.open.side.c_str());
-				}
+				bool isSizeOK = false;
+				if(m_nPriceDecimal)
+					isSizeOK = !(size < (1/double(10*m_nPriceDecimal)));
 				else
+					isSizeOK = size > 1;
+				if(i==0 && !isSizeOK)
 				{
-					BEGIN_API_CHECK
-						SHttpResponse resInfo;
-						OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_buy, strPrice, strSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
-						Json::Value& retObj = resInfo.retObj;
-						if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
-						{
-							std::string strOrderID = retObj["order_id"].asString();
-							BEGIN_API_CHECK
-								SHttpResponse _resInfo;
-								OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, strOrderID, &_resInfo);
-								Json::Value& _retObj = _resInfo.retObj;
-								if(_retObj.isObject() && _retObj["order_id"].isString())
-								{
-									SSPotTradePairInfo pairs;
-									pairs.open.orderID = strOrderID;
-									m_vectorTradePairs.push_back(pairs);
+					bReCheckMoney = true;
+					goto ReCheckMoney;
 
-									SSPotTradeInfo info;
-									info.orderID = _retObj["order_id"].asString();
-									info.price = _retObj["price"].asString();
-									info.size = _retObj["size"].asString();
-									info.side = _retObj["side"].asString();
-									info.strTimeStamp = _retObj["timestamp"].asString();
-									info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-									info.filledSize = _retObj["filled_size"].asString();
-									info.filledNotional = _retObj["filled_notional"].asString();
-									info.status = _retObj["status"].asString();
-									g_pDlg->UpdateTradeInfo(info);
-									CActionLog("trade", "[新批次 开买单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
-									API_OK
-								}
-								else
-								{
-									_checkStr = _resInfo.strRet;
-									boost::this_thread::sleep(boost::posix_time::seconds(1));
-								}
-							API_CHECK
-							END_API_CHECK
-
-							API_OK
-						}
-						else
-						{
-							_checkStr = resInfo.strRet;
-							boost::this_thread::sleep(boost::posix_time::seconds(1));
-						}
-					API_CHECK
-					END_API_CHECK
 				}
-				
+				if(isSizeOK)
+				{
+					if(m_bTest)
+					{
+						SSPotTradePairInfo info;
+						info.open.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						info.open.price = strPrice;
+						info.open.size = strSize;
+						info.open.side = "buy";
+						info.open.timeStamp = time(NULL);
+						info.open.strTimeStamp = CFuncCommon::FormatTimeStr(m_curTickData.time);
+						info.open.filledSize = "0";
+						info.open.filledNotional = "0";
+						info.open.status = "open";
+						m_vectorTradePairs.push_back(info);
+						CActionLog("trade", "[新批次 开买单][%s] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), info.open.orderID.c_str(), info.open.size.c_str(), info.open.filledSize.c_str(), info.open.price.c_str(), info.open.status.c_str(), info.open.side.c_str());
+					}
+					else
+					{
+						BEGIN_API_CHECK
+							SHttpResponse resInfo;
+							OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_buy, strPrice, strSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+							Json::Value& retObj = resInfo.retObj;
+							if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
+							{
+								std::string strOrderID = retObj["order_id"].asString();
+								BEGIN_API_CHECK
+									SHttpResponse _resInfo;
+									OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, strOrderID, &_resInfo);
+									Json::Value& _retObj = _resInfo.retObj;
+									if(_retObj.isObject() && _retObj["order_id"].isString())
+									{
+										SSPotTradePairInfo pairs;
+										pairs.open.orderID = strOrderID;
+										m_vectorTradePairs.push_back(pairs);
+
+										SSPotTradeInfo info;
+										info.orderID = _retObj["order_id"].asString();
+										info.price = _retObj["price"].asString();
+										info.size = _retObj["size"].asString();
+										info.side = _retObj["side"].asString();
+										info.strTimeStamp = _retObj["timestamp"].asString();
+										info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+										info.filledSize = _retObj["filled_size"].asString();
+										info.filledNotional = _retObj["filled_notional"].asString();
+										info.status = _retObj["status"].asString();
+										g_pDlg->UpdateTradeInfo(info);
+										CActionLog("trade", "[新批次 开买单] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+										API_OK
+									}
+									else
+									{
+										_checkStr = _resInfo.strRet;
+										boost::this_thread::sleep(boost::posix_time::seconds(1));
+									}
+								API_CHECK
+								END_API_CHECK
+								API_OK
+							}
+							else
+							{
+								_checkStr = resInfo.strRet;
+								boost::this_thread::sleep(boost::posix_time::seconds(1));
+							}
+						API_CHECK
+						END_API_CHECK
+					}
+				}
 			}
 			m_tOpenTime = time(NULL);
 			m_eTradeState = eTradeState_Trading;
@@ -1964,9 +1962,14 @@ void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
 		if(m_vectorTradePairs[i].open.orderID == info.orderID && 
 		   m_vectorTradePairs[i].open.status != "filled")
 		{
-			if(i == 0 && info.status != "open" && m_curTickData.bValid)
+			if(i == 0)
 			{
-				if(CFuncCommon::CheckEqual(m_minPrice, 0.0) && CFuncCommon::CheckEqual(m_maxPrice, 0.0))
+				if(m_curTickData.bValid && info.status != "open" && CFuncCommon::CheckEqual(m_minPrice, 0.0) && CFuncCommon::CheckEqual(m_maxPrice, 0.0))
+					m_maxPrice = m_minPrice = m_curTickData.last;
+			}
+			else
+			{
+				if(m_curTickData.bValid && info.status != "open" && m_vectorTradePairs[i].open.status == "open")
 					m_maxPrice = m_minPrice = m_curTickData.last;
 			}
 			m_vectorTradePairs[i].open.price = info.price;
@@ -2063,6 +2066,8 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 		m_combInstrumentID.SetCurSel(3);
 	else if(strTemp == "ETH-USDT")
 		m_combInstrumentID.SetCurSel(4);
+	else if(strTemp == "TRX-USDT")
+		m_combInstrumentID.SetCurSel(5);
 	strTemp = m_config.get("spot", "martingaleStepCnt", "");
 	m_editMartingaleStepCnt.SetWindowText(strTemp.c_str());
 
@@ -2378,4 +2383,21 @@ void COKExMartingaleDlg::OnBnClickedStopProfitMove()
 void COKExMartingaleDlg::OnBnClickedRadioStopProfitFix()
 {
 	m_btnStopProfitMove.SetCheck(0);
+}
+
+bool COKExMartingaleDlg::_CheckMoney(std::string& strCurrency)
+{
+	SHttpResponse resInfo;
+	OKEX_HTTP->API_SpotAccountInfoByCurrency(false, strCurrency, &resInfo);
+	if(resInfo.retObj.isObject() && resInfo.retObj["currency"].isString())
+	{
+		SSpotAccountInfo info;
+		info.balance = stod(resInfo.retObj["balance"].asString());
+		info.hold = stod(resInfo.retObj["hold"].asString());
+		info.available = stod(resInfo.retObj["available"].asString());
+		info.currency = resInfo.retObj["currency"].asString();
+		g_pDlg->UpdateAccountInfo(info);
+		return true;
+	}
+	return false;
 }

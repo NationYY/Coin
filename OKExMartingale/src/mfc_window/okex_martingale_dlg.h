@@ -172,6 +172,7 @@ private:
 	void TestCfg();
 	void _UpdateProfitShow();
 	void _UpdateTradeShow();
+	bool _CheckMoney(std::string& strCurrency);
 public:
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonTest();
