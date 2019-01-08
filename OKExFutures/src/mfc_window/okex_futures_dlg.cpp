@@ -1359,12 +1359,14 @@ void COKExFuturesDlg::__CheckTradeOrder()
 			std::string closePrice = CFuncCommon::Double2String(itB->close.price+DOUBLE_PRECISION, m_nPriceDecimal);
 			CActionLog("finish_trade", "删除已完成%s交易对 open_price=%s, open_num=%s, open_order=%s, close_price=%s, close_num=%s, close_order=%s", ((itB->open.tradeType == eFuturesTradeType_OpenBull) ? "多单" : "空单"), openPrice.c_str(), itB->open.filledQTY.c_str(), itB->open.orderID.c_str(), closePrice.c_str(), itB->close.filledQTY.c_str(), itB->close.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
+			_UpdateTradeShow();
 			continue;
 		}
 		if(bOpenFinish && itB->open.filledQTY == "0" && itB->close.strClientOrderID == "")
 		{
 			CActionLog("trade", "删除未完成交易对 order=%s", itB->open.orderID.c_str());
-			itB = m_listTradePairInfo.erase(itB);			
+			itB = m_listTradePairInfo.erase(itB);
+			_UpdateTradeShow();
 			continue;
 		}
 		//如果已进行平仓交易,等待平仓完成
