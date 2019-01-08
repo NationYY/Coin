@@ -318,6 +318,7 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST2, m_ctrlListLog);
 	DDX_Control(pDX, IDC_LIST1, m_listCtrlOrderOpen);
 	DDX_Control(pDX, IDC_LIST3, m_listCtrlOrderClose);
+	DDX_Control(pDX, IDC_STATIC_CUR_PRICE, m_staticPrice);
 }
 
 BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
@@ -376,11 +377,13 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_listCtrlOrderOpen.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
 	m_listCtrlOrderOpen.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
+	m_listCtrlOrderOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	m_listCtrlOrderClose.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
 	m_listCtrlOrderClose.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
 	m_listCtrlOrderClose.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderClose.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
+	m_listCtrlOrderClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	if(!m_config.open("./config.ini"))
 		return FALSE;
@@ -565,7 +568,7 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 		if(data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time != m_nKlineCycle)
 		{
 			CActionLog("boll", "差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time);
-			ComplementedKLine(data.time, (data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time - m_nKlineCycle)/m_nKlineCycle);
+			ComplementedKLine(data.time, int(data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time - m_nKlineCycle)/m_nKlineCycle);
 			//KLINE_DATA.clear();
 			//BOLL_DATA.clear();
 		}
@@ -1198,29 +1201,6 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		totalDifClosePriceSQ += (data.last - ma)*(data.last - ma);
 
 		double md = sqrt(totalDifClosePriceSQ/m_nBollCycle);
-		/*double addValue = 0.0;
-		double scaleValue = 10;
-		if(m_nPriceDecimal == 1)
-		{
-			addValue = 0.05;
-			scaleValue = 10;
-		}
-		else if(m_nPriceDecimal == 2)
-		{
-			addValue = 0.005;
-			scaleValue = 100;
-		}
-		else if(m_nPriceDecimal == 3)
-		{
-			addValue = 0.0005;
-			scaleValue = 1000;
-		}
-		else if(m_nPriceDecimal == 4)
-		{
-			addValue = 0.00005;
-			scaleValue = 10000;
-		}*/
-
 		m_curTickBoll.Reset();
 		m_curTickBoll.mb = ma;
 		m_curTickBoll.up = m_curTickBoll.mb + 2*md;
@@ -1244,6 +1224,11 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		}
 		__CheckTradeOrder();
 	}
+	std::string price = CFuncCommon::Double2String(m_curTickData.last + DOUBLE_PRECISION, m_nPriceDecimal);
+	price += "[";
+	price += CFuncCommon::FormatTimeStr(m_curTickData.time).c_str();
+	price += "]";
+	m_staticPrice.SetWindowText(price.c_str());
 }
 
 void COKExFuturesDlg::__CheckTrade_ZhangKou()

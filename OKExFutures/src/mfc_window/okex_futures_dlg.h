@@ -228,4 +228,5 @@ public:
 	afx_msg void OnBnClickedButtonStopWhenFinish();
 	CListCtrl m_listCtrlOrderOpen;
 	CListCtrl m_listCtrlOrderClose;
+	CStatic m_staticPrice;
 };
