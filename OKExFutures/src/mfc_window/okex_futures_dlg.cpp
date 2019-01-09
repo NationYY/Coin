@@ -299,6 +299,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_strFuturesCycle = "190329";
 	m_strFuturesTradeSize = "10";
 	m_strLeverage = "20";
+	m_nLeverage  = 20;
 	m_bTest = false;
 	m_stopLoss = 0.04;
 	m_moveStopProfit = 0.005;
@@ -373,10 +374,13 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
 
-	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
+	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 80);
 	m_listCtrlOrderOpen.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
 	m_listCtrlOrderOpen.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
+	m_listCtrlOrderOpen.InsertColumn(4, "最低价", LVCFMT_CENTER, 80);
+	m_listCtrlOrderOpen.InsertColumn(5, "最高价", LVCFMT_CENTER, 80);
+	m_listCtrlOrderOpen.InsertColumn(6, "参考利润", LVCFMT_CENTER, 85);
 	m_listCtrlOrderOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	m_listCtrlOrderClose.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
@@ -592,29 +596,6 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 			totalDifClosePriceSQ += ((KLINE_DATA[i].closePrice - ma)*(KLINE_DATA[i].closePrice - ma));
 		}
 		double md = sqrt(totalDifClosePriceSQ/m_nBollCycle);
-		/*double addValue = 0.0;
-		double scaleValue = 10;
-		if(m_nPriceDecimal == 1)
-		{
-			addValue = 0.05;
-			scaleValue = 10;
-		}
-		else if(m_nPriceDecimal == 2)
-		{
-			addValue = 0.005;
-			scaleValue = 100;
-		}
-		else if(m_nPriceDecimal == 3)
-		{
-			addValue = 0.0005;
-			scaleValue = 1000;
-		}
-		else if(m_nPriceDecimal == 4)
-		{
-			addValue = 0.00005;
-			scaleValue = 10000;
-		}*/
-			
 		SBollInfo info;
 		info.mb = ma;
 		info.up = info.mb + 2*md;
@@ -1208,6 +1189,7 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		m_curTickBoll.mb = CFuncCommon::Round(m_curTickBoll.mb+DOUBLE_PRECISION, m_nPriceDecimal);
 		m_curTickBoll.up = CFuncCommon::Round(m_curTickBoll.up+DOUBLE_PRECISION, m_nPriceDecimal);
 		m_curTickBoll.dn = CFuncCommon::Round(m_curTickBoll.dn+DOUBLE_PRECISION, m_nPriceDecimal);
+		CActionLog("tick_boll", "up=%.2f mb=%.2f dn=%.2f", m_curTickBoll.up, m_curTickBoll.mb, m_curTickBoll.dn);
 		switch(m_eBollState)
 		{
 		case eBollTrend_ShouKou:
@@ -1224,6 +1206,20 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		}
 		__CheckTradeOrder();
 	}
+	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
+	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
+	while(itB != itE)
+	{
+		if(itB->open.orderID != "" && !CFuncCommon::CheckEqual(itB->open.minPrice, 0.0) && !CFuncCommon::CheckEqual(itB->open.maxPrice, 0.0))
+		{
+			if(m_curTickData.last < itB->open.minPrice)
+				itB->open.minPrice = m_curTickData.last;
+			if(m_curTickData.last > itB->open.maxPrice)
+				itB->open.maxPrice = m_curTickData.last;
+		}
+		++itB;
+	}
+	_UpdateTradeShow();
 	std::string price = CFuncCommon::Double2String(m_curTickData.last + DOUBLE_PRECISION, m_nPriceDecimal);
 	price += "[";
 	price += CFuncCommon::FormatTimeStr(m_curTickData.time).c_str();
@@ -1667,6 +1663,11 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->open.status = info.status;
 			itB->open.tradeType = info.tradeType;
 			itB->open.size = info.size;
+			if(itB->open.status == "0" && (info.status == "1" || info.status == "2") && m_curTickData.bValid)
+			{
+				itB->open.minPrice = m_curTickData.last;
+				itB->open.maxPrice = m_curTickData.last;
+			}
 			break;
 		}
 		else if(info.tradeType == itB->close.tradeType && itB->close.orderID == info.orderID)
@@ -1677,6 +1678,11 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->close.status = info.status;
 			itB->close.tradeType = info.tradeType;
 			itB->close.size = info.size;
+			if(itB->close.status == "0" && (info.status == "1" || info.status == "2") && m_curTickData.bValid)
+			{
+				itB->close.minPrice = m_curTickData.last;
+				itB->close.maxPrice = m_curTickData.last;
+			}
 			break;
 		}
 		++itB;
@@ -1726,6 +1732,49 @@ void COKExFuturesDlg::_UpdateTradeShow()
 				m_listCtrlOrderOpen.SetItemText(i, 3, "part_filled");
 			else if(itB->open.status == "2")
 				m_listCtrlOrderOpen.SetItemText(i, 3, "filled");
+			szFormat.Format("%s", CFuncCommon::Double2String(itB->open.minPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
+			szFormat.Format("%s", CFuncCommon::Double2String(itB->open.maxPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+			if(itB->open.filledQTY != "0")
+			{
+				int count = stoi(itB->open.filledQTY);
+				int sizePrice = 10;
+				if(m_strCoinType == "BTC")
+					sizePrice = 100;
+				double baozhengjin = (sizePrice*count/itB->open.price)/m_nLeverage;
+				if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+				{
+					if(m_curTickData.last >= itB->open.price)
+					{
+						double profit = (m_curTickData.last-itB->open.price)/itB->open.price*m_nLeverage*baozhengjin;
+						szFormat.Format("%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
+						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+					}
+					else
+					{
+						double profit = (itB->open.price-m_curTickData.last)/itB->open.price*m_nLeverage*baozhengjin;
+						szFormat.Format("-%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
+						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+					}
+
+				}
+				else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
+				{
+					if(m_curTickData.last <= itB->open.price)
+					{
+						double profit = (itB->open.price-m_curTickData.last)/itB->open.price*m_nLeverage*baozhengjin;
+						szFormat.Format("%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
+						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+					}
+					else
+					{
+						double profit = (m_curTickData.last-itB->open.price)/itB->open.price*m_nLeverage*baozhengjin;
+						szFormat.Format("-%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
+						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+					}
+				}
+			}
 		}
 		if(itB->close.orderID != "")
 		{
@@ -1852,6 +1901,7 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
 	m_strLeverage = strLeverage.GetBuffer();
+	m_nLeverage = stoi(m_strLeverage);
 	m_stopLoss = stod(strStopLoss.GetBuffer());
 	m_moveStopProfit = stod(strStopProfit.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());

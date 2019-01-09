@@ -88,6 +88,8 @@ struct SFuturesTradeInfo
 	time_t waitClientOrderIDTime;
 	int stopProfit;
 	std::string size;
+	double maxPrice;
+	double minPrice;
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -104,6 +106,8 @@ struct SFuturesTradeInfo
 		waitClientOrderIDTime = 0;
 		stopProfit = 0;
 		size = "0";
+		maxPrice = 0.0;
+		minPrice = 0.0;
 	}
 };
 
@@ -210,7 +214,8 @@ public:
 	std::string m_strFuturesCycle;		//合约周期
 	std::string m_strFuturesTradeSize;	//下单张数
 	int m_nKlineCycle;					//布林线周期对应秒数
-	std::string m_strLeverage;					//合约倍数
+	std::string m_strLeverage;			//合约倍数
+	int m_nLeverage;					//合约倍数
 	double m_stopLoss;					//止损比例
 	double m_moveStopProfit;			//移动止盈比例
 	std::string m_strStopLoss;					//止损比例
