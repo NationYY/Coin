@@ -173,6 +173,7 @@ private:
 	void _UpdateProfitShow();
 	void _UpdateTradeShow();
 	bool _CheckMoney(std::string& strCurrency);
+	void _SetTradeState(eTradeState state);
 public:
 	afx_msg void OnBnClickedButtonStart();
 	afx_msg void OnBnClickedButtonTest();

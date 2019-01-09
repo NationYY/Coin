@@ -1244,7 +1244,7 @@ ReCheckMoney:
 				}
 			}
 			m_tOpenTime = time(NULL);
-			m_eTradeState = eTradeState_Trading;
+			_SetTradeState(eTradeState_Trading);
 		}
 		break;
 	case eTradeState_Trading:
@@ -1486,7 +1486,7 @@ ReCheckMoney:
 						{
 							CActionLog("trade", "超时未成交");
 							m_vectorTradePairs.clear();
-							m_eTradeState = eTradeState_WaitOpen;
+							_SetTradeState(eTradeState_WaitOpen);
 						}
 						else	
 							m_vectorTradePairs[0].open.bBeginStopProfit = true;
@@ -1516,7 +1516,7 @@ ReCheckMoney:
 						//所有批次的订单都完成了
 						if(m_curOpenFinishIndex == m_vectorTradePairs.size()-1)
 						{
-							m_eTradeState = eTradeState_WaitOpen;
+							_SetTradeState(eTradeState_WaitOpen);
 							CActionLog("finish_trade", "[成功交易] 单批次");
 							CActionLog("trade", "[成功交易] 单批次");
 							LOCAL_INFO("成功交易一个批次");
@@ -1550,7 +1550,7 @@ ReCheckMoney:
 										API_CHECK
 										END_API_CHECK
 									}
-									m_eTradeState = eTradeState_WaitOpen;
+									_SetTradeState(eTradeState_WaitOpen);
 									CActionLog("finish_trade", "[成功交易] 单批次");
 									CActionLog("trade", "[成功交易] 单批次");
 									LOCAL_INFO("成功交易一个批次");
@@ -1680,7 +1680,7 @@ ReCheckMoney:
 									{
 										if(pairsInfo.close.orderID == "")
 										{
-											m_eTradeState = eTradeState_WaitOpen;
+											_SetTradeState(eTradeState_WaitOpen);
 											CActionLog("finish_trade", "[成功交易] 单批次");
 											CActionLog("trade", "[成功交易] 单批次");
 											LOCAL_INFO("成功交易一个批次");
@@ -1691,7 +1691,7 @@ ReCheckMoney:
 										{
 											if(pairsInfo.close.status == "cancelled" || pairsInfo.close.status == "filled")
 											{
-												m_eTradeState = eTradeState_WaitOpen;
+												_SetTradeState(eTradeState_WaitOpen);
 												CActionLog("finish_trade", "[成功交易] 单批次");
 												CActionLog("trade", "[成功交易] 单批次");
 												LOCAL_INFO("成功交易一个批次");
@@ -1940,7 +1940,7 @@ ReCheckMoney:
 										}
 									}
 								}
-								m_eTradeState = eTradeState_WaitOpen;
+								_SetTradeState(eTradeState_WaitOpen);
 							}
 						}
 						
@@ -2400,4 +2400,18 @@ bool COKExMartingaleDlg::_CheckMoney(std::string& strCurrency)
 		return true;
 	}
 	return false;
+}
+
+void COKExMartingaleDlg::_SetTradeState(eTradeState state)
+{
+	m_eTradeState = state;
+	if(m_eTradeState == eTradeState_WaitOpen)
+	{
+		boost::this_thread::sleep(boost::posix_time::seconds(10));
+		BEGIN_API_CHECK
+			if(_CheckMoney(m_strMoneyType))
+				API_OK
+		API_CHECK
+		END_API_CHECK
+	}
 }
