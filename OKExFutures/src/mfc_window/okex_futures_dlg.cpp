@@ -27,7 +27,6 @@
 #define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pExchange->GetHttp())
 #define OKEX_TRADE_HTTP ((COkexHttpAPI*)pExchange->GetTradeHttp())
-#define MAX_TRADE_CNT 5
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CExchange* pExchange = NULL;
 COKExFuturesDlg* g_pDlg = NULL;
@@ -305,6 +304,8 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_moveStopProfit = 0.005;
 	m_bStopWhenFinish = false;
 	m_bFirstKLine = true;
+	m_nMaxTradeCnt = 5;
+	m_nMaxDirTradeCnt = 3;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -320,6 +321,8 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST1, m_listCtrlOrderOpen);
 	DDX_Control(pDX, IDC_LIST3, m_listCtrlOrderClose);
 	DDX_Control(pDX, IDC_STATIC_CUR_PRICE, m_staticPrice);
+	DDX_Control(pDX, IDC_EDIT5, m_editMaxTradeCnt);
+	DDX_Control(pDX, IDC_EDIT6, m_editMaxDirTradeCnt);
 }
 
 BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
@@ -1557,7 +1560,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 	{
 	case eFuturesTradeType_OpenBull:
 		{
-			if(m_listTradePairInfo.size() >= MAX_TRADE_CNT)
+			if((int)m_listTradePairInfo.size() >= m_nMaxTradeCnt)
 				return false;
 			std::list<SFuturesTradePairInfo>::reverse_iterator itBegin = m_listTradePairInfo.rbegin();
 			std::list<SFuturesTradePairInfo>::reverse_iterator itEnd = m_listTradePairInfo.rend();
@@ -1569,17 +1572,17 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 					bullCount++;
 				else if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
 					bearCount++;
-				if(bullCount + bearCount >= 3)
+				if(bullCount + bearCount >= m_nMaxDirTradeCnt)
 					break;
 				itBegin++;
 			}
-			if(bullCount >= 3)
+			if(bullCount >= m_nMaxDirTradeCnt)
 				return false;
 		}
 		break;
 	case eFuturesTradeType_OpenBear:
 		{
-			if(m_listTradePairInfo.size() >= MAX_TRADE_CNT)
+			if((int)m_listTradePairInfo.size() >= m_nMaxTradeCnt)
 				return false;
 			std::list<SFuturesTradePairInfo>::reverse_iterator itBegin = m_listTradePairInfo.rbegin();
 			std::list<SFuturesTradePairInfo>::reverse_iterator itEnd = m_listTradePairInfo.rend();
@@ -1591,11 +1594,11 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 					bullCount++;
 				else if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
 					bearCount++;
-				if(bullCount + bearCount >= 3)
+				if(bullCount + bearCount >= m_nMaxDirTradeCnt)
 					break;
 				itBegin++;
 			}
-			if(bearCount >= 3)
+			if(bearCount >= m_nMaxDirTradeCnt)
 				return false;
 		}
 		break;
@@ -1851,6 +1854,12 @@ void COKExFuturesDlg::__InitConfigCtrl()
 
 	strTemp = m_config.get("futures", "moveStopProfit", "");
 	m_editMoveStopProfit.SetWindowText(strTemp.c_str());
+	
+	strTemp = m_config.get("futures", "maxTradeCnt", "");
+	m_editMaxTradeCnt.SetWindowText(strTemp.c_str());
+	
+	strTemp = m_config.get("futures", "maxDirTradeCnt", "");
+	m_editMaxDirTradeCnt.SetWindowText(strTemp.c_str());
 }
 
 bool COKExFuturesDlg::__SaveConfigCtrl()
@@ -1897,6 +1906,20 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		MessageBox("未填写移动止盈点数");
 		return false;
 	}
+	CString strMaxTradeCnt;
+	m_editMaxTradeCnt.GetWindowText(strMaxTradeCnt);
+	if(strMaxTradeCnt == "")
+	{
+		MessageBox("未填写最大同时下单数");
+		return false;
+	}
+	CString strMaxDirTradeCnt;
+	m_editMaxDirTradeCnt.GetWindowText(strMaxDirTradeCnt);
+	if(strMaxDirTradeCnt == "")
+	{
+		MessageBox("未填写单向最大同时下单数");
+		return false;
+	}
 	m_strCoinType = strCoinType.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
@@ -1904,12 +1927,16 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 	m_nLeverage = stoi(m_strLeverage);
 	m_stopLoss = stod(strStopLoss.GetBuffer());
 	m_moveStopProfit = stod(strStopProfit.GetBuffer());
+	m_nMaxTradeCnt = stoi(strMaxTradeCnt.GetBuffer());
+	m_nMaxDirTradeCnt = stoi(strMaxDirTradeCnt.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
 	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
 	m_config.set_value("futures", "leverage", m_strLeverage.c_str());
 	m_config.set_value("futures", "stopLoss", strStopLoss.GetBuffer());
 	m_config.set_value("futures", "moveStopProfit", strStopProfit.GetBuffer());
+	m_config.set_value("futures", "maxTradeCnt", strMaxTradeCnt.GetBuffer());
+	m_config.set_value("futures", "maxDirTradeCnt", strMaxDirTradeCnt.GetBuffer());
 	m_config.save("./config.ini");
 	return true;
 }

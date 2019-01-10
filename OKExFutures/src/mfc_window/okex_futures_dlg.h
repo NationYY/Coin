@@ -213,6 +213,8 @@ public:
 	std::string m_strCoinType;			//货币类型
 	std::string m_strFuturesCycle;		//合约周期
 	std::string m_strFuturesTradeSize;	//下单张数
+	int	m_nMaxTradeCnt;					//最大同时下单数
+	int	m_nMaxDirTradeCnt;				//单向最大同时下单数
 	int m_nKlineCycle;					//布林线周期对应秒数
 	std::string m_strLeverage;			//合约倍数
 	int m_nLeverage;					//合约倍数
@@ -234,4 +236,6 @@ public:
 	CListCtrl m_listCtrlOrderOpen;
 	CListCtrl m_listCtrlOrderClose;
 	CStatic m_staticPrice;
+	CEdit m_editMaxTradeCnt;
+	CEdit m_editMaxDirTradeCnt;
 };
