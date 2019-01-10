@@ -148,7 +148,6 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST3, m_listCtrlOpen);
 	DDX_Control(pDX, IDC_LIST2, m_listCtrlClose);
 	DDX_Control(pDX, IDC_STATIC_PRICE, m_staticPrice);
-	DDX_Control(pDX, IDC_STATIC_LIMIT_PRICE, m_staticLimitPrice);
 	DDX_Control(pDX, IDC_STATIC_STOP_PROFIT_TIME, m_staticStopProfitTimes);
 	DDX_Control(pDX, IDC_STATIC_FINISH_TIME, m_staticFinishTimes);
 	DDX_Control(pDX, IDC_RADIO1, m_btnStopProfitMove);
@@ -208,11 +207,13 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combInstrumentID.InsertString(4, "ETH-USDT");
 	m_combInstrumentID.InsertString(5, "TRX-USDT");
 
-	m_listCtrlOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
+	m_listCtrlOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 90);
 	m_listCtrlOpen.InsertColumn(1, "成交量", LVCFMT_CENTER, 100);
-	m_listCtrlOpen.InsertColumn(2, "售出量", LVCFMT_CENTER, 50);
+	m_listCtrlOpen.InsertColumn(2, "售出量", LVCFMT_CENTER, 60);
 	m_listCtrlOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 75);
-	m_listCtrlOpen.InsertColumn(4, "参考利润", LVCFMT_CENTER, 60);
+	m_listCtrlOpen.InsertColumn(4, "参考利润", LVCFMT_CENTER, 100);
+	m_listCtrlOpen.InsertColumn(5, "最低价", LVCFMT_CENTER, 90);
+	m_listCtrlOpen.InsertColumn(6, "最高价", LVCFMT_CENTER, 90);
 	m_listCtrlOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	m_listCtrlClose.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
@@ -497,18 +498,18 @@ void COKExMartingaleDlg::OnRevTickerInfo(STickerData &data)
 		}
 		__CheckTrade();
 	}
+	for(int i = 0; i < (int)m_vectorTradePairs.size(); ++i)
+	{
+		if(m_vectorTradePairs[i].open.orderID != "" && !CFuncCommon::CheckEqual(m_vectorTradePairs[i].open.minPrice, 0.0) && !CFuncCommon::CheckEqual(m_vectorTradePairs[i].open.maxPrice, 0.0))
+		{
+			if(m_curTickData.last < m_vectorTradePairs[i].open.minPrice)
+				m_vectorTradePairs[i].open.minPrice = m_curTickData.last;
+			if(m_curTickData.last > m_vectorTradePairs[i].open.maxPrice)
+				m_vectorTradePairs[i].open.maxPrice = m_curTickData.last;
+		}
+	}
 	_UpdateTradeShow();
 	_UpdateProfitShow();
-	if(!CFuncCommon::CheckEqual(m_minPrice, 0.0) && !CFuncCommon::CheckEqual(m_maxPrice, 0.0))
-	{
-		if(m_curTickData.last < m_minPrice)
-			m_minPrice = m_curTickData.last;
-		if(m_curTickData.last > m_maxPrice)
-			m_maxPrice = m_curTickData.last;
-		CString szLimitPrice;
-		szLimitPrice.Format("max:%s   min:%s", CFuncCommon::Double2String(m_maxPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str(), CFuncCommon::Double2String(m_minPrice+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
-		m_staticLimitPrice.SetWindowText(szLimitPrice.GetBuffer());
-	}
 	std::string price = CFuncCommon::Double2String(m_curTickData.last+DOUBLE_PRECISION, m_nPriceDecimal);
 	price += "[";
 	price += CFuncCommon::FormatTimeStr(m_curTickData.time).c_str();
@@ -1118,7 +1119,6 @@ void COKExMartingaleDlg::__CheckTrade()
 	{
 	case eTradeState_WaitOpen:
 		{
-			m_maxPrice = m_minPrice = 0.0;
 			if(m_bStopWhenFinish)
 				break;
 			//if(KLINE_DATA_SIZE < m_nBollCycle)
@@ -1962,15 +1962,10 @@ void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
 		if(m_vectorTradePairs[i].open.orderID == info.orderID && 
 		   m_vectorTradePairs[i].open.status != "filled")
 		{
-			if(i == 0)
+			if((m_vectorTradePairs[i].open.status == "open" || m_vectorTradePairs[i].open.status == "") && info.status != "open" && m_curTickData.bValid)
 			{
-				if(m_curTickData.bValid && info.status != "open" && CFuncCommon::CheckEqual(m_minPrice, 0.0) && CFuncCommon::CheckEqual(m_maxPrice, 0.0))
-					m_maxPrice = m_minPrice = m_curTickData.last;
-			}
-			else
-			{
-				if(m_curTickData.bValid && info.status != "open" && m_vectorTradePairs[i].open.status == "open")
-					m_maxPrice = m_minPrice = m_curTickData.last;
+				m_vectorTradePairs[i].open.minPrice = m_curTickData.last;
+				m_vectorTradePairs[i].open.maxPrice = m_curTickData.last;
 			}
 			m_vectorTradePairs[i].open.price = info.price;
 			m_vectorTradePairs[i].open.size = info.size;
@@ -2038,7 +2033,10 @@ void COKExMartingaleDlg::_UpdateTradeShow()
 					}
 				}
 			}
-			
+			szFormat.Format("%s", CFuncCommon::Double2String(m_vectorTradePairs[i].open.minPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			m_listCtrlOpen.SetItemText(i, 5, szFormat);
+			szFormat.Format("%s", CFuncCommon::Double2String(m_vectorTradePairs[i].open.maxPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			m_listCtrlOpen.SetItemText(i, 6, szFormat);
 		}
 		if(m_vectorTradePairs[i].close.orderID != "")
 		{
@@ -2235,11 +2233,6 @@ void COKExMartingaleDlg::_LogicThread()
 		else
 		{
 			__CheckTrade();
-			if(m_bTest)
-			{
-				if(CFuncCommon::CheckEqual(m_minPrice, 0.0) && CFuncCommon::CheckEqual(m_maxPrice, 0.0) && m_curTickData.bValid && m_vectorTradePairs.size()>0 && m_vectorTradePairs[0].open.orderID != "" && m_vectorTradePairs[0].open.status != "open")
-					m_minPrice = m_maxPrice = m_curTickData.last;
-			}
 		}
 		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 	}
@@ -2365,8 +2358,6 @@ void COKExMartingaleDlg::TestCfg()
 				}
 			}
 			_UpdateTradeShow();
-			if(CFuncCommon::CheckEqual(m_minPrice, 0.0) && CFuncCommon::CheckEqual(m_maxPrice, 0.0) && m_curTickData.bValid)
-				m_minPrice = m_maxPrice = m_curTickData.last;
 		}
 		stream.close();
 		++itB;

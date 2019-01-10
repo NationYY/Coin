@@ -95,6 +95,8 @@ struct SSPotTradeInfo
 	std::string closeSize;//已卖出数量
 	bool bBeginStopProfit;
 	int stopProfit;
+	double minPrice;
+	double maxPrice;
 	SSPotTradeInfo()
 	{
 		Reset();
@@ -114,6 +116,8 @@ struct SSPotTradeInfo
 		strTimeStamp = "";
 		bBeginStopProfit = false;
 		stopProfit = 0;
+		minPrice = 0.0;
+		maxPrice = 0.0;
 	}
 };
 
@@ -239,8 +243,6 @@ public:
 	CEdit m_editFixedMoneyCnt;
 	CEdit m_editStopProfitFactor;
 	CEdit m_editCoin;
-	double m_maxPrice;
-	double m_minPrice;
 	afx_msg void OnBnClickedButtonStopWhenFinish();
 	CEdit m_editProfit;
 	CStatic m_staticCoin;
@@ -252,7 +254,6 @@ public:
 	CListCtrl m_listCtrlClose;
 	afx_msg void OnDestroy();
 	CStatic m_staticPrice;
-	CStatic m_staticLimitPrice;
 	CStatic m_staticStopProfitTimes;
 	CStatic m_staticFinishTimes;
 	CButton m_btnStopProfitMove;
