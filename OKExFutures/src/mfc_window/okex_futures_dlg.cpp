@@ -1666,7 +1666,7 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->open.status = info.status;
 			itB->open.tradeType = info.tradeType;
 			itB->open.size = info.size;
-			if(itB->open.status == "0" && (info.status == "1" || info.status == "2") && m_curTickData.bValid)
+			if(itB->open.status == "" && (info.status == "0" || info.status == "1" || info.status == "2") && m_curTickData.bValid)
 			{
 				itB->open.minPrice = m_curTickData.last;
 				itB->open.maxPrice = m_curTickData.last;

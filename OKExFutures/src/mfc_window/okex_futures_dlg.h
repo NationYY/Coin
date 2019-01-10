@@ -101,7 +101,7 @@ struct SFuturesTradeInfo
 		filledQTY = "0";
 		orderID = "";
 		price = 0.0;
-		status = "0";
+		status = "";
 		tradeType = eFuturesTradeType_OpenBull;
 		waitClientOrderIDTime = 0;
 		stopProfit = 0;
