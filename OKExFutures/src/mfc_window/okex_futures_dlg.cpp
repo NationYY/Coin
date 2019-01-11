@@ -1660,17 +1660,17 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 	{
 		if(info.tradeType == itB->open.tradeType && itB->open.orderID == info.orderID)
 		{
+			if(itB->open.status == "" && (info.status == "0" || info.status == "1" || info.status == "2") && m_curTickData.bValid)
+			{
+				itB->open.minPrice = m_curTickData.last;
+				itB->open.maxPrice = m_curTickData.last;
+			}
 			itB->open.timeStamp = info.timeStamp;
 			itB->open.filledQTY = info.filledQTY;
 			itB->open.price = info.price;
 			itB->open.status = info.status;
 			itB->open.tradeType = info.tradeType;
 			itB->open.size = info.size;
-			if(itB->open.status == "" && (info.status == "0" || info.status == "1" || info.status == "2") && m_curTickData.bValid)
-			{
-				itB->open.minPrice = m_curTickData.last;
-				itB->open.maxPrice = m_curTickData.last;
-			}
 			break;
 		}
 		else if(info.tradeType == itB->close.tradeType && itB->close.orderID == info.orderID)
@@ -1681,11 +1681,6 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->close.status = info.status;
 			itB->close.tradeType = info.tradeType;
 			itB->close.size = info.size;
-			if(itB->close.status == "0" && (info.status == "1" || info.status == "2") && m_curTickData.bValid)
-			{
-				itB->close.minPrice = m_curTickData.last;
-				itB->close.maxPrice = m_curTickData.last;
-			}
 			break;
 		}
 		++itB;
