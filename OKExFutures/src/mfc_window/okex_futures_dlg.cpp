@@ -1696,6 +1696,7 @@ void COKExFuturesDlg::_UpdateTradeShow()
 	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
 	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
 	int i=0;
+	double totalProfit = 0.0;
 	while(itB != itE)
 	{
 		if(itB->open.orderID != "")
@@ -1743,15 +1744,20 @@ void COKExFuturesDlg::_UpdateTradeShow()
 				double baozhengjin = (sizePrice*count/itB->open.price)/m_nLeverage;
 				if(itB->open.tradeType == eFuturesTradeType_OpenBull)
 				{
-					if(m_curTickData.last >= itB->open.price)
+					double calcuPrice = m_curTickData.last;
+					if(itB->close.orderID != "" && itB->close.status == "2")
+						calcuPrice = itB->close.price;
+					if(calcuPrice >= itB->open.price)
 					{
-						double profit = (m_curTickData.last-itB->open.price)/itB->open.price*m_nLeverage*baozhengjin;
+						double profit = (calcuPrice-itB->open.price)/itB->open.price*m_nLeverage*baozhengjin;
+						totalProfit += profit;
 						szFormat.Format("%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
 					}
 					else
 					{
-						double profit = (itB->open.price-m_curTickData.last)/itB->open.price*m_nLeverage*baozhengjin;
+						double profit = (itB->open.price-calcuPrice)/itB->open.price*m_nLeverage*baozhengjin;
+						totalProfit -= profit;
 						szFormat.Format("-%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
 					}
@@ -1759,15 +1765,20 @@ void COKExFuturesDlg::_UpdateTradeShow()
 				}
 				else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
 				{
-					if(m_curTickData.last <= itB->open.price)
+					double calcuPrice = m_curTickData.last;
+					if(itB->close.orderID != "" && itB->close.status == "2")
+						calcuPrice = itB->close.price;
+					if(calcuPrice <= itB->open.price)
 					{
-						double profit = (itB->open.price-m_curTickData.last)/itB->open.price*m_nLeverage*baozhengjin;
+						double profit = (itB->open.price-calcuPrice)/itB->open.price*m_nLeverage*baozhengjin;
+						totalProfit += profit;
 						szFormat.Format("%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
 					}
 					else
 					{
-						double profit = (m_curTickData.last-itB->open.price)/itB->open.price*m_nLeverage*baozhengjin;
+						double profit = (calcuPrice-itB->open.price)/itB->open.price*m_nLeverage*baozhengjin;
+						totalProfit -= profit;
 						szFormat.Format("-%s", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
 					}
@@ -1810,6 +1821,9 @@ void COKExFuturesDlg::_UpdateTradeShow()
 		++itB;
 		++i;
 	}
+	m_listCtrlOrderOpen.InsertItem(i, "");
+	szFormat.Format("%s", CFuncCommon::Double2String(totalProfit + DOUBLE_PRECISION, 5).c_str());
+	m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
 }
 
 
