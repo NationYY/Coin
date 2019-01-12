@@ -238,4 +238,5 @@ public:
 	CStatic m_staticPrice;
 	CEdit m_editMaxTradeCnt;
 	CEdit m_editMaxDirTradeCnt;
+	afx_msg void OnBnClickedButtonUpdateTradeSize();
 };

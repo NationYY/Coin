@@ -334,6 +334,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON2, &COKExFuturesDlg::OnBnClickedButtonTest)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON3, &COKExFuturesDlg::OnBnClickedButtonStopWhenFinish)
+	ON_BN_CLICKED(IDC_BUTTON4, &COKExFuturesDlg::OnBnClickedButtonUpdateTradeSize)
 END_MESSAGE_MAP()
 
 
@@ -377,19 +378,19 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
 
-	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 80);
+	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
 	m_listCtrlOrderOpen.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
-	m_listCtrlOrderOpen.InsertColumn(4, "最低价", LVCFMT_CENTER, 80);
-	m_listCtrlOrderOpen.InsertColumn(5, "最高价", LVCFMT_CENTER, 80);
+	m_listCtrlOrderOpen.InsertColumn(4, "最低价", LVCFMT_CENTER, 70);
+	m_listCtrlOrderOpen.InsertColumn(5, "最高价", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(6, "参考利润", LVCFMT_CENTER, 85);
+	m_listCtrlOrderOpen.InsertColumn(7, "下单时间", LVCFMT_CENTER, 90);
 	m_listCtrlOrderOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	m_listCtrlOrderClose.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
-	m_listCtrlOrderClose.InsertColumn(1, "类型", LVCFMT_CENTER, 50);
-	m_listCtrlOrderClose.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
-	m_listCtrlOrderClose.InsertColumn(3, "状态", LVCFMT_CENTER, 73);
+	m_listCtrlOrderClose.InsertColumn(1, "成交量", LVCFMT_CENTER, 70);
+	m_listCtrlOrderClose.InsertColumn(2, "状态", LVCFMT_CENTER, 73);
 	m_listCtrlOrderClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	if(!m_config.open("./config.ini"))
@@ -1784,46 +1785,38 @@ void COKExFuturesDlg::_UpdateTradeShow()
 					}
 				}
 			}
+			tm _tm;
+			localtime_s(&_tm, ((const time_t*)&(itB->open.timeStamp)));
+			szFormat.Format("%02d-%02d %02d:%02d:%02d", _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
+			m_listCtrlOrderOpen.SetItemText(i, 7, szFormat.GetBuffer());
 		}
 		if(itB->close.orderID != "")
 		{
 			m_listCtrlOrderClose.InsertItem(i, "");
 			szFormat.Format("%s", CFuncCommon::Double2String(itB->close.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
 			m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
-			switch(itB->close.tradeType)
-			{
-			case eFuturesTradeType_OpenBull:
-				m_listCtrlOrderClose.SetItemText(i, 1, "开多");
-				break;
-			case eFuturesTradeType_OpenBear:
-				m_listCtrlOrderClose.SetItemText(i, 1, "开空");
-				break;
-			case eFuturesTradeType_CloseBull:
-				m_listCtrlOrderClose.SetItemText(i, 1, "平多");
-				break;
-			case eFuturesTradeType_CloseBear:
-				m_listCtrlOrderClose.SetItemText(i, 1, "平空");
-				break;
-			default:
-				break;
-			}
 			szFormat.Format("%s/%s", itB->close.filledQTY.c_str(), itB->close.size.c_str());
-			m_listCtrlOrderClose.SetItemText(i, 2, szFormat);
+			m_listCtrlOrderClose.SetItemText(i, 1, szFormat);
 			if(itB->close.status == "-1")
-				m_listCtrlOrderClose.SetItemText(i, 3, "cancelled");
+				m_listCtrlOrderClose.SetItemText(i, 2, "cancelled");
 			else if(itB->close.status == "0")
-				m_listCtrlOrderClose.SetItemText(i, 3, "open");
+				m_listCtrlOrderClose.SetItemText(i, 2, "open");
 			else if(itB->close.status == "1")
-				m_listCtrlOrderClose.SetItemText(i, 3, "part_filled");
+				m_listCtrlOrderClose.SetItemText(i, 2, "part_filled");
 			else if(itB->close.status == "2")
-				m_listCtrlOrderClose.SetItemText(i, 3, "filled");
+				m_listCtrlOrderClose.SetItemText(i, 2, "filled");
 		}
 		++itB;
 		++i;
 	}
-	m_listCtrlOrderOpen.InsertItem(i, "");
-	szFormat.Format("%s", CFuncCommon::Double2String(totalProfit + DOUBLE_PRECISION, 5).c_str());
-	m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+	if(i != 0)
+	{
+		m_listCtrlOrderOpen.InsertItem(i, "");
+		m_listCtrlOrderOpen.SetItemText(i, 0, "统计");
+		szFormat.Format("%s", CFuncCommon::Double2String(totalProfit + DOUBLE_PRECISION, 5).c_str());
+		m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+	}
+	
 }
 
 
@@ -2011,4 +2004,18 @@ void COKExFuturesDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
 			g_pDlg->AddKlineData(data);
 		}
 	}
+}
+
+void COKExFuturesDlg::OnBnClickedButtonUpdateTradeSize()
+{
+	CString strFuturesTradeSize;
+	m_editFuturesTradeSize.GetWindowText(strFuturesTradeSize);
+	if(strFuturesTradeSize == "")
+	{
+		MessageBox("未填写下单张数");
+		return;
+	}
+	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
+	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
+	m_config.save("./config.ini");
 }
