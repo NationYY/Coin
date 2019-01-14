@@ -14,12 +14,15 @@ COkexHttpAPI::~COkexHttpAPI()
 }
 
 
-void COkexHttpAPI::API_FuturesAccountInfoByCurrency(std::string& currency)
+void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSwap, std::string& currency)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesAccountInfoByCurrency;
 	info.reqType = eHttpReqType_Get;
-	info.strMethod = "api/futures/v3/accounts/" + currency;
+	if(bSwap)
+		info.strMethod = "api/swap/v3/" + currency + "-USD-SWAP/accounts";
+	else
+		info.strMethod = "api/futures/v3/accounts/" + currency;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	info.customData = ++m_futuresAccountInfoByCurrencyIndex;

@@ -84,12 +84,12 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_Login, szExchangeName, retObj, strRet);
 	}
-	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "futures/order")
+	else if(retObj.isObject() && retObj["table"].isString() && (retObj["table"].asString() == "futures/order" || retObj["table"].asString() == "swap/order"))
 	{
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesOrderInfo, szExchangeName, retObj, strRet);
 	}
-	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "futures/account")
+	else if(retObj.isObject() && retObj["table"].isString() && (retObj["table"].asString() == "futures/account" || retObj["table"].asString() == "swap/account"))
 	{
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesAccountInfo, szExchangeName, retObj, strRet);

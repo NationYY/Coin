@@ -117,6 +117,9 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT5, m_editMaxTradeCnt);
 	DDX_Control(pDX, IDC_EDIT6, m_editMaxDirTradeCnt);
 	DDX_Control(pDX, IDC_COMBO4, m_combFuturesType);
+	DDX_Control(pDX, IDC_STATIC_ACCOUNT, m_staticAccountInfo);
+	DDX_Control(pDX, IDC_EDIT7, m_editCapital);
+	DDX_Control(pDX, IDC_STATIC_PROFIT, m_staticProfit);
 }
 
 BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
@@ -129,6 +132,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON3, &COKExFuturesDlg::OnBnClickedButtonStopWhenFinish)
 	ON_BN_CLICKED(IDC_BUTTON4, &COKExFuturesDlg::OnBnClickedButtonUpdateTradeSize)
+	ON_BN_CLICKED(IDC_BUTTON5, &COKExFuturesDlg::OnBnClickedButtonUpdateCost)
 END_MESSAGE_MAP()
 
 
@@ -206,7 +210,7 @@ BOOL COKExFuturesDlg::OnInitDialog()
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
 	SetTimer(eTimerType_Ping, 30000, NULL);
-
+	SetTimer(eTimerType_Account, 3000, NULL);
 	clib::string log_path = "log/";
 	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
 
@@ -301,6 +305,12 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			if(OKEX_WEB_SOCKET->Ping())
 				m_tListenPong = time(NULL);
+		}
+		break;
+	case eTimerType_Account:
+		{
+			if(m_bRun)
+				OKEX_HTTP->API_FuturesAccountInfoByCurrency(m_bSwapFutures, m_strCoinType);
 		}
 		break;
 	}
@@ -1373,7 +1383,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 void COKExFuturesDlg::OnLoginSuccess()
 {
 	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
-	OKEX_WEB_SOCKET->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType);
+	//OKEX_WEB_SOCKET->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType);
 }
 
 bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
@@ -1693,6 +1703,9 @@ void COKExFuturesDlg::__InitConfigCtrl()
 	
 	strTemp = m_config.get("futures", "maxDirTradeCnt", "");
 	m_editMaxDirTradeCnt.SetWindowText(strTemp.c_str());
+
+	strTemp = m_config.get("futures", "beginMoney", "");
+	m_editCapital.SetWindowText(strTemp.c_str());
 }
 
 bool COKExFuturesDlg::__SaveConfigCtrl()
@@ -1761,6 +1774,9 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		MessageBox("未填写单向最大同时下单数");
 		return false;
 	}
+	CString szCost = "";
+	m_editCapital.GetWindowText(szCost);
+
 	m_strCoinType = strCoinType.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
@@ -1774,6 +1790,8 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		m_bSwapFutures = true;
 	else
 		m_bSwapFutures = false;
+	if(szCost != "")
+		m_beginMoney = stod(szCost.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
 	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
@@ -1783,6 +1801,7 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 	m_config.set_value("futures", "maxTradeCnt", strMaxTradeCnt.GetBuffer());
 	m_config.set_value("futures", "maxDirTradeCnt", strMaxDirTradeCnt.GetBuffer());
 	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
+	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
 	m_config.save("./config.ini");
 	return true;
 }
@@ -1889,5 +1908,37 @@ void COKExFuturesDlg::OnBnClickedButtonUpdateTradeSize()
 	}
 	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
 	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
+	m_config.save("./config.ini");
+}
+
+void COKExFuturesDlg::UpdateAccountInfo(SFuturesAccountInfo& info)
+{
+	m_accountInfo = info;
+	m_accountInfo.bValid = true;
+	_UpdateAccountShow();
+}
+
+void COKExFuturesDlg::_UpdateAccountShow()
+{
+	if(m_accountInfo.bValid && !CFuncCommon::CheckEqual(m_beginMoney, 0.0))
+	{
+		m_staticAccountInfo.SetWindowText(m_accountInfo.equity.c_str());
+		double equity = stod(m_accountInfo.equity);
+		CString strTemp;
+		if(equity >= m_beginMoney)
+			strTemp.Format("%.4f(%.2f%%)", equity-m_beginMoney, (equity-m_beginMoney)/m_beginMoney*100);
+		else
+			strTemp.Format("-%.4f(-%.2f%%)", m_beginMoney-equity, (m_beginMoney-equity)/m_beginMoney*100);
+		m_staticProfit.SetWindowText(strTemp);
+	}
+}
+
+void COKExFuturesDlg::OnBnClickedButtonUpdateCost()
+{
+	m_beginMoney = 0.0;
+	CString szCost;
+	m_editCapital.GetWindowText(szCost);
+	m_beginMoney = stod(szCost.GetBuffer());
+	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
 	m_config.save("./config.ini");
 }

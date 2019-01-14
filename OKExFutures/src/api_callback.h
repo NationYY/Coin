@@ -13,16 +13,31 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	{
 	case eHttpAPIType_FuturesAccountInfoByCurrency:
 		{
-			if(retObj.isObject() && retObj["equity"].isString() && retObj["margin"].isString())
+			bool bRet = false;
+			if(retObj.isObject())
 			{
-				if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+				SFuturesAccountInfo data;
+				if(g_pDlg->m_bSwapFutures)
 				{
-					SFuturesAccountInfo data;
-					data.equity = stod(retObj["equity"].asString());
-					data.margin = stod(retObj["margin"].asString());
+					if(retObj["info"].isObject() && retObj["info"]["equity"].isString())
+					{
+						bRet = true;
+						if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+							data.equity = retObj["info"]["equity"].asString();
+					}
 				}
+				else
+				{
+					if(retObj["equity"].isString())
+					{
+						bRet = true;
+						if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+							data.equity = retObj["equity"].asString();
+					}
+				}
+				g_pDlg->UpdateAccountInfo(data);
 			}
-			else
+			if(!bRet)
 				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
@@ -74,7 +89,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 		break;
 	case eHttpAPIType_FuturesCancelOrder:
 		{
-			if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool() == true)
+			if(retObj.isObject() && ((retObj["result"].isBool() && retObj["result"].asBool() == true) || (retObj["result"].isString() && retObj["result"].asString() == "true")))
 			{
 				CActionLog("trade", "撤消订单成功 order=%s", retObj["order_id"].asString().c_str());
 			}
@@ -203,7 +218,12 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 		{
 			if(retObj.isObject() && retObj["data"].isArray())
 			{
-
+				SFuturesAccountInfo info;
+				if(g_pDlg->m_bSwapFutures)
+					info.equity = retObj["data"][0]["equity"].asString();
+				else
+					info.equity = retObj["data"][0][g_pDlg->m_strCoinType]["equity"].asString();
+				g_pDlg->UpdateAccountInfo(info);
 			}
 			else
 				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());

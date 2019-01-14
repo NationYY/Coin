@@ -11,6 +11,7 @@ enum eTimerType
 {
 	eTimerType_APIUpdate,
 	eTimerType_EntrustDepth,
+	eTimerType_Account,
 	eTimerType_Ping,
 };
 
@@ -69,10 +70,11 @@ struct SBollInfo
 
 struct SFuturesAccountInfo
 {
-	double equity;	//账户权益
-	double margin;	//保证金
-	SFuturesAccountInfo(){
-		memset(this, 0, sizeof(SFuturesAccountInfo));
+	std::string equity;	//账户权益
+	bool bValid;
+	SFuturesAccountInfo() : equity("0"), bValid(false)
+	{
+		
 	}
 };
 
@@ -161,6 +163,7 @@ public:
 	void UpdateTradeInfo(SFuturesTradeInfo& info);
 	void SetHScroll();
 	void ComplementedKLine(time_t tNowKlineTick, int kLineCnt);
+	void UpdateAccountInfo(SFuturesAccountInfo& info);
 private:
 	void Test();
 	void OnBollUpdate();
@@ -179,6 +182,7 @@ private:
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
 	void _UpdateTradeShow();
+	void _UpdateAccountShow();
 public:
 	bool m_bRun;
 	bool m_bSwapFutures;
@@ -200,6 +204,7 @@ private:
 	std::list<SFuturesTradePairInfo> m_listTradePairInfo;
 	bool m_bTest;
 	bool m_bStopWhenFinish;
+	SFuturesAccountInfo m_accountInfo;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:
@@ -241,4 +246,9 @@ public:
 	CEdit m_editMaxDirTradeCnt;
 	afx_msg void OnBnClickedButtonUpdateTradeSize();
 	CComboBox m_combFuturesType;
+	CStatic m_staticAccountInfo;
+	CEdit m_editCapital;
+	double m_beginMoney;
+	afx_msg void OnBnClickedButtonUpdateCost();
+	CStatic m_staticProfit;
 };
