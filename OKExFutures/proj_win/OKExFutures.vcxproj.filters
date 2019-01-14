@@ -44,6 +44,7 @@
     <ClInclude Include="..\src\mfc_window\okex_futures_dlg.h">
       <Filter>mfc_window</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\api_callback.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\ReadMe.txt" />

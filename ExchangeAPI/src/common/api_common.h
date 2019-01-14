@@ -15,6 +15,7 @@ enum eHttpAPIType
 	eHttpAPIType_FuturesTradeInfo,				//查询合约单条订单信息
 	eHttpAPIType_FuturesCancelOrder,			//合约撤单
 	eHttpAPIType_FuturesInstruments,			//获取合约币对信息
+	eHttpAPIType_SetFuturesLeverage,			//设置合约杠杆
 	eHttpAPIType_GetFuturesSomeKline,			//获取部分K线
 	eHttpAPIType_SpotTrade,						//现货下单
 	eHttpAPIType_SpotTradeInfo,					//查询现货单条订单信息

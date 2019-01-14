@@ -32,21 +32,37 @@ void COkexWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool b
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle)
+void COkexWebsocketAPI::API_FuturesKlineData(bool bAdd, bool bSwap, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle)
 {
-	m_futuresKlineCheck = "futures/";
-	m_futuresKlineCheck.append(strKlineType);
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/%s:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(),  strFuturesCycle.c_str());
+	if(bSwap)
+	{
+		m_futuresKlineCheck = "swap/";
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"swap/%s:%s-USD-SWAP\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str());
+	}
+	else
+	{
+		m_futuresKlineCheck = "futures/";
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/%s:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(), strFuturesCycle.c_str());
+	}
+	m_futuresKlineCheck.append(strKlineType);
 	Request(szBuffer);
 }
 
 
-void COkexWebsocketAPI::API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle)
+void COkexWebsocketAPI::API_FuturesTickerData(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle)
 {
-	m_futuresTickerCheck = "futures/ticker";
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/ticker:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
+	if(bSwap)
+	{
+		m_futuresTickerCheck = "swap/ticker";
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"swap/ticker:%s-USD-SWAP\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	}
+	else
+	{
+		m_futuresTickerCheck = "futures/ticker";
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/ticker:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
+	}
 	Request(szBuffer);
 }
 
@@ -64,17 +80,23 @@ void COkexWebsocketAPI::API_LoginFutures(std::string& strAPIKey, std::string& st
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_FuturesOrderInfo(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle)
+void COkexWebsocketAPI::API_FuturesOrderInfo(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle)
 {
 	char szBuffer[512] = { 0 };
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/order:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
+	if(bSwap)
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"swap/order:%s-USD-SWAP\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	else
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/order:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_FuturesAccountInfoByCurrency(bool bAdd, std::string& strCoinType)
+void COkexWebsocketAPI::API_FuturesAccountInfoByCurrency(bool bAdd, bool bSwap, std::string& strCoinType)
 {
 	char szBuffer[512] = { 0 };
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/account:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	if(bSwap)
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"swap/account:%s-USD-SWAP\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	else
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/account:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
 	Request(szBuffer);
 }
 

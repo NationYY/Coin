@@ -122,6 +122,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\api_callback.h" />
     <ClInclude Include="..\src\mfc_window\okex_futures.h" />
     <ClInclude Include="..\src\mfc_window\okex_futures_dlg.h" />
     <ClInclude Include="..\src\stdafx.h" />

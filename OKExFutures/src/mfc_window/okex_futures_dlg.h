@@ -181,6 +181,7 @@ private:
 	void _UpdateTradeShow();
 public:
 	bool m_bRun;
+	bool m_bSwapFutures;
 	time_t m_tListenPong;
 	bool m_bFirstKLine;
 private:
@@ -239,4 +240,5 @@ public:
 	CEdit m_editMaxTradeCnt;
 	CEdit m_editMaxDirTradeCnt;
 	afx_msg void OnBnClickedButtonUpdateTradeSize();
+	CComboBox m_combFuturesType;
 };
