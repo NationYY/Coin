@@ -1164,6 +1164,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 {
 	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
 	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
+	bool bUpdate = false;
 	while(itB != itE)
 	{
 		//如果交易完成就删除
@@ -1176,6 +1177,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 			CActionLog("finish_trade", "删除已完成%s交易对 open_price=%s, open_num=%s, open_order=%s, close_price=%s, close_num=%s, close_order=%s", ((itB->open.tradeType == eFuturesTradeType_OpenBull) ? "多单" : "空单"), openPrice.c_str(), itB->open.filledQTY.c_str(), itB->open.orderID.c_str(), closePrice.c_str(), itB->close.filledQTY.c_str(), itB->close.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
 			_UpdateTradeShow();
+			bUpdate = true;
 			continue;
 		}
 		if(bOpenFinish && itB->open.filledQTY == "0" && itB->close.strClientOrderID == "")
@@ -1183,6 +1185,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 			CActionLog("trade", "删除未完成交易对 order=%s", itB->open.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
 			_UpdateTradeShow();
+			bUpdate = true;
 			continue;
 		}
 		//如果已进行平仓交易,等待平仓完成
@@ -1191,7 +1194,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		{
 		
 		}
-		else if(itB->open.orderID != "") 
+		else if(itB->open.orderID != "" && !CFuncCommon::CheckEqual(itB->open.price, 0.0))
 		{
 			//多仓
 			if(itB->open.tradeType == eFuturesTradeType_OpenBull)
@@ -1279,8 +1282,9 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						else
 						{
 							double up = (m_curTickData.last - itB->open.price)/itB->open.price;
-							if(up/m_moveStopProfit >= 2)
-								itB->open.stopProfit = 1;
+							int nowStep = int(up/m_moveStopProfit);
+							if(nowStep >= 2)
+								itB->open.stopProfit = nowStep-1;
 						}
 					}
 				}
@@ -1369,8 +1373,9 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						else
 						{
 							double up = (itB->open.price - m_curTickData.last) / itB->open.price;
-							if(up / m_moveStopProfit >= 2)
-								itB->open.stopProfit = 1;
+							int nowStep = int(up/m_moveStopProfit);
+							if(nowStep >= 2)
+								itB->open.stopProfit = nowStep-1;
 						}
 					}
 				}
@@ -1378,11 +1383,97 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		}
 		++itB;
 	}
+	if(bUpdate)
+		_SaveData();
 }
 
 void COKExFuturesDlg::OnLoginSuccess()
 {
 	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+	std::string strFilePath = "./save.txt";
+	std::ifstream stream(strFilePath);
+	if(!stream.is_open())
+		return;
+	char lineBuffer[4096] = {0};
+	if(stream.fail())
+		return;
+	while(!stream.eof())
+	{
+		stream.getline(lineBuffer, sizeof(lineBuffer));
+		if(*lineBuffer == 0 || (lineBuffer[0] == '/' && lineBuffer[1] == '/') || (lineBuffer[0] == '-' && lineBuffer[1] == '-'))
+			continue;
+		std::stringstream lineStream(lineBuffer, std::ios_base::in);
+		char szOpenClientID[128] = {0};
+		char szOpenOrderID[128] = {0};
+		char szCloseClientID[128] = {0};
+		char szCloseOrderID[128] = {0};
+		lineStream >> szOpenOrderID >> szOpenClientID >> szCloseOrderID >> szCloseClientID;
+		SFuturesTradePairInfo info;
+		if(strcmp(szOpenOrderID, "0") != 0)
+		{
+			info.open.strClientOrderID = szOpenClientID;
+			info.open.orderID = szOpenOrderID;
+			SHttpResponse resInfo;
+			OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID, &resInfo);
+			Json::Value& retObj = resInfo.retObj;
+			if(retObj.isObject() && retObj["order_id"].isString())
+			{
+				info.open.timeStamp = CFuncCommon::ISO8601ToTime(retObj["timestamp"].asString());
+				info.open.filledQTY = retObj["filled_qty"].asString();
+				info.open.price = stod(retObj["price"].asString());
+				info.open.status = retObj["status"].asString();
+				info.open.size = retObj["size"].asString();
+				std::string tradeType = retObj["type"].asString();
+				if(tradeType == "1")
+					info.open.tradeType = eFuturesTradeType_OpenBull;
+				else if(tradeType == "2")
+					info.open.tradeType = eFuturesTradeType_OpenBear;
+				else if(tradeType == "3")
+					info.open.tradeType = eFuturesTradeType_CloseBull;
+				else if(tradeType == "4")
+					info.open.tradeType = eFuturesTradeType_CloseBear;
+				if(info.open.status != "0")
+				{
+					info.open.maxPrice = info.open.price;
+					info.open.minPrice = info.open.price;
+				}
+			}
+		}
+		if(strcmp(szCloseOrderID, "0") != 0)
+		{
+			info.close.strClientOrderID = szCloseClientID;
+			info.close.orderID = szCloseOrderID;
+			SHttpResponse resInfo;
+			OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.close.orderID, &resInfo);
+			Json::Value& retObj = resInfo.retObj;
+			if(retObj.isObject() && retObj["order_id"].isString())
+			{
+				info.close.timeStamp = CFuncCommon::ISO8601ToTime(retObj["timestamp"].asString());
+				info.close.filledQTY = retObj["filled_qty"].asString();
+				info.close.price = stod(retObj["price"].asString());
+				info.close.status = retObj["status"].asString();
+				info.close.size = retObj["size"].asString();
+				std::string tradeType = retObj["type"].asString();
+				if(tradeType == "1")
+					info.close.tradeType = eFuturesTradeType_OpenBull;
+				else if(tradeType == "2")
+					info.close.tradeType = eFuturesTradeType_OpenBear;
+				else if(tradeType == "3")
+					info.close.tradeType = eFuturesTradeType_CloseBull;
+				else if(tradeType == "4")
+					info.close.tradeType = eFuturesTradeType_CloseBear;
+				if(info.close.status != "0")
+				{
+					info.close.maxPrice = info.close.price;
+					info.close.minPrice = info.close.price;
+				}
+			}
+		}
+		if(strcmp(szOpenOrderID, "0") != 0)
+			m_listTradePairInfo.push_back(info);
+	}
+	stream.close();
+	_UpdateTradeShow();
 	//OKEX_WEB_SOCKET->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType);
 }
 
@@ -1464,6 +1555,7 @@ void COKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::string& se
 {
 	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
 	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
+	bool bUpdate = false;
 	while(itB != itE)
 	{
 		if(itB->open.strClientOrderID == clientOrderID)
@@ -1471,7 +1563,8 @@ void COKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::string& se
 			itB->open.orderID = serverOrderID;
 			itB->open.waitClientOrderIDTime = 0;
 			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str());
-			OKEX_HTTP->API_FuturesOrderInfo(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
+			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
+			bUpdate = true;
 			break;
 		}
 		if(itB->close.strClientOrderID == clientOrderID)
@@ -1479,11 +1572,35 @@ void COKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::string& se
 			itB->close.orderID = serverOrderID;
 			itB->close.waitClientOrderIDTime = 0;
 			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->close.strClientOrderID.c_str(), itB->close.orderID.c_str());
-			OKEX_HTTP->API_FuturesOrderInfo(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
+			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
+			bUpdate = true;
 			break;
 		}
 		++itB;
 	}
+	if(bUpdate)
+		_SaveData();
+}
+
+void COKExFuturesDlg::_SaveData()
+{
+	std::string strFilePath = "./save.txt";
+	std::ofstream stream(strFilePath);
+	if(!stream.is_open())
+		return;
+	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
+	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
+	while(itB != itE)
+	{
+		if(itB->open.orderID != "")
+			stream << itB->open.orderID << "	" << itB->open.strClientOrderID << "	";
+		if(itB->close.orderID != "")
+			stream << itB->close.orderID << "	" << itB->close.strClientOrderID << std::endl;
+		else
+			stream << "0	0" << std::endl;
+		++itB;
+	}
+	stream.close();
 }
 
 void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)

@@ -110,7 +110,7 @@ void COkexHttpAPI::API_FuturesServerTime()
 	RequestAsync(info);
 }
 
-void COkexHttpAPI::API_FuturesOrderInfo(bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID)
+void COkexHttpAPI::API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesTradeInfo;
@@ -121,7 +121,10 @@ void COkexHttpAPI::API_FuturesOrderInfo(bool bSwap, std::string& strCoinType, st
 		info.strMethod = "api/futures/v3/orders/" + strCoinType + "-USD-" + strFuturesCycle + "/" + orderID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
-	RequestAsync(info);
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
 }
 
 void COkexHttpAPI::API_FuturesCancelOrder(bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID)

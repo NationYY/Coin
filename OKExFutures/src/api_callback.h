@@ -71,6 +71,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				info.orderID = retObj["order_id"].asString();
 				info.price = stod(retObj["price"].asString());
 				info.status = retObj["status"].asString();
+				info.size = retObj["size"].asString();
 				std::string tradeType = retObj["type"].asString();
 				if(tradeType == "1")
 					info.tradeType = eFuturesTradeType_OpenBull;

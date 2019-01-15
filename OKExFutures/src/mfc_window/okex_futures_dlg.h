@@ -183,6 +183,7 @@ private:
 	bool __SaveConfigCtrl();
 	void _UpdateTradeShow();
 	void _UpdateAccountShow();
+	void _SaveData();
 public:
 	bool m_bRun;
 	bool m_bSwapFutures;
