@@ -374,7 +374,7 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 		if(m_bSwapFutures)
 		{
 			std::string strInstrumentID = m_strCoinType + "-USD-SWAP";
-			if(!resInfo.retObj.isObject() || (resInfo.retObj["instrument_id"].asString() != strInstrumentID))
+			if(!resInfo.retObj.isObject() || ((resInfo.retObj["instrument_id"].asString() != strInstrumentID) && (resInfo.retObj["code"].asInt() != 35017)))
 			{
 				MessageBox("…Ë÷√∏‹∏À ß∞‹");
 				return;
