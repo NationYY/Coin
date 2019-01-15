@@ -162,7 +162,7 @@ public:
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
 private:
-	void _Update30Sec();
+	void _Update15Sec();
 	void _LogicThread();
 	void OnBollUpdate();
 	void CheckBollTrend();
@@ -212,7 +212,7 @@ private:
 	double m_beginMoney;
 	boost::thread m_logicThread;
 	bool m_bExit;
-	time_t m_tLastUpdate30Sec;
+	time_t m_tLastUpdate15Sec;
 	int m_nStopProfitTimes;
 	int m_nFinishTimes;
 public:

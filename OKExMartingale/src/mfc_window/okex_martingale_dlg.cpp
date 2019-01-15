@@ -122,7 +122,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_bStopProfitMove = true;
 	m_tOpenTime = 0;
 	m_bExit = false;
-	m_tLastUpdate30Sec = 0;
+	m_tLastUpdate15Sec = 0;
 	m_nStopProfitTimes = 0;
 	m_nFinishTimes = 0;
 	m_bTestCfg = false;
@@ -2213,7 +2213,7 @@ void COKExMartingaleDlg::_LogicThread()
 	while(!m_bExit)
 	{
 		CLocalLogger::GetInstancePt()->SwapFront2Middle();
-		_Update30Sec();
+		_Update15Sec();
 		if(OKEX_CHANGE)
 			OKEX_CHANGE->Update();
 		if(m_tListenPong && time(NULL) - m_tListenPong > 15)
@@ -2239,14 +2239,14 @@ void COKExMartingaleDlg::_LogicThread()
 
 }
 
-void COKExMartingaleDlg::_Update30Sec()
+void COKExMartingaleDlg::_Update15Sec()
 {
 	time_t tNow = time(NULL);
-	if(m_tLastUpdate30Sec == 0)
-		m_tLastUpdate30Sec = tNow;
-	if(tNow - m_tLastUpdate30Sec < 30)
+	if(m_tLastUpdate15Sec == 0)
+		m_tLastUpdate15Sec = tNow;
+	if(tNow - m_tLastUpdate15Sec < 15)
 		return;
-	m_tLastUpdate30Sec = tNow;
+	m_tLastUpdate15Sec = tNow;
 	if(OKEX_WEB_SOCKET->Ping())
 		m_tListenPong = time(NULL);
 }
