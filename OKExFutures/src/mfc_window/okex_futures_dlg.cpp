@@ -1471,6 +1471,7 @@ void COKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::string& se
 		{
 			itB->open.orderID = serverOrderID;
 			itB->open.waitClientOrderIDTime = 0;
+			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str());
 			OKEX_HTTP->API_FuturesOrderInfo(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
 			break;
 		}
@@ -1478,6 +1479,7 @@ void COKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::string& se
 		{
 			itB->close.orderID = serverOrderID;
 			itB->close.waitClientOrderIDTime = 0;
+			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->close.strClientOrderID.c_str(), itB->close.orderID.c_str());
 			OKEX_HTTP->API_FuturesOrderInfo(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
 			break;
 		}
@@ -1504,6 +1506,7 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->open.status = info.status;
 			itB->open.tradeType = info.tradeType;
 			itB->open.size = info.size;
+			info.strClientOrderID = itB->open.strClientOrderID;
 			break;
 		}
 		else if(info.tradeType == itB->close.tradeType && itB->close.orderID == info.orderID)
@@ -1514,6 +1517,7 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 			itB->close.status = info.status;
 			itB->close.tradeType = info.tradeType;
 			itB->close.size = info.size;
+			info.strClientOrderID = itB->close.strClientOrderID;
 			break;
 		}
 		++itB;
