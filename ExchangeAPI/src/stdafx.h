@@ -13,6 +13,9 @@
 #include <set>
 #include <list>
 #include <map>
+#include <stdio.h>
+#include <stdlib.h>
+#include <Windows.h>
 #include "common/singleton.h"
 #include <json/json.h>
 #include "common/api_common.h"

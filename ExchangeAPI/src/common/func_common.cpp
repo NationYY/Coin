@@ -6,6 +6,7 @@
 #include <io.h>
 #include <iostream>
 #include "boost/thread.hpp"
+#include "objbase.h"
 CFuncCommon::CFuncCommon()
 {
 }
@@ -164,8 +165,21 @@ time_t CFuncCommon::ISO8601ToTime(std::string& time)
 	return time_unix;
 }
 
-__int64 CFuncCommon::GenUUID()
+char* CFuncCommon::GenUUID()
 {
+	static __declspec(thread) char buffer[64] = "";
+	GUID guid;
+
+	if(CoCreateGuid(&guid))
+		return "";
+	_snprintf(buffer, sizeof(buffer),
+			  "%08x%04x%04x%02x%02x%02x%02x%02x%02x%02x%02x",
+			  guid.Data1, guid.Data2, guid.Data3,
+			  guid.Data4[0], guid.Data4[1], guid.Data4[2],
+			  guid.Data4[3], guid.Data4[4], guid.Data4[5],
+			  guid.Data4[6], guid.Data4[7]);
+	return buffer;
+	/*
 	static boost::mutex guidMutex;
 	static __int64 increment = 0;
 	//我们时间只存储从2016年1月1日到现在的时间
@@ -195,5 +209,5 @@ __int64 CFuncCommon::GenUUID()
 	// 数字：时间29，自增34
 	//return j + i +server_id + type;
 	return (time_flag | increment);
-
+	*/
 }

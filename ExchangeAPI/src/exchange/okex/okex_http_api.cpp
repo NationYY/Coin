@@ -34,12 +34,13 @@ void COkexHttpAPI::API_FuturesTrade(bool bSwap, eFuturesTradeType tradeType, std
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesTrade;
 	info.reqType = eHttpReqType_Post;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
 	if(bSwap)
 		info.strMethod = "api/swap/v3/order";
 	else
 		info.strMethod = "api/futures/v3/order";
-	info.confirmationType = eHttpConfirmationType_OKEx;
-	info.bUTF8 = true;
+	
 	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
 	char szBuffer[128];
 	if(bSwap)
@@ -65,7 +66,7 @@ void COkexHttpAPI::API_FuturesTrade(bool bSwap, eFuturesTradeType tradeType, std
 		break;
 	}
 	if(price == "-1")
-		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "1");
+		info.mapParams["match_price"] = SHttpParam(eHttpParamType_String, "1");
 	else
 		info.mapParams["price"] = SHttpParam(eHttpParamType_String, price);
 	info.mapParams["size"] = SHttpParam(eHttpParamType_String, size);

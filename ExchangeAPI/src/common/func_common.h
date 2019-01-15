@@ -16,6 +16,6 @@ public:
 	static void GetAllFileInDirectory(const char* szPath, std::set<std::string>& setFiles);
 	static std::string LocaltimeToISO8601(time_t time);
 	static time_t ISO8601ToTime(std::string& time);
-	static __int64 GenUUID();
+	static char* GenUUID();
 };
 

@@ -1179,7 +1179,7 @@ ReCheckMoney:
 					if(m_bTest)
 					{
 						SSPotTradePairInfo info;
-						info.open.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						info.open.orderID = CFuncCommon::GenUUID();
 						info.open.price = strPrice;
 						info.open.size = strSize;
 						info.open.side = "buy";
@@ -1195,7 +1195,7 @@ ReCheckMoney:
 					{
 						BEGIN_API_CHECK
 							SHttpResponse resInfo;
-							OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_buy, strPrice, strSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+							OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_buy, strPrice, strSize, CFuncCommon::GenUUID(), &resInfo);
 							Json::Value& retObj = resInfo.retObj;
 							if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 							{
@@ -1356,7 +1356,7 @@ ReCheckMoney:
 					{
 						if(m_bTest)
 						{
-							m_vectorTradePairs[i].close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							m_vectorTradePairs[i].close.orderID = CFuncCommon::GenUUID();
 							m_vectorTradePairs[i].close.price = strPrice;
 							m_vectorTradePairs[i].close.size = m_vectorTradePairs[i].open.filledSize;
 							m_vectorTradePairs[i].close.side = "sell";
@@ -1371,7 +1371,7 @@ ReCheckMoney:
 						{
 							BEGIN_API_CHECK
 								SHttpResponse resInfo;
-								OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+								OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, CFuncCommon::GenUUID(), &resInfo);
 								Json::Value& retObj = resInfo.retObj;
 								if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 								{
@@ -1619,7 +1619,7 @@ ReCheckMoney:
 										std::string strPrice = CFuncCommon::Double2String(m_curTickData.sell + DOUBLE_PRECISION, m_nPriceDecimal);
 										if(m_bTest)
 										{
-											pairsInfo.close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+											pairsInfo.close.orderID = CFuncCommon::GenUUID();
 											pairsInfo.close.price = strPrice;
 											pairsInfo.close.size = pairsInfo.open.filledSize;
 											pairsInfo.close.side = "sell";
@@ -1634,7 +1634,7 @@ ReCheckMoney:
 										{
 											BEGIN_API_CHECK
 												SHttpResponse resInfo;
-												OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, pairsInfo.open.filledSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+												OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, pairsInfo.open.filledSize, CFuncCommon::GenUUID(), &resInfo);
 												Json::Value& retObj = resInfo.retObj;
 												if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 												{
@@ -1737,7 +1737,7 @@ ReCheckMoney:
 													{
 														if(m_bTest)
 														{
-															m_vectorTradePairs[i].close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+															m_vectorTradePairs[i].close.orderID = CFuncCommon::GenUUID();
 															m_vectorTradePairs[i].close.price = strPrice;
 															m_vectorTradePairs[i].close.size = m_vectorTradePairs[i].open.filledSize;
 															m_vectorTradePairs[i].close.side = "sell";
@@ -1752,7 +1752,7 @@ ReCheckMoney:
 														{
 															BEGIN_API_CHECK
 																SHttpResponse resInfo;
-																OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+																OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, m_vectorTradePairs[i].open.filledSize, CFuncCommon::GenUUID(), &resInfo);
 																Json::Value& retObj = resInfo.retObj;
 																if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 																{
@@ -1805,7 +1805,7 @@ ReCheckMoney:
 									std::string strPrice = CFuncCommon::Double2String(openPrice*(1+m_stopProfitFactor)+DOUBLE_PRECISION, m_nPriceDecimal);
 									if(m_bTest)
 									{
-										pairsInfo.close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										pairsInfo.close.orderID = CFuncCommon::GenUUID();
 										pairsInfo.close.price = strPrice;
 										pairsInfo.close.size = pairsInfo.open.filledSize;
 										pairsInfo.close.side = "sell";
@@ -1820,7 +1820,7 @@ ReCheckMoney:
 									{
 										BEGIN_API_CHECK
 											SHttpResponse resInfo;
-											OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, pairsInfo.open.filledSize, CFuncCommon::ToString(CFuncCommon::GenUUID()), &resInfo);
+											OKEX_HTTP->API_SpotTrade(false, m_strInstrumentID, eTradeType_sell, strPrice, pairsInfo.open.filledSize, CFuncCommon::GenUUID(), &resInfo);
 											Json::Value& retObj = resInfo.retObj;
 											if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 											{

@@ -1079,13 +1079,13 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 				{
 					if(m_bTest)
 					{
-						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						std::string strClinetOrderID = CFuncCommon::GenUUID();
 						std::string price = CFuncCommon::Double2String(m_curTickData.buy+DOUBLE_PRECISION, m_nPriceDecimal);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClinetOrderID;
 						info.open.timeStamp = time(NULL);
 						info.open.filledQTY = m_strFuturesTradeSize;
-						info.open.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						info.open.orderID = CFuncCommon::GenUUID();
 						info.open.price = m_curTickData.buy;
 						info.open.status = 2;
 						info.open.tradeType = eFuturesTradeType_OpenBull;
@@ -1095,7 +1095,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					}
 					else
 					{
-						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						std::string strClinetOrderID = CFuncCommon::GenUUID();
 						std::string price = CFuncCommon::Double2String(m_curTickData.buy+DOUBLE_PRECISION, m_nPriceDecimal);
 						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
 						SFuturesTradePairInfo info;
@@ -1118,13 +1118,13 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 				{
 					if(m_bTest)
 					{
-						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						std::string strClinetOrderID = CFuncCommon::GenUUID();
 						std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClinetOrderID;
 						info.open.timeStamp = time(NULL);
 						info.open.filledQTY = m_strFuturesTradeSize.c_str();
-						info.open.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						info.open.orderID = CFuncCommon::GenUUID();
 						info.open.price = m_curTickData.sell;
 						info.open.status = 2;
 						info.open.tradeType = eFuturesTradeType_OpenBear;
@@ -1134,7 +1134,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					}
 					else
 					{
-						std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+						std::string strClinetOrderID = CFuncCommon::GenUUID();
 						std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal);
 						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
 						SFuturesTradePairInfo info;
@@ -1204,10 +1204,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal);
 						if(m_bTest)
 						{
-							itB->close.strClientOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							itB->close.strClientOrderID = CFuncCommon::GenUUID();
 							itB->close.timeStamp = time(NULL);
 							itB->close.filledQTY = m_strFuturesTradeSize;
-							itB->close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							itB->close.orderID = CFuncCommon::GenUUID();
 							itB->close.price = m_curTickData.sell;
 							itB->close.status = 2;
 							itB->close.tradeType = eFuturesTradeType_CloseBull;
@@ -1215,7 +1215,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						}
 						else
 						{
-							std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							std::string strClinetOrderID = CFuncCommon::GenUUID();
 							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
 							itB->close.strClientOrderID = strClinetOrderID;
 							itB->close.waitClientOrderIDTime = time(NULL);
@@ -1248,10 +1248,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 									std::string price = CFuncCommon::Double2String(m_curTickData.sell + DOUBLE_PRECISION, m_nPriceDecimal);
 									if(m_bTest)
 									{
-										itB->close.strClientOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										itB->close.strClientOrderID = CFuncCommon::GenUUID();
 										itB->close.timeStamp = time(NULL);
 										itB->close.filledQTY = itB->open.filledQTY;
-										itB->close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										itB->close.orderID = CFuncCommon::GenUUID();
 										itB->close.price = m_curTickData.sell;
 										itB->close.status = 2;
 										itB->close.tradeType = eFuturesTradeType_CloseBull;
@@ -1259,7 +1259,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 									}
 									else
 									{
-										std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										std::string strClinetOrderID = CFuncCommon::GenUUID();
 										OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClinetOrderID);
 										itB->close.strClientOrderID = strClinetOrderID;
 										itB->close.waitClientOrderIDTime = time(NULL);
@@ -1295,10 +1295,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						std::string price = CFuncCommon::Double2String(m_curTickData.buy + DOUBLE_PRECISION, m_nPriceDecimal);
 						if(m_bTest)
 						{
-							itB->close.strClientOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							itB->close.strClientOrderID = CFuncCommon::GenUUID();
 							itB->close.timeStamp = time(NULL);
 							itB->close.filledQTY = m_strFuturesTradeSize;
-							itB->close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							itB->close.orderID = CFuncCommon::GenUUID();
 							itB->close.price = m_curTickData.buy;
 							itB->close.status = 2;
 							itB->close.tradeType = eFuturesTradeType_CloseBear;
@@ -1306,7 +1306,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 						}
 						else
 						{
-							std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+							std::string strClinetOrderID = CFuncCommon::GenUUID();
 							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClinetOrderID);
 							itB->close.strClientOrderID = strClinetOrderID;
 							itB->close.waitClientOrderIDTime = time(NULL);
@@ -1338,10 +1338,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 									std::string price = CFuncCommon::Double2String(m_curTickData.buy + DOUBLE_PRECISION, m_nPriceDecimal);
 									if(m_bTest)
 									{
-										itB->close.strClientOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										itB->close.strClientOrderID = CFuncCommon::GenUUID();
 										itB->close.timeStamp = time(NULL);
 										itB->close.filledQTY = itB->open.filledQTY;
-										itB->close.orderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										itB->close.orderID = CFuncCommon::GenUUID();
 										itB->close.price = m_curTickData.buy;
 										itB->close.status = 2;
 										itB->close.tradeType = eFuturesTradeType_CloseBear;
@@ -1349,7 +1349,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 									}
 									else
 									{
-										std::string strClinetOrderID = CFuncCommon::ToString(CFuncCommon::GenUUID());
+										std::string strClinetOrderID = CFuncCommon::GenUUID();
 										OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClinetOrderID);
 										itB->close.strClientOrderID = strClinetOrderID;
 										itB->close.waitClientOrderIDTime = time(NULL);
