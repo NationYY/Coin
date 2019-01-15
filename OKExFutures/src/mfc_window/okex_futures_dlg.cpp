@@ -382,14 +382,13 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 		}
 		else
 		{
-			if(!resInfo.retObj.isObject() || !resInfo.retObj["result"].asBool())
+			if(!resInfo.retObj.isObject() || (resInfo.retObj["result"].asString() != "true"))
 			{
 				MessageBox("ÉèÖÃ¸Ü¸ËÊ§°Ü");
 				return;
 			}
 		}
 	}
-	
 	if(OKEX_WEB_SOCKET)
 	{
 		OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_bSwapFutures, m_strKlineCycle, m_strCoinType, m_strFuturesCycle);
