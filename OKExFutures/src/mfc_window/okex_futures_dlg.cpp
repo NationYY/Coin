@@ -209,7 +209,7 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	pExchange->Run();
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
-	SetTimer(eTimerType_Ping, 30000, NULL);
+	SetTimer(eTimerType_Ping, 15000, NULL);
 	SetTimer(eTimerType_Account, 3000, NULL);
 	clib::string log_path = "log/";
 	bool bRet = clib::file_util::mkfiledir(log_path.c_str(), true);
@@ -289,6 +289,7 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 				OKEX_CHANGE->Update();
 			if(m_tListenPong && time(NULL) - m_tListenPong > 15)
 			{
+				LOCAL_ERROR("ping≥¨ ±÷ÿ¡¨");
 				m_tListenPong = 0;
 				delete pExchange;
 				pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
