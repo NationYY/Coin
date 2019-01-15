@@ -1418,10 +1418,10 @@ void COKExFuturesDlg::OnLoginSuccess()
 			if(retObj.isObject() && retObj["order_id"].isString())
 			{
 				info.open.timeStamp = CFuncCommon::ISO8601ToTime(retObj["timestamp"].asString());
-				info.open.filledQTY = retObj["filled_qty"].asString();
+				info.open.filledQTY = CFuncCommon::ToString(stoi(retObj["filled_qty"].asString()));
 				info.open.price = stod(retObj["price"].asString());
 				info.open.status = retObj["status"].asString();
-				info.open.size = retObj["size"].asString();
+				info.open.size = CFuncCommon::ToString(stoi(retObj["size"].asString()));
 				std::string tradeType = retObj["type"].asString();
 				if(tradeType == "1")
 					info.open.tradeType = eFuturesTradeType_OpenBull;
@@ -1448,10 +1448,10 @@ void COKExFuturesDlg::OnLoginSuccess()
 			if(retObj.isObject() && retObj["order_id"].isString())
 			{
 				info.close.timeStamp = CFuncCommon::ISO8601ToTime(retObj["timestamp"].asString());
-				info.close.filledQTY = retObj["filled_qty"].asString();
+				info.close.filledQTY = CFuncCommon::ToString(stoi(retObj["filled_qty"].asString()));
 				info.close.price = stod(retObj["price"].asString());
 				info.close.status = retObj["status"].asString();
-				info.close.size = retObj["size"].asString();
+				info.close.size = CFuncCommon::ToString(stoi(retObj["size"].asString()));
 				std::string tradeType = retObj["type"].asString();
 				if(tradeType == "1")
 					info.close.tradeType = eFuturesTradeType_OpenBull;
