@@ -191,7 +191,6 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_listCtrlOrderClose.InsertColumn(1, "³É½»Á¿", LVCFMT_CENTER, 70);
 	m_listCtrlOrderClose.InsertColumn(2, "×´Ì¬", LVCFMT_CENTER, 45);
 	m_listCtrlOrderClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
-
 	if(!m_config.open("./config.ini"))
 		return FALSE;
 	m_apiKey = m_config.get("futures", "apiKey", "");
@@ -1539,6 +1538,7 @@ void COKExFuturesDlg::_UpdateTradeShow()
 		if(itB->open.orderID != "")
 		{
 			m_listCtrlOrderOpen.InsertItem(i, "");
+			m_listCtrlOrderClose.InsertItem(i, "");
 			szFormat.Format("%s", CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
 			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
 			switch(itB->open.tradeType)
@@ -1632,7 +1632,6 @@ void COKExFuturesDlg::_UpdateTradeShow()
 		}
 		if(itB->close.orderID != "")
 		{
-			m_listCtrlOrderClose.InsertItem(i, "");
 			szFormat.Format("%s", CFuncCommon::Double2String(itB->close.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
 			m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
 			szFormat.Format("%s/%s", itB->close.filledQTY.c_str(), itB->close.size.c_str());
