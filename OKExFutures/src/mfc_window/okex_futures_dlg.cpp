@@ -176,6 +176,8 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_combCoinType.InsertString(5, "XRP");
 	m_combCoinType.InsertString(6, "EOS");
 	m_combCoinType.InsertString(7, "BCH");
+	m_combCoinType.InsertString(8, "TRX");
+
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
 	m_combFuturesType.InsertString(0, "交割合约");
@@ -399,6 +401,11 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
 		//OKEX_HTTP->API_FuturesServerTime();
 	}
+	CString strTitle;
+	strTitle.Format("%s-%s", (m_bSwapFutures?"永续合约":"交割合约"), m_strCoinType.c_str());
+	CWnd *m_pMainWnd;
+	m_pMainWnd = AfxGetMainWnd();
+	m_pMainWnd->SetWindowText(strTitle);
 	m_bRun = true;
 }
 
@@ -1886,6 +1893,8 @@ void COKExFuturesDlg::__InitConfigCtrl()
 		m_combCoinType.SetCurSel(6);
 	else if(strTemp == "BCH")
 		m_combCoinType.SetCurSel(7);
+	else if(strTemp == "TRX")
+		m_combCoinType.SetCurSel(8);
 	strTemp = m_config.get("futures", "futuresCycle", "");
 	m_editFuturesCycle.SetWindowText(strTemp.c_str());
 
