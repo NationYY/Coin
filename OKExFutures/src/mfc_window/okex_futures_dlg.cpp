@@ -75,7 +75,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	g_pDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_nBollCycle = 20;
-	m_nPriceDecimal = 2;
+	m_nPriceDecimal = 3;
 	m_nZhangKouCheckCycle = 20;
 	m_nShouKouCheckCycle = 20;
 	m_nZhangKouTrendCheckCycle = 5;
@@ -577,7 +577,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 			}
 		}
 		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if(offset / minValue > 2.5)
+		if(offset / minValue > 2.24)
 		{
 			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 			return;
@@ -720,7 +720,7 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 			__SetBollState(eBollTrend_ShouKou);
 			return;
 		}
-		if((maxValue/offset) > 2.5)
+		if((maxValue/offset) > 2.24)
 		{
 			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
 			if(offset/avgPrice < 0.02)
@@ -796,7 +796,7 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 		}
 	}
 	double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-	if(offset / minValue > 2.5)
+	if(offset / minValue > 2.24)
 	{
 		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 		return;
@@ -874,7 +874,7 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 					break;
 			}
 			double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-			if(offset / minValue > 2.5)
+			if(offset / minValue > 2.24)
 			{
 				__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 				return;
