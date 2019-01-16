@@ -202,6 +202,7 @@ private:
 	SBollInfo m_curTickBoll;
 	STickerData m_curTickData;
 	int m_nZhangKouTradeCheckBar;
+	int m_nShouKouTradeCheckBar;
 	std::list<SFuturesTradePairInfo> m_listTradePairInfo;
 	bool m_bTest;
 	bool m_bStopWhenFinish;
