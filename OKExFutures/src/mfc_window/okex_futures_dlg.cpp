@@ -23,7 +23,7 @@
 #define KLINE_DATA m_vecKlineData
 #define KLINE_DATA_SIZE ((int)m_vecKlineData.size())
 #define OKEX_CHANGE ((COkexExchange*)pExchange)
-#define TRADE_DIR 2	//1:张口顺向交易 2:收口逆向交易
+#define TRADE_DIR 1	//1:张口顺向交易 2:收口逆向交易
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CExchange* pExchange = NULL;
