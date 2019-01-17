@@ -1291,13 +1291,25 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		}
 		time_t tNow = time(NULL);
 		//超时订单删除
-		if(itB->open.orderID != "" && itB->open.status == "0" && itB->open.timeStamp && tNow-itB->open.timeStamp>60*10)
+		if(itB->open.orderID != "" && itB->open.status == "0" && itB->open.timeStamp && tNow-itB->open.timeStamp>60*10 && !CFuncCommon::CheckEqual(itB->open.price, 0.0))
 		{
+			if(!m_bTest)
+				OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, itB->open.orderID);
 			CActionLog("trade", "删除超时交易对 order=%s", itB->open.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
 			_UpdateTradeShow();
 			bUpdate = true;
 			continue;
+		}
+		if(itB->close.orderID != "" && itB->close.status == "0" && itB->close.timeStamp && tNow-itB->close.timeStamp>60*10 && !CFuncCommon::CheckEqual(itB->close.price, 0.0))
+		{
+			CActionLog("trade", "删除超时平仓单 order=%s", itB->close.orderID.c_str());
+			if(!m_bTest)
+				OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, itB->close.orderID);
+			itB->open.stopProfit = 0;
+			itB->close.Reset();
+			_UpdateTradeShow();
+			bUpdate = true;
 		}
 		//如果已进行平仓交易,等待平仓完成
 		//否则判断开仓的盈亏
@@ -1599,19 +1611,14 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 				return false;
 			std::list<SFuturesTradePairInfo>::reverse_iterator itBegin = m_listTradePairInfo.rbegin();
 			std::list<SFuturesTradePairInfo>::reverse_iterator itEnd = m_listTradePairInfo.rend();
-			int bullCount = 0;
-			int bearCount = 0;
+			int cnt = 0;
 			while(itBegin != itEnd)
 			{
 				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull)
-					bullCount++;
-				else if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
-					bearCount++;
-				if(bullCount + bearCount >= m_nMaxDirTradeCnt)
-					break;
+					cnt++;
 				itBegin++;
 			}
-			if(bullCount >= m_nMaxDirTradeCnt)
+			if(cnt >= m_nMaxDirTradeCnt)
 				return false;
 		}
 		break;
@@ -1621,19 +1628,14 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 				return false;
 			std::list<SFuturesTradePairInfo>::reverse_iterator itBegin = m_listTradePairInfo.rbegin();
 			std::list<SFuturesTradePairInfo>::reverse_iterator itEnd = m_listTradePairInfo.rend();
-			int bullCount = 0;
-			int bearCount = 0;
+			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull)
-					bullCount++;
-				else if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
-					bearCount++;
-				if(bullCount + bearCount >= m_nMaxDirTradeCnt)
-					break;
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
+					cnt++;
 				itBegin++;
 			}
-			if(bearCount >= m_nMaxDirTradeCnt)
+			if(cnt >= m_nMaxDirTradeCnt)
 				return false;
 		}
 		break;
