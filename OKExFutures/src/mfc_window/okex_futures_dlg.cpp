@@ -1291,7 +1291,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		}
 		time_t tNow = time(NULL);
 		//超时订单删除
-		if(itB->open.orderID != "" && itB->open.timeStamp && tNow-itB->open.timeStamp>60*10)
+		if(itB->open.orderID != "" && itB->open.status == "0" && itB->open.timeStamp && tNow-itB->open.timeStamp>60*10)
 		{
 			CActionLog("trade", "删除超时交易对 order=%s", itB->open.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
