@@ -407,6 +407,7 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 	m_pMainWnd = AfxGetMainWnd();
 	m_pMainWnd->SetWindowText(strTitle);
 	m_bRun = true;
+	CActionLog("market", "restart");
 }
 
 void COKExFuturesDlg::AddKlineData(SKlineData& data)
@@ -484,7 +485,10 @@ void COKExFuturesDlg::Test()
 				continue;
 			std::stringstream lineStream(lineBuffer, std::ios_base::in);
 			char szContent[4096] = {};
-			lineStream >> szContent >> szContent >> szContent;
+			lineStream >> szContent;
+			if(strcmp(szContent, "restart") == 0)
+				continue;
+			lineStream >> szContent >> szContent;
 			Json::Value retObj;
 			Json::Reader reader;
 			reader.parse(szContent, retObj);
@@ -1280,6 +1284,16 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		if(bOpenFinish && itB->open.filledQTY == "0" && itB->close.strClientOrderID == "")
 		{
 			CActionLog("trade", "删除未完成交易对 order=%s", itB->open.orderID.c_str());
+			itB = m_listTradePairInfo.erase(itB);
+			_UpdateTradeShow();
+			bUpdate = true;
+			continue;
+		}
+		time_t tNow = time(NULL);
+		//超时订单删除
+		if(itB->open.orderID != "" && itB->open.timeStamp && tNow-itB->open.timeStamp>60*10)
+		{
+			CActionLog("trade", "删除超时交易对 order=%s", itB->open.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
 			_UpdateTradeShow();
 			bUpdate = true;
