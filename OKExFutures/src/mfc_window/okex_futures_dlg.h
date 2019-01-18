@@ -228,8 +228,9 @@ public:
 	int m_nLeverage;					//合约倍数
 	double m_stopLoss;					//止损比例
 	double m_moveStopProfit;			//移动止盈比例
-	std::string m_strStopLoss;					//止损比例
-	std::string m_strMoveStopProfit;			//移动止盈比例
+	std::string m_strStopLoss;			//止损比例
+	std::string m_strMoveStopProfit;	//移动止盈比例
+	int m_tradeMoment;					//交易时机 0:张口顺向交易 1:收口逆向交易
 public:
 	afx_msg void OnBnClickedButtonTest();
 	afx_msg void OnDestroy();
@@ -253,4 +254,6 @@ public:
 	double m_beginMoney;
 	afx_msg void OnBnClickedButtonUpdateCost();
 	CStatic m_staticProfit;
+	CComboBox m_combTradeMoment;
+	afx_msg void OnBnClickedButtonUpdateTradeMoment();
 };

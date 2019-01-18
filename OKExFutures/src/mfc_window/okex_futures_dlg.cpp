@@ -23,7 +23,6 @@
 #define KLINE_DATA m_vecKlineData
 #define KLINE_DATA_SIZE ((int)m_vecKlineData.size())
 #define OKEX_CHANGE ((COkexExchange*)pExchange)
-#define TRADE_DIR 1	//1:张口顺向交易 2:收口逆向交易
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 CExchange* pExchange = NULL;
@@ -102,6 +101,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_bSwapFutures = false;
 	m_nShouKouTradeCheckBar = 0;
 	m_nZhangKouTradeCheckBar = 0;
+	m_tradeMoment = 0;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -123,6 +123,7 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT, m_staticAccountInfo);
 	DDX_Control(pDX, IDC_EDIT7, m_editCapital);
 	DDX_Control(pDX, IDC_STATIC_PROFIT, m_staticProfit);
+	DDX_Control(pDX, IDC_COMBO1, m_combTradeMoment);
 }
 
 BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
@@ -136,6 +137,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &COKExFuturesDlg::OnBnClickedButtonStopWhenFinish)
 	ON_BN_CLICKED(IDC_BUTTON4, &COKExFuturesDlg::OnBnClickedButtonUpdateTradeSize)
 	ON_BN_CLICKED(IDC_BUTTON5, &COKExFuturesDlg::OnBnClickedButtonUpdateCost)
+	ON_BN_CLICKED(IDC_BUTTON6, &COKExFuturesDlg::OnBnClickedButtonUpdateTradeMoment)
 END_MESSAGE_MAP()
 
 
@@ -180,6 +182,10 @@ BOOL COKExFuturesDlg::OnInitDialog()
 
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
+
+	m_combTradeMoment.InsertString(0, "趋势出现");
+	m_combTradeMoment.InsertString(1, "趋势结束");
+
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
 	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
@@ -1080,7 +1086,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 {
 	if(m_bStopWhenFinish)
 		return;
-	if(TRADE_DIR != 1)
+	if(m_tradeMoment != 0)
 		return;
 	//确认张口后第一根柱子
 	if(KLINE_DATA_SIZE-1-m_nZhangKouTradeCheckBar <= 1)
@@ -1170,7 +1176,7 @@ void COKExFuturesDlg::__CheckTrade_ShouKou()
 {
 	if(m_bStopWhenFinish)
 		return;
-	if(TRADE_DIR != 2)
+	if(m_tradeMoment != 1)
 		return;
 	//确认张口后第一根柱子
 	if(m_eLastBollState == eBollTrend_ZhangKou && m_nShouKouTradeCheckBar)
@@ -1943,6 +1949,12 @@ void COKExFuturesDlg::__InitConfigCtrl()
 
 	strTemp = m_config.get("futures", "beginMoney", "");
 	m_editCapital.SetWindowText(strTemp.c_str());
+
+	strTemp = m_config.get("futures", "tradeMoment", "");
+	if(strTemp == "趋势出现")
+		m_combTradeMoment.SetCurSel(0);
+	else if(strTemp == "趋势结束")
+		m_combTradeMoment.SetCurSel(1);
 }
 
 bool COKExFuturesDlg::__SaveConfigCtrl()
@@ -2011,6 +2023,14 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		MessageBox("未填写单向最大同时下单数");
 		return false;
 	}
+	CString strTradeMoment;
+	m_combTradeMoment.GetWindowText(strTradeMoment);
+	if(strTradeMoment == "")
+	{
+		MessageBox("未选择交易时机");
+		return false;
+	}
+
 	CString szCost = "";
 	m_editCapital.GetWindowText(szCost);
 
@@ -2027,6 +2047,10 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		m_bSwapFutures = true;
 	else
 		m_bSwapFutures = false;
+	if(strTradeMoment == "趋势出现")
+		m_tradeMoment = 0;
+	else
+		m_tradeMoment = 1;
 	if(szCost != "")
 		m_beginMoney = stod(szCost.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
@@ -2039,6 +2063,7 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 	m_config.set_value("futures", "maxDirTradeCnt", strMaxDirTradeCnt.GetBuffer());
 	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
 	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
+	m_config.set_value("futures", "tradeMoment", strTradeMoment.GetBuffer());
 	m_config.save("./config.ini");
 	return true;
 }
@@ -2177,5 +2202,23 @@ void COKExFuturesDlg::OnBnClickedButtonUpdateCost()
 	m_editCapital.GetWindowText(szCost);
 	m_beginMoney = stod(szCost.GetBuffer());
 	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
+	m_config.save("./config.ini");
+}
+
+
+void COKExFuturesDlg::OnBnClickedButtonUpdateTradeMoment()
+{
+	CString strTradeMoment;
+	m_combTradeMoment.GetWindowText(strTradeMoment);
+	if(strTradeMoment == "")
+	{
+		MessageBox("未选择交易时机");
+		return;
+	}
+	if(strTradeMoment == "趋势出现")
+		m_tradeMoment = 0;
+	else
+		m_tradeMoment = 1;
+	m_config.set_value("futures", "tradeMoment", strTradeMoment.GetBuffer());
 	m_config.save("./config.ini");
 }
