@@ -10,9 +10,9 @@
 enum eTimerType
 {
 	eTimerType_APIUpdate,
-	eTimerType_EntrustDepth,
 	eTimerType_Account,
 	eTimerType_Ping,
+	eTimerType_TradeOrder,
 };
 
 enum eBollTrend
@@ -92,6 +92,7 @@ struct SFuturesTradeInfo
 	std::string size;
 	double maxPrice;
 	double minPrice;
+	time_t tLastUpdate;
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -110,6 +111,7 @@ struct SFuturesTradeInfo
 		size = "0";
 		maxPrice = 0.0;
 		minPrice = 0.0;
+		tLastUpdate = 0;
 	}
 };
 
@@ -179,6 +181,7 @@ private:
 	void __CheckTradeOrder();
 	void __SetBollState(eBollTrend state, int nParam=0, double dParam=0.0);
 	bool __CheckCanTrade(eFuturesTradeType eType);
+	bool __CheckCanStopProfit(eFuturesTradeType eOpenType, std::string& orderID);
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
 	void _UpdateTradeShow();
@@ -207,6 +210,8 @@ private:
 	bool m_bTest;
 	bool m_bStopWhenFinish;
 	SFuturesAccountInfo m_accountInfo;
+	bool m_bCanLogCheckCanTrade;
+	bool m_bCanStopProfit;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:
