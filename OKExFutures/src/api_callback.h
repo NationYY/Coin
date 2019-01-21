@@ -67,11 +67,11 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				SFuturesTradeInfo info;
 				info.strClientOrderID = "";
 				info.timeStamp = CFuncCommon::ISO8601ToTime(retObj["timestamp"].asString());
-				info.filledQTY = retObj["filled_qty"].asString();
+				info.filledQTY = CFuncCommon::ToString(stoi(retObj["filled_qty"].asString()));
 				info.orderID = retObj["order_id"].asString();
 				info.price = stod(retObj["price"].asString());
 				info.status = retObj["status"].asString();
-				info.size = retObj["size"].asString();
+				info.size = CFuncCommon::ToString(stoi(retObj["size"].asString()));
 				std::string tradeType = retObj["type"].asString();
 				if(tradeType == "1")
 					info.tradeType = eFuturesTradeType_OpenBull;
