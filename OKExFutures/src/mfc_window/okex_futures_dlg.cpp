@@ -2188,13 +2188,13 @@ void COKExFuturesDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
 			}
 			else
 			{
-				data.time = retObj[i][0].asInt64()/1000;
-				data.openPrice = retObj[i][1].asDouble();
-				data.highPrice = retObj[i][2].asDouble();
-				data.lowPrice = retObj[i][3].asDouble();
-				data.closePrice = retObj[i][4].asDouble();
-				data.volume = retObj[i][5].asInt();
-				data.volumeByCurrency = retObj[i][6].asDouble();
+				data.time = CFuncCommon::ISO8601ToTime(retObj[i][0].asString());
+				data.openPrice = stod(retObj[i][1].asString());
+				data.highPrice = stod(retObj[i][2].asString());
+				data.lowPrice = stod(retObj[i][3].asString());
+				data.closePrice = stod(retObj[i][4].asString());
+				data.volume = stoi(retObj[i][5].asString());
+				data.volumeByCurrency = stod(retObj[i][6].asString());
 			}
 			CString strlocalLog;
 			if(m_bSwapFutures)
