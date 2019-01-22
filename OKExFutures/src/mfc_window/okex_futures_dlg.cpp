@@ -79,7 +79,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_nPriceDecimal = 3;
 	m_nZhangKouCheckCycle = 20;
 	m_nShouKouCheckCycle = 20;
-	m_nZhangKouTrendCheckCycle = 5;
+	m_nZhangKouTrendCheckCycle = 3;
 	m_bRun = false;
 	m_eBollState = eBollTrend_Normal;
 	m_eLastBollState = eBollTrend_Normal;
@@ -110,6 +110,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_pNet = NULL;
 	m_pServerFactory = NULL;
 	m_bSuccessLogin = false;
+	m_bollCheckAngle = 1.0005;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -476,6 +477,8 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 	m_pMainWnd->SetWindowText(strTitle);
 	m_bRun = true;
 	CActionLog("market", "restart");
+	if(m_strCoinType == "BTC")
+		m_bollCheckAngle = 1.0003;
 }
 
 void COKExFuturesDlg::AddKlineData(SKlineData& data)
@@ -492,8 +495,8 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 	}
 	tm* pTM = localtime(&data.time);
 	_snprintf(data.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", pTM->tm_year+1900, pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
-	//if(strcmp(data.szTime, "2019-01-02 11:57:00") == 0)
-	//	int a = 3;
+	if(strcmp(data.szTime, "2019-01-22 19:36:00") == 0)
+		int a = 3;
 	KLINE_DATA.push_back(data);
 	if(KLINE_DATA_SIZE >= m_nBollCycle)
 	{
@@ -533,6 +536,8 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 void COKExFuturesDlg::Test()
 {
 	m_bTest = true;
+	m_eBollState = eBollTrend_ShouKouChannel;
+	m_eLastBollState = eBollTrend_ShouKou;
 	std::set<std::string>::iterator itB = m_setAllTestFile.begin();
 	std::set<std::string>::iterator itE = m_setAllTestFile.end();
 	char* szEnd = NULL;
@@ -554,9 +559,19 @@ void COKExFuturesDlg::Test()
 			std::stringstream lineStream(lineBuffer, std::ios_base::in);
 			char szContent[4096] = {};
 			lineStream >> szContent;
-			if(strcmp(szContent, "restart") == 0)
-				continue;
 			lineStream >> szContent >> szContent;
+			if(strcmp(szContent, "restart") == 0)
+			{
+				KLINE_DATA.clear();
+				BOLL_DATA.clear();
+				m_nShouKouConfirmBar = 0;
+				m_nZhangKouConfirmBar = 0;
+				m_nZhangKouMinValue = 0;
+				m_nZhangKouTradeCheckBar = 0;
+				m_nShouKouTradeCheckBar = 0;
+				m_nShouKouChannelConfirmBar = 0;
+				continue;
+			}
 			Json::Value retObj;
 			Json::Reader reader;
 			reader.parse(szContent, retObj);
@@ -654,9 +669,9 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 			return;
 		}
-		else if(offset / minValue > 1.5)
+		else if(offset / minValue > 1.4)
 		{
-			int check = m_nZhangKouTrendCheckCycle/2 + 1;
+			int check = m_nZhangKouTrendCheckCycle;
 			if(KLINE_DATA_SIZE >= check)
 			{
 				int up = 0;
@@ -665,11 +680,11 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 				{
 					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
 						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
 						up++;
 					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
 						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
 						down++;
 				}
 				if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
@@ -787,7 +802,7 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 			}
 		}
 		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if((offset/m_nZhangKouMinValue) < 1.5)
+		if((offset/m_nZhangKouMinValue) < 1.4)
 		{
 			__SetBollState(eBollTrend_ShouKou);
 			return;
@@ -873,9 +888,9 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 		return;
 	}
-	else if(offset / minValue > 1.5)
+	else if(offset / minValue > 1.4)
 	{
-		int check = m_nZhangKouTrendCheckCycle/2 + 1;
+		int check = m_nZhangKouTrendCheckCycle;
 		if(KLINE_DATA_SIZE >= check)
 		{
 			int up = 0;
@@ -884,11 +899,11 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 			{
 				if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
 					up++;
-				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
 					up++;
 				else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
 					down++;
-				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
 					down++;
 			}
 			if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
@@ -951,9 +966,9 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 				__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 				return;
 			}
-			else if(offset / minValue > 1.5)
+			else if(offset / minValue > 1.4)
 			{
-				int check = m_nZhangKouTrendCheckCycle/2 + 1;
+				int check = m_nZhangKouTrendCheckCycle;
 				if(KLINE_DATA_SIZE >= check)
 				{
 					int up = 0;
@@ -962,11 +977,11 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 					{
 						if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
 							up++;
-						else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+						else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
 							up++;
 						else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
 							down++;
-						else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+						else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
 							down++;
 					}
 					if(up == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
@@ -987,51 +1002,118 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 
 void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam)
 {
-	m_eLastBollState = m_eBollState;
-	m_eBollState = state;
-	switch(m_eBollState)
+	switch(state)
 	{
 	case eBollTrend_ZhangKou:
 		{
-			m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
-			m_nZhangKouTradeCheckBar = m_nZhangKouConfirmBar;
-			m_nZhangKouMinValue = dParam;
-			CString szInfo;
-			szInfo.Format("张口产生<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time).c_str(), (nParam==0 ? "开口角判断" : "柱体穿插判断"));
-			if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
+			if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle && REAL_BOLL_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
 			{
 				int up = 0;
 				int down = 0;
+				bool bZhangkouUP = false;
+				int dir = -1;
 				for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-m_nZhangKouTrendCheckCycle; --i)
 				{
 					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
+					{
+						if(dir == -1)
+							dir = 1;
 						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
+					}
+					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
+					{
+						if(dir == -1)
+							dir = 1;
 						up++;
+					}
 					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
+					{
+						if(dir == -1)
+							dir = 0;
 						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
+					}
+					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
+					{
+						if(dir == -1)
+							dir = 0;
 						down++;
+					}
 				}
 				CString _szInfo = "";
 				if(up > down)
+					bZhangkouUP = true;
+				else
+					bZhangkouUP = false;
+				if(up == 0 && down == 0)
+					return;
+				if(up == down)
 				{
-					m_bZhangKouUp = true;
-					_szInfo.Format(" 趋势[涨 %d:%d]", up, down);
+					if(dir == 1)
+						bZhangkouUP = true;
+					else
+						bZhangkouUP = false;
+				}
+				int check = m_nZhangKouTrendCheckCycle;
+				if(bZhangkouUP)
+				{
+					//l线必须持续下跌
+					double last = 0.0;
+					int good = 0;
+					for(int i = KLINE_DATA_SIZE-check; i<KLINE_DATA_SIZE; ++i)
+					{
+						if(i == KLINE_DATA_SIZE-check)
+							last = BOLL_DATA[i].dn;
+						else
+						{
+							if(BOLL_DATA[i].dn >= last)
+								return;
+							if(last/BOLL_DATA[i].dn < m_bollCheckAngle)
+							{
+								last = BOLL_DATA[i].dn;
+								continue;
+							}
+							last = BOLL_DATA[i].dn;
+							good++;
+						}
+					}
+					if(good == 0)
+						return;
 				}
 				else
 				{
-					m_bZhangKouUp = false;
-					_szInfo.Format(" 趋势[跌 %d:%d]", up, down);
+					//u线必须持续上升
+					double last = 0.0;
+					int good = 0;
+					for(int i = KLINE_DATA_SIZE-check; i<KLINE_DATA_SIZE; ++i)
+					{
+						if(i == KLINE_DATA_SIZE-check)
+							last = BOLL_DATA[i].up;
+						else
+						{
+							if(BOLL_DATA[i].up <= last)
+								return;
+							if(BOLL_DATA[i].up/last < m_bollCheckAngle)
+							{
+								last = BOLL_DATA[i].up;
+								continue;
+							}
+							last = BOLL_DATA[i].up;
+							good++;
+						}
+					}
+					if(good == 0)
+						return;
 				}
-				if(up == 0 && down == 0)
-				{
-
-					int a = 3;
-				}
-				szInfo.Append(_szInfo);
+				m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
+				m_nZhangKouTradeCheckBar = m_nZhangKouConfirmBar;
+				m_nZhangKouMinValue = dParam;
+				m_bZhangKouUp = bZhangkouUP;
+				CString szInfo;
+				szInfo.Format("张口产生<<<< 确认时间[%s] %s 趋势[%s %d:%d]", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time).c_str(), (nParam==0 ? "开口角判断" : "柱体穿插判断"), (m_bZhangKouUp?"涨":"跌"), up, down);
+				CActionLog("boll", szInfo.GetBuffer());
 			}
-			CActionLog("boll", szInfo.GetBuffer());
+			else
+				return;
 		}
 		break;
 	case eBollTrend_ShouKou:
@@ -1052,7 +1134,8 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam
 	default:
 		break;
 	}
-
+	m_eLastBollState = m_eBollState;
+	m_eBollState = state;
 }
 
 void COKExFuturesDlg::OnBnClickedButtonTest()
@@ -1106,7 +1189,8 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		m_curTickBoll.mb = CFuncCommon::Round(m_curTickBoll.mb+DOUBLE_PRECISION, m_nPriceDecimal);
 		m_curTickBoll.up = CFuncCommon::Round(m_curTickBoll.up+DOUBLE_PRECISION, m_nPriceDecimal);
 		m_curTickBoll.dn = CFuncCommon::Round(m_curTickBoll.dn+DOUBLE_PRECISION, m_nPriceDecimal);
-		CActionLog("tick_boll", "up=%.2f mb=%.2f dn=%.2f", m_curTickBoll.up, m_curTickBoll.mb, m_curTickBoll.dn);
+		if(!m_bTest)
+			CActionLog("tick_boll", "up=%.2f mb=%.2f dn=%.2f", m_curTickBoll.up, m_curTickBoll.mb, m_curTickBoll.dn);
 		switch(m_eBollState)
 		{
 		case eBollTrend_ShouKou:
@@ -1157,6 +1241,8 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 	{
 		if(m_bZhangKouUp)
 		{
+			if((KLINE_DATA[m_nZhangKouConfirmBar].closePrice > KLINE_DATA[m_nZhangKouConfirmBar].openPrice) && ((KLINE_DATA[m_nZhangKouConfirmBar].closePrice - KLINE_DATA[m_nZhangKouConfirmBar].openPrice)/KLINE_DATA[m_nZhangKouConfirmBar].openPrice) > 0.04)
+				return;
 			if(m_curTickData.last < m_curTickBoll.up)
 			{
 				//用买一价格挂多单
@@ -1198,6 +1284,8 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		}
 		else
 		{
+			if((KLINE_DATA[m_nZhangKouConfirmBar].closePrice < KLINE_DATA[m_nZhangKouConfirmBar].openPrice) && ((KLINE_DATA[m_nZhangKouConfirmBar].openPrice - KLINE_DATA[m_nZhangKouConfirmBar].closePrice)/KLINE_DATA[m_nZhangKouConfirmBar].openPrice) > 0.04)
+				return;
 			if(m_curTickData.last > m_curTickBoll.dn)
 			{
 				//用卖一价格挂空单

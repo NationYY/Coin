@@ -229,6 +229,7 @@ private:
 	clib::pnet_manager m_pNet;
 	pserver_factory m_pServerFactory;
 	server_net_handle m_netHandle;
+	double m_bollCheckAngle;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:
