@@ -6,27 +6,22 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="mfc_window">
-      <UniqueIdentifier>{50306ea0-9b6a-4597-8da3-a75c886d1c06}</UniqueIdentifier>
+      <UniqueIdentifier>{2e4c5350-ebfe-4681-8f4d-4f492227fb21}</UniqueIdentifier>
     </Filter>
     <Filter Include="net">
-      <UniqueIdentifier>{24cf1aeb-dc29-459a-91d3-be8d5415b5de}</UniqueIdentifier>
+      <UniqueIdentifier>{68688105-958d-4711-a7a0-1414885392d5}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="res\OKExFutures.ico">
-      <Filter>资源文件</Filter>
-    </Image>
+    <Filter Include="logic">
+      <UniqueIdentifier>{9a318bab-3e17-48b5-b069-db8729c7f997}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\stdafx.cpp" />
-    <ClCompile Include="..\src\mfc_window\okex_futures.cpp">
+    <ClCompile Include="..\src\mfc_window\CenterServer.cpp">
       <Filter>mfc_window</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mfc_window\okex_futures_dlg.cpp">
+    <ClCompile Include="..\src\mfc_window\CenterServerDlg.cpp">
       <Filter>mfc_window</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\net\server_factory.cpp">
-      <Filter>net</Filter>
     </ClCompile>
     <ClCompile Include="..\src\net\net_handle.cpp">
       <Filter>net</Filter>
@@ -37,21 +32,22 @@
     <ClCompile Include="..\src\net\nmsg_server_iml.cpp">
       <Filter>net</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\net\client_factory.cpp">
+      <Filter>net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\logic\account_manager.cpp">
+      <Filter>logic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\stdafx.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="..\src\test_kline_data.h" />
+    <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="..\src\mfc_window\okex_futures.h">
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="..\src\mfc_window\CenterServer.h">
       <Filter>mfc_window</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mfc_window\okex_futures_dlg.h">
+    <ClInclude Include="..\src\mfc_window\CenterServerDlg.h">
       <Filter>mfc_window</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\api_callback.h" />
-    <ClInclude Include="..\src\net\server_factory.h">
-      <Filter>net</Filter>
     </ClInclude>
     <ClInclude Include="..\src\net\net_handle.h">
       <Filter>net</Filter>
@@ -62,14 +58,25 @@
     <ClInclude Include="..\src\net\nmsg_server_iml.h">
       <Filter>net</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\net\client_factory.h">
+      <Filter>net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\logic\account_manager.h">
+      <Filter>logic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OKExFutures.rc">
+    <Image Include="res\CenterServer.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CenterServer.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\OKExFutures.rc2">
+    <None Include="res\CenterServer.rc2">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

@@ -17,5 +17,6 @@ public:
 	static std::string LocaltimeToISO8601(time_t time);
 	static time_t ISO8601ToTime(std::string& time);
 	static char* GenUUID();
+	static time_t ToTime(const char *sz);
 };
 

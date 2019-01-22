@@ -13,6 +13,8 @@
 #include "common/func_common.h"
 #include "test_kline_data.h"
 #include "api_callback.h"
+#include "net/client.h"
+#include "net/nmsg_server_iml.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -84,6 +86,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_nZhangKouDoubleConfirmCycle = 2;
 	m_nShoukouDoubleConfirmCycle = 3;
 	m_tListenPong = 0;
+	m_tListenServerPong = 0;
 	m_strKlineCycle = "candle180s";
 	m_nKlineCycle = 180;
 	m_strCoinType = "BTC";
@@ -104,6 +107,9 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_tradeMoment = 0;
 	m_bCanLogCheckCanTrade = true;
 	m_bCanStopProfit = true;
+	m_pNet = NULL;
+	m_pServerFactory = NULL;
+	m_bSuccessLogin = false;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -126,6 +132,7 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT7, m_editCapital);
 	DDX_Control(pDX, IDC_STATIC_PROFIT, m_staticProfit);
 	DDX_Control(pDX, IDC_COMBO1, m_combTradeMoment);
+	DDX_Control(pDX, IDC_STATIC_ACCOUNT_STATE, m_staticAccountState);
 }
 
 BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
@@ -236,6 +243,17 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	CLocalActionLog::GetInstancePt()->set_log_path(log_path.c_str());
 	CLocalActionLog::GetInstancePt()->start();
 
+	if(m_pNet == NULL)
+	{
+		m_pNet = new clib::net_manager();
+		m_pNet->init(1, 1);
+		if(m_pNet->start_run())
+		{
+			m_netHandle.init();
+			ConnectServer();
+		}
+	}
+
 	// TODO:  在此添加额外的初始化代码
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -301,7 +319,10 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 			CLocalLogger::GetInstancePt()->SwapFront2Middle();
 			if(OKEX_CHANGE)
 				OKEX_CHANGE->Update();
-			if(m_tListenPong && time(NULL) - m_tListenPong > 15)
+			if(m_pNet)
+				m_pNet->update(30);
+			time_t tNow = time(NULL);
+			if(m_tListenPong && tNow - m_tListenPong > 15)
 			{
 				LOCAL_ERROR("ping超时重连");
 				m_tListenPong = 0;
@@ -314,12 +335,19 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 				pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 				pExchange->Run();
 			}
+			if(m_tListenServerPong && tNow - m_tListenServerPong > 15)
+				SetLoginState(false);
 		}
 		break;
 	case eTimerType_Ping:
 		{
 			if(OKEX_WEB_SOCKET->Ping())
 				m_tListenPong = time(NULL);
+			if(m_netHandle._session)
+			{
+				m_tListenServerPong = time(NULL);
+				nmsg_server_iml::cg_ping(m_netHandle._session);
+			}
 		}
 		break;
 	case eTimerType_Account:
@@ -347,6 +375,12 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 		}
 		break;
+	case eTimerType_ConnetServer:
+		{
+			ConnectServer();
+			KillTimer(eTimerType_ConnetServer);
+		}
+		break;
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -358,6 +392,11 @@ void COKExFuturesDlg::OnBnClickedButtonStart()
 		return;
 	if(m_bRun)
 		return;
+	if(!m_bSuccessLogin)
+	{
+		MessageBox("账号验证未通过");
+		return;
+	}
 	bool bFound = false;
 	std::string instrumentID;
 	if(m_bSwapFutures)
@@ -1107,6 +1146,8 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 
 void COKExFuturesDlg::__CheckTrade_ZhangKou()
 {
+	if(!m_bSuccessLogin)
+		return;
 	if(m_bStopWhenFinish)
 		return;
 	if(m_tradeMoment != 0)
@@ -1201,6 +1242,8 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 
 void COKExFuturesDlg::__CheckTrade_ShouKou()
 {
+	if(!m_bSuccessLogin)
+		return;
 	if(m_bStopWhenFinish)
 		return;
 	if(m_tradeMoment != 1)
@@ -1295,11 +1338,14 @@ void COKExFuturesDlg::__CheckTrade_ShouKou()
 
 void COKExFuturesDlg::__CheckTrade_ShouKouChannel()
 {
-
+	if(!m_bSuccessLogin)
+		return;
 }
 
 void COKExFuturesDlg::__CheckTradeOrder()
 {
+	if(!m_bSuccessLogin)
+		return;
 	std::list<SFuturesTradePairInfo>::iterator itB = m_listTradePairInfo.begin();
 	std::list<SFuturesTradePairInfo>::iterator itE = m_listTradePairInfo.end();
 	//先统计当前未平仓的多空数量
@@ -2342,4 +2388,79 @@ bool COKExFuturesDlg::__CheckCanStopProfit(eFuturesTradeType eOpenType, std::str
 		}
 	}
 	return true;
+}
+
+void COKExFuturesDlg::ConnectServer()
+{
+	if(m_pNet == NULL)
+		return;
+	SetLoginState(false);
+	// 连接账号服务器
+	if(m_pServerFactory == NULL)
+	{
+		m_pServerFactory = new server_factory();
+	}
+	clib::pclient p = m_pNet->create_client(&m_netHandle, m_pServerFactory);
+	if(p)
+	{
+		p->asyc_connect("47.52.153.233", "9191");
+	}
+	if(p){
+		p->del_ref();
+	}
+
+}
+
+void COKExFuturesDlg::RetryConnectServer()
+{
+	SetTimer(eTimerType_ConnetServer, 3000, NULL);
+	LOCAL_ERROR("error, connect to server after 3 seconds ");
+}
+
+void COKExFuturesDlg::OnRecvLoginRst(int rst, time_t _time)
+{
+	if(rst == 0)
+	{
+		SetLoginState(true, _time);
+		if(_time != 0)
+		{
+			std::string text = CFuncCommon::FormatTimeStr(_time);
+			LOCAL_INFO("账号验证通过, 到期时间%s", text.c_str());
+		}
+		else
+		{
+			LOCAL_INFO("白名单账号验证通过");
+		}
+	}
+	else
+	{
+		LOCAL_ERROR("账号验证失败");
+	}
+
+}
+
+void COKExFuturesDlg::OnRecvAccountInvalid()
+{
+	SetLoginState(false);
+	LOCAL_ERROR("账号验证失败");
+}
+
+void COKExFuturesDlg::SetLoginState(bool bSuccess, time_t passTime)
+{
+	m_bSuccessLogin = bSuccess;
+	if(bSuccess)
+	{
+		std::string text = CFuncCommon::FormatTimeStr(passTime);
+		CString szTemp;
+		szTemp.Format("验证通过 过期时间%s", passTime==0 ? "无限制" : text.c_str());
+		m_staticAccountState.SetWindowText(szTemp);
+	}
+	else
+		m_staticAccountState.SetWindowText("验证失败");
+}
+
+void COKExFuturesDlg::OnRecvServerPong()
+{
+	m_tListenServerPong = 0;
+
 }

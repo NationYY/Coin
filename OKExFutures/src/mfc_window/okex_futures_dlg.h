@@ -7,12 +7,16 @@
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
 #include "afxcmn.h"
+#include "net\net_manager.h"
+#include "net/server_factory.h"
+#include "net/net_handle.h"
 enum eTimerType
 {
 	eTimerType_APIUpdate,
 	eTimerType_Account,
 	eTimerType_Ping,
 	eTimerType_TradeOrder,
+	eTimerType_ConnetServer,
 };
 
 enum eBollTrend
@@ -166,6 +170,14 @@ public:
 	void SetHScroll();
 	void ComplementedKLine(time_t tNowKlineTick, int kLineCnt);
 	void UpdateAccountInfo(SFuturesAccountInfo& info);
+	void ConnectServer();
+	void RetryConnectServer();
+	std::string GetAPIKey(){
+		return m_apiKey;
+	}
+	void OnRecvLoginRst(int rst, time_t _time);
+	void OnRecvAccountInvalid();
+	void OnRecvServerPong();
 private:
 	void Test();
 	void OnBollUpdate();
@@ -187,10 +199,12 @@ private:
 	void _UpdateTradeShow();
 	void _UpdateAccountShow();
 	void _SaveData();
+	void SetLoginState(bool bSuccess, time_t passTime=0);
 public:
 	bool m_bRun;
 	bool m_bSwapFutures;
 	time_t m_tListenPong;
+	time_t m_tListenServerPong;
 	bool m_bFirstKLine;
 private:
 	std::vector<SKlineData> m_vecKlineData;
@@ -212,6 +226,9 @@ private:
 	SFuturesAccountInfo m_accountInfo;
 	bool m_bCanLogCheckCanTrade;
 	bool m_bCanStopProfit;
+	clib::pnet_manager m_pNet;
+	pserver_factory m_pServerFactory;
+	server_net_handle m_netHandle;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:
@@ -236,6 +253,7 @@ public:
 	std::string m_strStopLoss;			//止损比例
 	std::string m_strMoveStopProfit;	//移动止盈比例
 	int m_tradeMoment;					//交易时机 0:张口顺向交易 1:收口逆向交易
+	bool m_bSuccessLogin;
 public:
 	afx_msg void OnBnClickedButtonTest();
 	afx_msg void OnDestroy();
@@ -261,4 +279,5 @@ public:
 	CStatic m_staticProfit;
 	CComboBox m_combTradeMoment;
 	afx_msg void OnBnClickedButtonUpdateTradeMoment();
+	CStatic m_staticAccountState;
 };

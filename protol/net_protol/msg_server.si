@@ -1,0 +1,8 @@
+
+client_to_server:
+	cg_login(string key);
+	cg_ping();
+server_to_client:
+	gc_login_rst(int rst, string time);
+	gc_pong();
+	gc_account_invalid();

@@ -165,6 +165,13 @@ time_t CFuncCommon::ISO8601ToTime(std::string& time)
 	return time_unix;
 }
 
+time_t CFuncCommon::ToTime(const char *sz)
+{
+	time_t ret = 0;
+	sscanf(sz, "%lld", &ret);
+	return ret;
+}
+
 char* CFuncCommon::GenUUID()
 {
 	static __declspec(thread) char buffer[64] = "";

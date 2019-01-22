@@ -66,3 +66,6 @@ InterExchangeSpread/proj_win/InterExchangeSpread.aps
 OKExFutures/proj_win/Debug/
 *.dmp
 OKExMartingale/proj_win/Debug/
+CenterServer/proj_win/Debug/CenterServer.Build.CppClean.log
+CenterServer/proj_win/Debug/
+protol/last_trans_rst.log

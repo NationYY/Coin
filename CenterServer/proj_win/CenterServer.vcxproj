@@ -10,9 +10,42 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\logic\account_manager.cpp" />
+    <ClCompile Include="..\src\mfc_window\CenterServer.cpp" />
+    <ClCompile Include="..\src\mfc_window\CenterServerDlg.cpp" />
+    <ClCompile Include="..\src\net\net_handle.cpp" />
+    <ClCompile Include="..\src\net\nmsg_server.cpp" />
+    <ClCompile Include="..\src\net\nmsg_server_iml.cpp" />
+    <ClCompile Include="..\src\net\client_factory.cpp" />
+    <ClCompile Include="..\src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\logic\account_manager.h" />
+    <ClInclude Include="..\src\mfc_window\CenterServer.h" />
+    <ClInclude Include="..\src\mfc_window\CenterServerDlg.h" />
+    <ClInclude Include="..\src\net\net_handle.h" />
+    <ClInclude Include="..\src\net\nmsg_server.h" />
+    <ClInclude Include="..\src\net\nmsg_server_iml.h" />
+    <ClInclude Include="..\src\net\client_factory.h" />
+    <ClInclude Include="..\src\stdafx.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\CenterServer.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CenterServer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\CenterServer.rc2" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{22A8A095-3409-4BC8-AFFE-0266AD4141E0}</ProjectGuid>
-    <RootNamespace>OKExFutures</RootNamespace>
+    <ProjectGuid>{8B0EEAA6-988E-4797-9A8B-4680240C7F9A}</ProjectGuid>
+    <RootNamespace>CenterServer</RootNamespace>
     <Keyword>MFCProj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -29,7 +62,7 @@
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -43,7 +76,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\Environment\OKExFutures\</OutDir>
+    <OutDir>..\..\Environment\CenterServer\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -53,19 +86,17 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;NO_WARN_MBCS_MFC_DEPRECATION;_OPEN_OKEX_;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;NO_WARN_MBCS_MFC_DEPRECATION;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ghoul_sdk_include);$(openssl_include);$(websocket_include);../src/mfc_window;../src/;./;../../ExchangeAPI/src;$(ghoul_sdk_include)/clib/lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ghoul_sdk_include);../src/mfc_window;../src/;./;$(ghoul_sdk_include)/clib/lib</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ghoul_sdk_lib);$(openssl_lib);../../ExchangeAPI/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libcurl.lib;lib_json.lib;clib_d.lib;libeay32.lib;ssleay32.lib;ExchangeAPI_d.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ghoul_sdk_lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>clib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
-      <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -105,48 +136,12 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <Image Include="res\OKExFutures.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\mfc_window\okex_futures.cpp" />
-    <ClCompile Include="..\src\mfc_window\okex_futures_dlg.cpp" />
-    <ClCompile Include="..\src\net\net_handle.cpp" />
-    <ClCompile Include="..\src\net\nmsg_server.cpp" />
-    <ClCompile Include="..\src\net\nmsg_server_iml.cpp" />
-    <ClCompile Include="..\src\net\server_factory.cpp" />
-    <ClCompile Include="..\src\stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\src\api_callback.h" />
-    <ClInclude Include="..\src\mfc_window\okex_futures.h" />
-    <ClInclude Include="..\src\mfc_window\okex_futures_dlg.h" />
-    <ClInclude Include="..\src\net\net_handle.h" />
-    <ClInclude Include="..\src\net\nmsg_server.h" />
-    <ClInclude Include="..\src\net\nmsg_server_iml.h" />
-    <ClInclude Include="..\src\net\server_factory.h" />
-    <ClInclude Include="..\src\stdafx.h" />
-    <ClInclude Include="..\src\test_kline_data.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="OKExFutures.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="res\OKExFutures.rc2" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <PropertyGroup>
-    <TrackFileAccess>false</TrackFileAccess>
-  </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="OKExFutures.rc" />
+      <UserProperties RESOURCE_FILE="CenterServer.rc" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
