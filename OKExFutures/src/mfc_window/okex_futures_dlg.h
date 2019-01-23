@@ -200,6 +200,9 @@ private:
 	void _UpdateAccountShow();
 	void _SaveData();
 	void SetLoginState(bool bSuccess, time_t passTime=0);
+	//从某根柱子开始判断
+	bool _FindZhangKou(int beginBarIndex);
+	bool _IsBollDirForward(bool bUp, int checkNum, double checkAngle);
 public:
 	bool m_bRun;
 	bool m_bSwapFutures;
@@ -230,6 +233,8 @@ private:
 	pserver_factory m_pServerFactory;
 	server_net_handle m_netHandle;
 	double m_bollCheckAngle;
+	double m_bollCheckAngleFast;
+	double m_bollCheckAngleSlow;
 	//std::string m_curWaitClientOrderID;
 	//std::string m_curOrderID;
 public:

@@ -111,6 +111,9 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_pServerFactory = NULL;
 	m_bSuccessLogin = false;
 	m_bollCheckAngle = 1.0005;
+
+	m_bollCheckAngleFast = 1.0007;
+	m_bollCheckAngleSlow = 1.0004;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -1701,6 +1704,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 void COKExFuturesDlg::OnLoginSuccess()
 {
 	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+	m_listTradePairInfo.clear();
 	std::string strFilePath = "./save.txt";
 	std::ifstream stream(strFilePath);
 	if(!stream.is_open())
@@ -2550,5 +2554,84 @@ void COKExFuturesDlg::SetLoginState(bool bSuccess, time_t passTime)
 void COKExFuturesDlg::OnRecvServerPong()
 {
 	m_tListenServerPong = 0;
+}
 
+bool COKExFuturesDlg::_FindZhangKou(int beginBarIndex)
+{
+	int beginBar = 0;
+	if(BOLL_DATA_SIZE - beginBarIndex >= m_nBollCycle)
+		beginBar = BOLL_DATA_SIZE - m_nBollCycle;
+	else
+		beginBar = beginBarIndex;
+	if(beginBar > 0)
+	{
+		//先找到min值
+		int minBar = 0;
+		double minValue = 100000.0;
+		for(int i=beginBar; i<BOLL_DATA_SIZE; ++i)
+		{
+			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+			if(offset < minValue)
+			{
+				minValue = offset;
+				minBar = i;
+			}
+		}
+		//大于1.4的间距才考虑进行张口判断
+		double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
+		if(offset / minValue > 1.4)
+		{
+			int check = m_nZhangKouTrendCheckCycle;
+			bool bDFast = _IsBollDirForward(false, check, m_bollCheckAngleFast);
+			bool bDSlow = _IsBollDirForward(false, check, m_bollCheckAngleSlow);
+			bool bUFast = _IsBollDirForward(true, check, m_bollCheckAngleFast);
+			bool bUSlow = _IsBollDirForward(true, check, m_bollCheckAngleSlow);
+			if((bDFast && bUFast) || (bDFast && bUSlow) || (bDSlow && bUFast))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool COKExFuturesDlg::_IsBollDirForward(bool bUp, int checkNum, double checkAngle)
+{
+	double last = 0.0;
+	int good = 0;
+	for(int i = KLINE_DATA_SIZE - checkNum; i < KLINE_DATA_SIZE; ++i)
+	{
+		if(i == KLINE_DATA_SIZE - checkNum)
+		{
+			if(bUp)
+				last = BOLL_DATA[i].up;
+			else
+				last = BOLL_DATA[i].dn;
+		}
+		else
+		{
+			if(bUp)
+			{
+				if(BOLL_DATA[i].up <= last)
+					return;
+				if(BOLL_DATA[i].up / last < checkAngle)
+				{
+					last = BOLL_DATA[i].up;
+					continue;
+				}
+				last = BOLL_DATA[i].up;
+			}
+			else
+			{
+				if(BOLL_DATA[i].dn >= last)
+					return false;
+				if(last / BOLL_DATA[i].dn < checkAngle)
+				{
+					last = BOLL_DATA[i].dn;
+					continue;
+				}
+				last = BOLL_DATA[i].dn;
+			}
+			good++;
+		}
+	}
+	return (good > 0);
 }
