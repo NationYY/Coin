@@ -201,7 +201,7 @@ private:
 	void _SaveData();
 	void SetLoginState(bool bSuccess, time_t passTime=0);
 	//从某根柱子开始判断
-	bool _FindZhangKou(int beginBarIndex);
+	bool _FindZhangKou(int beginBarIndex, double& minValue);
 	bool _IsBollDirForward(bool bUp, int checkNum, double checkAngle);
 public:
 	bool m_bRun;

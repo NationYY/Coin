@@ -140,7 +140,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			if(g_pDlg->m_bFirstKLine)
 			{
 				g_pDlg->m_bFirstKLine = false;
-				g_pDlg->ComplementedKLine(curTime, g_pDlg->m_nBollCycle);
+				g_pDlg->ComplementedKLine(curTime, g_pDlg->m_nBollCycle*2);
 			}
 			CActionLog("all_kline", "%s", strRet.c_str());
 			if(curTime >= lastKlineTime)

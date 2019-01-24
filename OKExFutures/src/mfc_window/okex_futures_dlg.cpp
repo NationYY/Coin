@@ -498,7 +498,7 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 	}
 	tm* pTM = localtime(&data.time);
 	_snprintf(data.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", pTM->tm_year+1900, pTM->tm_mon+1, pTM->tm_mday, pTM->tm_hour, pTM->tm_min, pTM->tm_sec);
-	if(strcmp(data.szTime, "2019-01-22 19:36:00") == 0)
+	if(strcmp(data.szTime, "2019-01-21 22:15:00") == 0)
 		int a = 3;
 	KLINE_DATA.push_back(data);
 	if(KLINE_DATA_SIZE >= m_nBollCycle)
@@ -539,8 +539,8 @@ void COKExFuturesDlg::AddKlineData(SKlineData& data)
 void COKExFuturesDlg::Test()
 {
 	m_bTest = true;
-	m_eBollState = eBollTrend_ShouKouChannel;
-	m_eLastBollState = eBollTrend_ShouKou;
+	//m_eBollState = eBollTrend_ShouKouChannel;
+	//m_eLastBollState = eBollTrend_ShouKou;
 	std::set<std::string>::iterator itB = m_setAllTestFile.begin();
 	std::set<std::string>::iterator itE = m_setAllTestFile.end();
 	char* szEnd = NULL;
@@ -655,7 +655,13 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 {
 	if(REAL_BOLL_DATA_SIZE >= m_nZhangKouCheckCycle)//判断张口
 	{
-		int minBar = 0;
+		double minValue;
+		if(_FindZhangKou(0, minValue))
+		{
+			__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+			return;
+		}
+		/*int minBar = 0;
 		double minValue = 100000.0;
 		for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
 		{
@@ -722,9 +728,9 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 					return;
 				}
 			}
-		}
+		}*/
 	}
-	if(REAL_BOLL_DATA_SIZE >= m_nShouKouCheckCycle)//判断收口
+	/*if(REAL_BOLL_DATA_SIZE >= m_nShouKouCheckCycle)//判断收口
 	{
 		int maxBar = 0;
 		double maxValue = 0.0;
@@ -747,7 +753,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 				return;
 			}
 		}
-	}
+	}*/
 }
 
 void COKExFuturesDlg::__CheckTrend_ZhangKou()
@@ -780,6 +786,7 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 		double maxValue = 0.0;
 		for(int i = m_nZhangKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
 		{
+			//up或dn恢复到前面某根柱子值,并且该柱子和最后一根柱子之前间隔1根及以上柱子,表示一个反转的过程,出现收口
 			if(m_bZhangKouUp)
 			{
 				if(BOLL_DATA[BOLL_DATA_SIZE-1].up < BOLL_DATA[i].up && (BOLL_DATA_SIZE-1-i) > 1)
@@ -873,6 +880,13 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 			return;
 		}
 	}
+	double minValue;
+	if(_FindZhangKou(m_nShouKouConfirmBar, minValue))
+	{
+		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
+		return;
+	}
+	/*
 	//寻找张口,从确定收口的柱子开始
 	int minBar = 0;
 	double minValue = 100000.0;
@@ -921,6 +935,7 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 			}
 		}
 	}
+	*/
 	//超过25个周期直接进入收口通道状态
 	if(KLINE_DATA_SIZE-1-m_nShouKouConfirmBar >= 25)
 	{
@@ -935,6 +950,16 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 	//寻找张口,从确定收口通道的柱子开始
 	if(m_eLastBollState == eBollTrend_ShouKou || m_eLastBollState == eBollTrend_ZhangKou)
 	{
+		double minValue;
+		int checkBar = 0;
+		if(m_eLastBollState == eBollTrend_ShouKou)
+			checkBar = m_nShouKouConfirmBar;
+		if(_FindZhangKou(checkBar, minValue))
+		{
+			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
+			return;
+		}
+
 		int checkBarNum = 0;
 		if(m_eLastBollState == eBollTrend_ShouKou)
 		{
@@ -946,60 +971,6 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 		}
 		else
 			checkBarNum = m_nBollCycle;
-		if(checkBarNum > 0)
-		{
-			int minBar = 0;
-			double minValue = 100000.0;
-			int cnt = 0;
-			for(int i = BOLL_DATA_SIZE-1; i>=0; --i)
-			{
-				double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-				if(offset < minValue)
-				{
-					minValue = offset;
-					minBar = i;
-				}
-				cnt++;
-				if(cnt == checkBarNum)
-					break;
-			}
-			double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-			if(offset / minValue > 2.24)
-			{
-				__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-				return;
-			}
-			else if(offset / minValue > 1.4)
-			{
-				int check = m_nZhangKouTrendCheckCycle;
-				if(KLINE_DATA_SIZE >= check)
-				{
-					int up = 0;
-					int down = 0;
-					for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
-					{
-						if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-							up++;
-						else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
-							up++;
-						else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-							down++;
-						else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
-							down++;
-					}
-					if(up == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-					else if(down == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-				}
-			}
-		}
 	}
 }
 
@@ -1055,57 +1026,6 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam
 						bZhangkouUP = true;
 					else
 						bZhangkouUP = false;
-				}
-				int check = m_nZhangKouTrendCheckCycle;
-				if(bZhangkouUP)
-				{
-					//l线必须持续下跌
-					double last = 0.0;
-					int good = 0;
-					for(int i = KLINE_DATA_SIZE-check; i<KLINE_DATA_SIZE; ++i)
-					{
-						if(i == KLINE_DATA_SIZE-check)
-							last = BOLL_DATA[i].dn;
-						else
-						{
-							if(BOLL_DATA[i].dn >= last)
-								return;
-							if(last/BOLL_DATA[i].dn < m_bollCheckAngle)
-							{
-								last = BOLL_DATA[i].dn;
-								continue;
-							}
-							last = BOLL_DATA[i].dn;
-							good++;
-						}
-					}
-					if(good == 0)
-						return;
-				}
-				else
-				{
-					//u线必须持续上升
-					double last = 0.0;
-					int good = 0;
-					for(int i = KLINE_DATA_SIZE-check; i<KLINE_DATA_SIZE; ++i)
-					{
-						if(i == KLINE_DATA_SIZE-check)
-							last = BOLL_DATA[i].up;
-						else
-						{
-							if(BOLL_DATA[i].up <= last)
-								return;
-							if(BOLL_DATA[i].up/last < m_bollCheckAngle)
-							{
-								last = BOLL_DATA[i].up;
-								continue;
-							}
-							last = BOLL_DATA[i].up;
-							good++;
-						}
-					}
-					if(good == 0)
-						return;
 				}
 				m_nZhangKouConfirmBar = KLINE_DATA_SIZE-1;
 				m_nZhangKouTradeCheckBar = m_nZhangKouConfirmBar;
@@ -2556,8 +2476,10 @@ void COKExFuturesDlg::OnRecvServerPong()
 	m_tListenServerPong = 0;
 }
 
-bool COKExFuturesDlg::_FindZhangKou(int beginBarIndex)
+bool COKExFuturesDlg::_FindZhangKou(int beginBarIndex, double& minValue)
 {
+	if(strcmp(KLINE_DATA[KLINE_DATA_SIZE-1].szTime, "2019-01-21 22:15:00") == 0)
+		int a = 3;
 	int beginBar = 0;
 	if(BOLL_DATA_SIZE - beginBarIndex >= m_nBollCycle)
 		beginBar = BOLL_DATA_SIZE - m_nBollCycle;
@@ -2567,7 +2489,7 @@ bool COKExFuturesDlg::_FindZhangKou(int beginBarIndex)
 	{
 		//先找到min值
 		int minBar = 0;
-		double minValue = 100000.0;
+		minValue = 100000.0;
 		for(int i=beginBar; i<BOLL_DATA_SIZE; ++i)
 		{
 			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
@@ -2611,7 +2533,7 @@ bool COKExFuturesDlg::_IsBollDirForward(bool bUp, int checkNum, double checkAngl
 			if(bUp)
 			{
 				if(BOLL_DATA[i].up <= last)
-					return;
+					return false;
 				if(BOLL_DATA[i].up / last < checkAngle)
 				{
 					last = BOLL_DATA[i].up;
