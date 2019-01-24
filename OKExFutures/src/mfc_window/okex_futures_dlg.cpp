@@ -987,7 +987,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		{
 			if((KLINE_DATA[m_nZhangKouConfirmBar].closePrice > KLINE_DATA[m_nZhangKouConfirmBar].openPrice) && ((KLINE_DATA[m_nZhangKouConfirmBar].closePrice - KLINE_DATA[m_nZhangKouConfirmBar].openPrice)/KLINE_DATA[m_nZhangKouConfirmBar].openPrice) > 0.04)
 				return;
-			if(m_curTickData.last < m_curTickBoll.up)
+			double rate = BOLL_DATA[BOLL_DATA_SIZE-1].up / BOLL_DATA[BOLL_DATA_SIZE-2].up;
+			double fprice = BOLL_DATA[BOLL_DATA_SIZE-1].up * rate;
+			//if(m_curTickData.last < m_curTickBoll.up)
 			{
 				//用买一价格挂多单
 				if(__CheckCanTrade(eFuturesTradeType_OpenBull))
@@ -996,13 +998,13 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					if(m_bTest)
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
-						std::string price = CFuncCommon::Double2String(m_curTickData.buy+DOUBLE_PRECISION, m_nPriceDecimal);
+						std::string price = CFuncCommon::Double2String(fprice+DOUBLE_PRECISION, m_nPriceDecimal);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClientOrderID;
 						info.open.timeStamp = time(NULL);
 						info.open.filledQTY = m_strFuturesTradeSize;
 						info.open.orderID = CFuncCommon::GenUUID();
-						info.open.price = m_curTickData.buy;
+						info.open.price = fprice;
 						info.open.status = 2;
 						info.open.tradeType = eFuturesTradeType_OpenBull;
 						m_listTradePairInfo.push_back(info);
@@ -1012,7 +1014,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					else
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
-						std::string price = CFuncCommon::Double2String(m_curTickData.buy+DOUBLE_PRECISION, m_nPriceDecimal);
+						std::string price = CFuncCommon::Double2String(fprice+DOUBLE_PRECISION, m_nPriceDecimal);
 						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClientOrderID;
@@ -1030,7 +1032,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		{
 			if((KLINE_DATA[m_nZhangKouConfirmBar].closePrice < KLINE_DATA[m_nZhangKouConfirmBar].openPrice) && ((KLINE_DATA[m_nZhangKouConfirmBar].openPrice - KLINE_DATA[m_nZhangKouConfirmBar].closePrice)/KLINE_DATA[m_nZhangKouConfirmBar].openPrice) > 0.04)
 				return;
-			if(m_curTickData.last > m_curTickBoll.dn)
+			double rate = BOLL_DATA[BOLL_DATA_SIZE-1].up / BOLL_DATA[BOLL_DATA_SIZE-2].up;
+			double fprice = BOLL_DATA[BOLL_DATA_SIZE-1].up * rate;
+			//if(m_curTickData.last > m_curTickBoll.dn)
 			{
 				//用卖一价格挂空单
 				if(__CheckCanTrade(eFuturesTradeType_OpenBear))
@@ -1039,13 +1043,13 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					if(m_bTest)
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
-						std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal);
+						std::string price = CFuncCommon::Double2String(fprice+DOUBLE_PRECISION, m_nPriceDecimal);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClientOrderID;
 						info.open.timeStamp = time(NULL);
 						info.open.filledQTY = m_strFuturesTradeSize.c_str();
 						info.open.orderID = CFuncCommon::GenUUID();
-						info.open.price = m_curTickData.sell;
+						info.open.price = fprice;
 						info.open.status = 2;
 						info.open.tradeType = eFuturesTradeType_OpenBear;
 						m_listTradePairInfo.push_back(info);
@@ -1055,7 +1059,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					else
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
-						std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal);
+						std::string price = CFuncCommon::Double2String(fprice+DOUBLE_PRECISION, m_nPriceDecimal);
 						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
 						SFuturesTradePairInfo info;
 						info.open.strClientOrderID = strClientOrderID;
