@@ -203,6 +203,7 @@ private:
 	//从某根柱子开始判断
 	bool _FindZhangKou(int beginBarIndex, double& minValue);
 	bool _IsBollDirForward(bool bUp, int checkNum, double checkAngle);
+	bool _FindShouKou();
 public:
 	bool m_bRun;
 	bool m_bSwapFutures;

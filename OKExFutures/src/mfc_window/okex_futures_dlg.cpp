@@ -653,107 +653,17 @@ void COKExFuturesDlg::CheckBollTrend()
 
 void COKExFuturesDlg::__CheckTrend_Normal()
 {
-	if(REAL_BOLL_DATA_SIZE >= m_nZhangKouCheckCycle)//判断张口
+	double minValue;
+	if(_FindZhangKou(0, minValue))
 	{
-		double minValue;
-		if(_FindZhangKou(0, minValue))
-		{
-			__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-			return;
-		}
-		/*int minBar = 0;
-		double minValue = 100000.0;
-		for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
-		{
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset < minValue)
-			{
-				minValue = offset;
-				minBar = i;
-			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if(offset / minValue > 2.24)
-		{
-			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-			return;
-		}
-		else if(offset / minValue > 1.4)
-		{
-			int check = m_nZhangKouTrendCheckCycle;
-			if(KLINE_DATA_SIZE >= check)
-			{
-				int up = 0;
-				int down = 0;
-				for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
-				{
-					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
-						up++;
-					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
-						down++;
-				}
-				if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
-				{
-					double min_up = 100.0;
-					for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
-					{
-						if(BOLL_DATA[i].up < min_up)
-							min_up = BOLL_DATA[i].up;
-					}
-					if((BOLL_DATA[BOLL_DATA_SIZE-1].up / min_up) >= 1.005)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-
-				}
-				else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
-				{
-					double max_down = 0;
-					for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nZhangKouCheckCycle; --i)
-					{
-						if(BOLL_DATA[i].dn > max_down)
-							max_down = BOLL_DATA[i].dn;
-					}
-					if((BOLL_DATA[BOLL_DATA_SIZE-1].dn / max_down) <= 0.095)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-					return;
-				}
-			}
-		}*/
+		__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+		return;
 	}
-	/*if(REAL_BOLL_DATA_SIZE >= m_nShouKouCheckCycle)//判断收口
+	if(_FindShouKou())
 	{
-		int maxBar = 0;
-		double maxValue = 0.0;
-		for(int i = BOLL_DATA_SIZE-1; i>=BOLL_DATA_SIZE-m_nShouKouCheckCycle; --i)
-		{
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset > maxValue)
-			{
-				maxValue = offset;
-				maxBar = i-1;
-			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if(maxValue / offset > 3)
-		{
-			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
-			if(offset/avgPrice < 0.02)
-			{
-				__SetBollState(eBollTrend_ShouKou);
-				return;
-			}
-		}
-	}*/
+		__SetBollState(eBollTrend_ShouKou);
+		return;
+	}
 }
 
 void COKExFuturesDlg::__CheckTrend_ZhangKou()
@@ -782,49 +692,10 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 	else
 	{
 		//寻找收口,从确定张口的柱子开始
-		int maxBar = 0;
-		double maxValue = 0.0;
-		for(int i = m_nZhangKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
-		{
-			//up或dn恢复到前面某根柱子值,并且该柱子和最后一根柱子之前间隔1根及以上柱子,表示一个反转的过程,出现收口
-			if(m_bZhangKouUp)
-			{
-				if(BOLL_DATA[BOLL_DATA_SIZE-1].up < BOLL_DATA[i].up && (BOLL_DATA_SIZE-1-i) > 1)
-				{
-					__SetBollState(eBollTrend_ShouKou);
-					return;
-				}
-			}
-			else
-			{
-
-				if(BOLL_DATA[BOLL_DATA_SIZE-1].dn > BOLL_DATA[i].dn && (BOLL_DATA_SIZE-1-i) > 1)
-				{
-					__SetBollState(eBollTrend_ShouKou);
-					return;
-				}
-			}
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset > maxValue)
-			{
-				maxValue = offset;
-				maxBar = i-1;
-			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-		if((offset/m_nZhangKouMinValue) < 1.4)
+		if(_FindShouKou())
 		{
 			__SetBollState(eBollTrend_ShouKou);
 			return;
-		}
-		if((maxValue/offset) > 2.24)
-		{
-			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE-1].highPrice + KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice) / 2;
-			if(offset/avgPrice < 0.02)
-			{
-				__SetBollState(eBollTrend_ShouKou);
-				return;
-			}
 		}
 	}
 	//超过25个周期直接进入收口通道状态
@@ -886,56 +757,6 @@ void COKExFuturesDlg::__CheckTrend_ShouKou()
 		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 		return;
 	}
-	/*
-	//寻找张口,从确定收口的柱子开始
-	int minBar = 0;
-	double minValue = 100000.0;
-	for(int i = m_nShouKouConfirmBar; i<BOLL_DATA_SIZE; ++i)
-	{
-		double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-		if(offset < minValue)
-		{
-			minValue = offset;
-			minBar = i;
-		}
-	}
-	double offset = BOLL_DATA[BOLL_DATA_SIZE-1].up - BOLL_DATA[BOLL_DATA_SIZE-1].dn;
-	if(offset / minValue > 2.24)
-	{
-		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-		return;
-	}
-	else if(offset / minValue > 1.4)
-	{
-		int check = m_nZhangKouTrendCheckCycle;
-		if(KLINE_DATA_SIZE >= check)
-		{
-			int up = 0;
-			int down = 0;
-			for(int i = KLINE_DATA_SIZE-1; i>=KLINE_DATA_SIZE-check; --i)
-			{
-				if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-					up++;
-				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].closePrice > KLINE_DATA[i].openPrice)
-					up++;
-				else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-					down++;
-				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].closePrice < KLINE_DATA[i].openPrice)
-					down++;
-			}
-			if(up == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
-			{
-				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-				return;
-			}
-			else if(down == check && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
-			{
-				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-				return;
-			}
-		}
-	}
-	*/
 	//超过25个周期直接进入收口通道状态
 	if(KLINE_DATA_SIZE-1-m_nShouKouConfirmBar >= 25)
 	{
@@ -2480,6 +2301,8 @@ bool COKExFuturesDlg::_FindZhangKou(int beginBarIndex, double& minValue)
 {
 	if(strcmp(KLINE_DATA[KLINE_DATA_SIZE-1].szTime, "2019-01-21 22:15:00") == 0)
 		int a = 3;
+	if(REAL_BOLL_DATA_SIZE < m_nZhangKouCheckCycle)//判断张口
+		return false;
 	int beginBar = 0;
 	if(BOLL_DATA_SIZE - beginBarIndex >= m_nBollCycle)
 		beginBar = BOLL_DATA_SIZE - m_nBollCycle;
@@ -2556,4 +2379,69 @@ bool COKExFuturesDlg::_IsBollDirForward(bool bUp, int checkNum, double checkAngl
 		}
 	}
 	return (good > 0);
+}
+
+bool COKExFuturesDlg::_FindShouKou()
+{
+	if(m_eBollState == eBollTrend_Normal)
+	{
+		if(REAL_BOLL_DATA_SIZE >= m_nShouKouCheckCycle)//判断收口
+		{
+			int maxBar = 0;
+			double maxValue = 0.0;
+			for(int i = BOLL_DATA_SIZE - 1; i >= BOLL_DATA_SIZE - m_nShouKouCheckCycle; --i)
+			{
+				double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+				if(offset > maxValue)
+				{
+					maxValue = offset;
+					maxBar = i - 1;
+				}
+			}
+			double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
+			if(maxValue / offset > 3)
+			{
+				double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE - 1].highPrice + KLINE_DATA[KLINE_DATA_SIZE - 1].lowPrice) / 2;
+				if(offset / avgPrice < 0.02)
+					return true;
+			}
+		}
+	}
+	else if(m_eBollState == eBollTrend_ZhangKou)
+	{
+		//寻找收口,从确定张口的柱子开始
+		int maxBar = 0;
+		double maxValue = 0.0;
+		for(int i = m_nZhangKouConfirmBar; i < BOLL_DATA_SIZE; ++i)
+		{
+			//up或dn恢复到前面某根柱子值,并且该柱子和最后一根柱子之前间隔1根及以上柱子,表示一个反转的过程,出现收口
+			if(m_bZhangKouUp)
+			{
+				if(BOLL_DATA[BOLL_DATA_SIZE - 1].up < BOLL_DATA[i].up && (BOLL_DATA_SIZE - 1 - i) > 1)
+					return true;
+			}
+			else
+			{
+
+				if(BOLL_DATA[BOLL_DATA_SIZE - 1].dn > BOLL_DATA[i].dn && (BOLL_DATA_SIZE - 1 - i) > 1)
+					return true;
+			}
+			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
+			if(offset > maxValue)
+			{
+				maxValue = offset;
+				maxBar = i - 1;
+			}
+		}
+		double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
+		if((offset / m_nZhangKouMinValue) < 1.4)
+			return true;
+		if((maxValue / offset) > 2.24)
+		{
+			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE - 1].highPrice + KLINE_DATA[KLINE_DATA_SIZE - 1].lowPrice) / 2;
+			if(offset / avgPrice < 0.02)
+				return true;
+		}
+	}
+	return false;
 }
