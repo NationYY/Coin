@@ -987,8 +987,8 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		{
 			if((KLINE_DATA[m_nZhangKouConfirmBar].closePrice > KLINE_DATA[m_nZhangKouConfirmBar].openPrice) && ((KLINE_DATA[m_nZhangKouConfirmBar].closePrice - KLINE_DATA[m_nZhangKouConfirmBar].openPrice)/KLINE_DATA[m_nZhangKouConfirmBar].openPrice) > 0.04)
 				return;
-			double rate = BOLL_DATA[BOLL_DATA_SIZE-1].up / BOLL_DATA[BOLL_DATA_SIZE-2].up;
-			double fprice = BOLL_DATA[BOLL_DATA_SIZE-1].up * rate;
+			double rate = BOLL_DATA[m_nZhangKouTradeCheckBar].up / BOLL_DATA[m_nZhangKouTradeCheckBar-1].up;
+			double fprice = BOLL_DATA[m_nZhangKouTradeCheckBar].up * rate;
 			//if(m_curTickData.last < m_curTickBoll.up)
 			{
 				//用买一价格挂多单
@@ -1032,8 +1032,8 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		{
 			if((KLINE_DATA[m_nZhangKouConfirmBar].closePrice < KLINE_DATA[m_nZhangKouConfirmBar].openPrice) && ((KLINE_DATA[m_nZhangKouConfirmBar].openPrice - KLINE_DATA[m_nZhangKouConfirmBar].closePrice)/KLINE_DATA[m_nZhangKouConfirmBar].openPrice) > 0.04)
 				return;
-			double rate = BOLL_DATA[BOLL_DATA_SIZE-1].up / BOLL_DATA[BOLL_DATA_SIZE-2].up;
-			double fprice = BOLL_DATA[BOLL_DATA_SIZE-1].up * rate;
+			double rate = BOLL_DATA[m_nZhangKouTradeCheckBar].dn / BOLL_DATA[m_nZhangKouTradeCheckBar-1].dn;
+			double fprice = BOLL_DATA[m_nZhangKouTradeCheckBar].dn * rate;
 			//if(m_curTickData.last > m_curTickBoll.dn)
 			{
 				//用卖一价格挂空单
@@ -1287,7 +1287,13 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							bool _bStopProfitFail = __CheckCanStopProfit(eFuturesTradeType_OpenBull, itB->open.orderID);
 							if(!_bStopProfitFail)
 								bStopProfitFail = true;
-							if(m_curTickData.last <= (itB->open.price*(1+itB->open.stopProfit*m_moveStopProfit)) && _bStopProfitFail)
+							bool mustClose = false;
+							if((m_curTickData.last - itB->open.price)/itB->open.price > m_stopLoss)
+							{
+								CActionLog("trade", "达到收益上限");
+								mustClose = true;
+							}
+							if((m_curTickData.last <= (itB->open.price*(1+itB->open.stopProfit*m_moveStopProfit)) && _bStopProfitFail) || mustClose)
 							{
 								//如果open未交易完,先撤单
 								if(itB->open.status == "1")
@@ -1303,6 +1309,8 @@ void COKExFuturesDlg::__CheckTradeOrder()
 								if(itB->open.filledQTY != "0")
 								{
 									std::string price = CFuncCommon::Double2String(m_curTickData.sell + DOUBLE_PRECISION, m_nPriceDecimal);
+									if(mustClose)
+										price = "-1";
 									if(m_bTest)
 									{
 										itB->close.strClientOrderID = CFuncCommon::GenUUID();
@@ -1380,8 +1388,14 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							bool _bStopProfitFail = __CheckCanStopProfit(eFuturesTradeType_OpenBear, itB->open.orderID);
 							if(!_bStopProfitFail)
 								bStopProfitFail = true;
+							bool mustClose = false;
+							if((itB->open.price-m_curTickData.last) / itB->open.price >= m_stopLoss)
+							{
+								CActionLog("trade", "达到收益上限");
+								mustClose = true;
+							}
 							//平仓
-							if(m_curTickData.last >= (itB->open.price*(1 - itB->open.stopProfit*m_moveStopProfit)) && _bStopProfitFail)
+							if((m_curTickData.last >= (itB->open.price*(1 - itB->open.stopProfit*m_moveStopProfit)) && _bStopProfitFail) || mustClose)
 							{
 								//如果open未交易完,先撤单
 								if(itB->open.status == "1")
@@ -1397,6 +1411,8 @@ void COKExFuturesDlg::__CheckTradeOrder()
 								if(itB->open.filledQTY != "0")
 								{
 									std::string price = CFuncCommon::Double2String(m_curTickData.buy + DOUBLE_PRECISION, m_nPriceDecimal);
+									if(mustClose)
+										price = "-1";
 									if(m_bTest)
 									{
 										itB->close.strClientOrderID = CFuncCommon::GenUUID();
@@ -2177,6 +2193,7 @@ void COKExFuturesDlg::OnBnClickedButtonUpdateTradeMoment()
 
 bool COKExFuturesDlg::__CheckCanStopProfit(eFuturesTradeType eOpenType, std::string& orderID)
 {
+	return true;
 	if(eOpenType == eFuturesTradeType_OpenBull && m_eBollState == eBollTrend_ZhangKou && m_bZhangKouUp)
 	{
 		//除开自己以外还能有足够对空单进行对冲的单子
