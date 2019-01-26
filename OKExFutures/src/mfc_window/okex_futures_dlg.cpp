@@ -196,8 +196,8 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
 
-	m_combTradeMoment.InsertString(0, "趋势出现");
-	m_combTradeMoment.InsertString(1, "趋势结束");
+	m_combTradeMoment.InsertString(0, "趋势出现正向");
+	m_combTradeMoment.InsertString(1, "趋势出现反向");
 
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
@@ -964,6 +964,13 @@ void COKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 			if(m_curTickData.last > itB->open.maxPrice)
 				itB->open.maxPrice = m_curTickData.last;
 		}
+		if(itB->stopLoss.orderID != "" && !CFuncCommon::CheckEqual(itB->stopLoss.minPrice, 0.0) && !CFuncCommon::CheckEqual(itB->stopLoss.maxPrice, 0.0))
+		{
+			if(m_curTickData.last < itB->stopLoss.minPrice)
+				itB->stopLoss.minPrice = m_curTickData.last;
+			if(m_curTickData.last > itB->stopLoss.maxPrice)
+				itB->stopLoss.maxPrice = m_curTickData.last;
+		}
 		++itB;
 	}
 	_UpdateTradeShow();
@@ -982,7 +989,8 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 		return;
 	if(m_tradeMoment != 0)
 		return;
-#ifdef NEW_MODE
+if(m_tradeMoment == 1)
+{
 	//确认张口后第一根柱子
 	if(KLINE_DATA_SIZE - 1 - m_nZhangKouTradeCheckBar <= 1)
 	{
@@ -1079,7 +1087,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 			}
 		}
 	}
-#else
+}
+else if(m_tradeMoment == 0)
+{
 	//确认张口后第一根柱子
 	if(KLINE_DATA_SIZE - 1 - m_nZhangKouTradeCheckBar <= 1)
 	{
@@ -1176,12 +1186,13 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 			}
 		}
 	}
-#endif
+}
 	
 }
 
 void COKExFuturesDlg::__CheckTrade_ShouKou()
 {
+	return;
 	if(!m_bSuccessLogin)
 		return;
 	if(m_bStopWhenFinish)
@@ -1950,6 +1961,11 @@ void COKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 		}
 		else if(info.tradeType == itB->stopLoss.tradeType && itB->stopLoss.orderID == info.orderID)
 		{
+			if(itB->stopLoss.status == "" && (info.status == "0" || info.status == "1" || info.status == "2") && m_curTickData.bValid)
+			{
+				itB->stopLoss.minPrice = m_curTickData.last;
+				itB->stopLoss.maxPrice = m_curTickData.last;
+			}
 			itB->stopLoss.timeStamp = info.timeStamp;
 			itB->stopLoss.filledQTY = info.filledQTY;
 			itB->stopLoss.price = info.price;
@@ -2170,9 +2186,9 @@ void COKExFuturesDlg::__InitConfigCtrl()
 	m_editCapital.SetWindowText(strTemp.c_str());
 
 	strTemp = m_config.get("futures", "tradeMoment", "");
-	if(strTemp == "趋势出现")
+	if(strTemp == "趋势出现正向")
 		m_combTradeMoment.SetCurSel(0);
-	else if(strTemp == "趋势结束")
+	else if(strTemp == "趋势出现反向")
 		m_combTradeMoment.SetCurSel(1);
 }
 
@@ -2266,7 +2282,7 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		m_bSwapFutures = true;
 	else
 		m_bSwapFutures = false;
-	if(strTradeMoment == "趋势出现")
+	if(strTradeMoment == "趋势出现正向")
 		m_tradeMoment = 0;
 	else
 		m_tradeMoment = 1;
@@ -2434,7 +2450,7 @@ void COKExFuturesDlg::OnBnClickedButtonUpdateTradeMoment()
 		MessageBox("未选择交易时机");
 		return;
 	}
-	if(strTradeMoment == "趋势出现")
+	if(strTradeMoment == "趋势出现正向")
 		m_tradeMoment = 0;
 	else
 		m_tradeMoment = 1;
