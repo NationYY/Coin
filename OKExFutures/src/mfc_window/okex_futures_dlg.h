@@ -123,6 +123,7 @@ struct SFuturesTradePairInfo
 {
 	SFuturesTradeInfo open;
 	SFuturesTradeInfo close;
+	SFuturesTradeInfo stopLoss;
 };
 
 // COKExFuturesDlg ¶Ô»°¿ò
