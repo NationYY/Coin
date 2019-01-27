@@ -2000,7 +2000,7 @@ void COKExFuturesDlg::_UpdateTradeShow()
 		{
 			m_listCtrlOrderOpen.InsertItem(i, "");
 			m_listCtrlOrderClose.InsertItem(i, "");
-			szFormat.Format("%s[%d]", CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str(), CFuncCommon::ToString(itB->open.stopProfit));
+			szFormat.Format("%s[%d]", CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str(), itB->open.stopProfit);
 			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
 			switch(itB->open.tradeType)
 			{
