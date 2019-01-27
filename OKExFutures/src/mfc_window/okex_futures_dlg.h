@@ -282,10 +282,16 @@ public:
 	CComboBox m_combFuturesType;
 	CStatic m_staticAccountInfo;
 	CEdit m_editCapital;
+	CEdit m_editCapitalToday;
+	
 	double m_beginMoney;
+	double m_todayBeginMoney;
 	afx_msg void OnBnClickedButtonUpdateCost();
+	afx_msg void OnBnClickedButtonUpdateTodayCost();
 	CStatic m_staticProfit;
+	CStatic m_staticTodayProfit;
 	CComboBox m_combTradeMoment;
 	afx_msg void OnBnClickedButtonUpdateTradeMoment();
 	CStatic m_staticAccountState;
+	int m_nLastUpdateDay;
 };

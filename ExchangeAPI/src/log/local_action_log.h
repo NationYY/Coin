@@ -10,11 +10,18 @@ public:
 	~CActionLog() {};
 };
 
+class CFixActionLog
+{
+public:
+	CFixActionLog(const char* type, const char* format, ...);
+	~CFixActionLog() {};
+};
 
 struct sActionLog
 {
 	std::string m_strTableName;
 	std::string m_strText;
+	bool m_bDayFix;
 };
 class CLocalActionLog
 {
@@ -24,9 +31,9 @@ public:
 	~CLocalActionLog();
 public:
 	//push log 到容器中。
-	void push_log_text(std::string file_name, const char* log_text);
+	void push_log_text(std::string file_name, const char* log_text, bool bDayFix = false);
 
-	void loadFile(std::string logTableName);
+	void loadFile(std::string logTableName, bool bDayFix);
 
 	//线程启动函数
 	void start();
@@ -46,6 +53,7 @@ private:
 	std::string m_path;
 
 	std::map<std::string, ofstream*> map_file;
+	std::map<std::string, ofstream*> map_fix_file;
 	boost::thread* m_pThread;
 	bool m_bExit;
 };

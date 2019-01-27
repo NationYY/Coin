@@ -111,9 +111,10 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_pServerFactory = NULL;
 	m_bSuccessLogin = false;
 	m_bollCheckAngle = 1.0005;
-
+	m_todayBeginMoney = 0.0;
 	m_bollCheckAngleFast = 1.0007;
 	m_bollCheckAngleSlow = 1.0004;
+	m_nLastUpdateDay = -1;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -134,7 +135,11 @@ void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO4, m_combFuturesType);
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT, m_staticAccountInfo);
 	DDX_Control(pDX, IDC_EDIT7, m_editCapital);
+	DDX_Control(pDX, IDC_EDIT8, m_editCapitalToday);
 	DDX_Control(pDX, IDC_STATIC_PROFIT, m_staticProfit);
+	DDX_Control(pDX, IDC_STATIC_TODAY_PROFIT, m_staticTodayProfit);
+	
+	
 	DDX_Control(pDX, IDC_COMBO1, m_combTradeMoment);
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT_STATE, m_staticAccountState);
 }
@@ -150,6 +155,7 @@ BEGIN_MESSAGE_MAP(COKExFuturesDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &COKExFuturesDlg::OnBnClickedButtonStopWhenFinish)
 	ON_BN_CLICKED(IDC_BUTTON4, &COKExFuturesDlg::OnBnClickedButtonUpdateTradeSize)
 	ON_BN_CLICKED(IDC_BUTTON5, &COKExFuturesDlg::OnBnClickedButtonUpdateCost)
+	ON_BN_CLICKED(IDC_BUTTON7, &COKExFuturesDlg::OnBnClickedButtonUpdateTodayCost)
 	ON_BN_CLICKED(IDC_BUTTON6, &COKExFuturesDlg::OnBnClickedButtonUpdateTradeMoment)
 END_MESSAGE_MAP()
 
@@ -220,6 +226,7 @@ BOOL COKExFuturesDlg::OnInitDialog()
 	m_apiKey = m_config.get("futures", "apiKey", "");
 	m_secretKey = m_config.get("futures", "secretKey", "");
 	m_passphrase = m_config.get("futures", "passphrase", "");
+	m_nLastUpdateDay = m_config.get_int("futures", "lastUpdateDay", -1);
 	
 	__InitConfigCtrl();
 
@@ -2182,6 +2189,9 @@ void COKExFuturesDlg::__InitConfigCtrl()
 	strTemp = m_config.get("futures", "beginMoney", "");
 	m_editCapital.SetWindowText(strTemp.c_str());
 
+	strTemp = m_config.get("futures", "todayBeginMoney", "");
+	m_editCapitalToday.SetWindowText(strTemp.c_str());
+
 	strTemp = m_config.get("futures", "tradeMoment", "");
 	if(strTemp == "趋势出现正向")
 		m_combTradeMoment.SetCurSel(0);
@@ -2266,6 +2276,9 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 	CString szCost = "";
 	m_editCapital.GetWindowText(szCost);
 
+	CString szTodayCost = "";
+	m_editCapitalToday.GetWindowText(szTodayCost);
+
 	m_strCoinType = strCoinType.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
@@ -2285,6 +2298,8 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 		m_tradeMoment = 1;
 	if(szCost != "")
 		m_beginMoney = stod(szCost.GetBuffer());
+	if(szTodayCost != "")
+		m_todayBeginMoney = stod(szTodayCost.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
 	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
@@ -2295,6 +2310,7 @@ bool COKExFuturesDlg::__SaveConfigCtrl()
 	m_config.set_value("futures", "maxDirTradeCnt", strMaxDirTradeCnt.GetBuffer());
 	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
 	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
+	m_config.set_value("futures", "todayBeginMoney", szTodayCost.GetBuffer());
 	m_config.set_value("futures", "tradeMoment", strTradeMoment.GetBuffer());
 	m_config.save("./config.ini");
 	return true;
@@ -2414,16 +2430,43 @@ void COKExFuturesDlg::UpdateAccountInfo(SFuturesAccountInfo& info)
 
 void COKExFuturesDlg::_UpdateAccountShow()
 {
-	if(m_accountInfo.bValid && !CFuncCommon::CheckEqual(m_beginMoney, 0.0))
+	if(m_accountInfo.bValid)
 	{
 		m_staticAccountInfo.SetWindowText(m_accountInfo.equity.c_str());
-		double equity = stod(m_accountInfo.equity);
-		CString strTemp;
-		if(equity >= m_beginMoney)
-			strTemp.Format("%.4f(%.2f%%)", equity-m_beginMoney, (equity-m_beginMoney)/m_beginMoney*100);
-		else
-			strTemp.Format("-%.4f(-%.2f%%)", m_beginMoney-equity, (m_beginMoney-equity)/m_beginMoney*100);
-		m_staticProfit.SetWindowText(strTemp);
+		time_t tNow = time(NULL);
+		tm* pTM = localtime(&tNow);
+		if(pTM->tm_yday != m_nLastUpdateDay)
+		{
+			double equity = stod(m_accountInfo.equity);
+			if(m_nLastUpdateDay != -1)
+				CFixActionLog("profit", "今日收益%.2f%%", (equity - m_todayBeginMoney) / m_todayBeginMoney * 100)l
+			
+			m_todayBeginMoney = equity;
+			m_nLastUpdateDay = pTM->tm_yday;
+			m_config.set_value("futures", "lastUpdateDay", CFuncCommon::ToString(m_nLastUpdateDay));
+			m_config.set_value("futures", "todayBeginMoney", m_accountInfo.equity.GetBuffer());
+			m_config.save("./config.ini");
+		}
+		if(!CFuncCommon::CheckEqual(m_beginMoney, 0.0))
+		{
+			double equity = stod(m_accountInfo.equity);
+			CString strTemp;
+			if(equity >= m_beginMoney)
+				strTemp.Format("%.4f(%.2f%%)", equity - m_beginMoney, (equity - m_beginMoney) / m_beginMoney * 100);
+			else
+				strTemp.Format("-%.4f(-%.2f%%)", m_beginMoney - equity, (m_beginMoney - equity) / m_beginMoney * 100);
+			m_staticProfit.SetWindowText(strTemp);
+		}
+		if(!CFuncCommon::CheckEqual(m_todayBeginMoney, 0.0))
+		{
+			double equity = stod(m_accountInfo.equity);
+			CString strTemp;
+			if(equity >= m_todayBeginMoney)
+				strTemp.Format("%.4f(%.2f%%)", equity - m_todayBeginMoney, (equity - m_todayBeginMoney) / m_todayBeginMoney * 100);
+			else
+				strTemp.Format("-%.4f(-%.2f%%)", m_todayBeginMoney - equity, (m_todayBeginMoney - equity) / m_todayBeginMoney * 100);
+			m_staticTodayProfit.SetWindowText(strTemp);
+		}
 	}
 }
 
@@ -2436,6 +2479,17 @@ void COKExFuturesDlg::OnBnClickedButtonUpdateCost()
 	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
 	m_config.save("./config.ini");
 }
+
+void COKExFuturesDlg::OnBnClickedButtonUpdateTodayCost()
+{
+	m_todayBeginMoney = 0.0;
+	CString szCost;
+	m_editCapitalToday.GetWindowText(szCost);
+	m_todayBeginMoney = stod(szCost.GetBuffer());
+	m_config.set_value("futures", "todayBeginMoney", szCost.GetBuffer());
+	m_config.save("./config.ini");
+}
+
 
 
 void COKExFuturesDlg::OnBnClickedButtonUpdateTradeMoment()

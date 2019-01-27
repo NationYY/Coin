@@ -24,6 +24,24 @@ CActionLog::CActionLog(const char* type, const char* format, ...)
 	CLocalActionLog::GetInstancePt()->push_log_text(type, context);
 }
 
+CFixActionLog::CFixActionLog(const char* type, const char* format, ...)
+{
+	time_t tNow = time(NULL);
+	tm nowtm;
+	localtime_s(&nowtm, &tNow);
+	char context[6144] = { 0 };
+	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d ",
+			  (int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec);
+	char _context[6144] = { 0 };
+	va_list args;
+	int n;
+	va_start(args, format);
+	n = vsnprintf(_context, sizeof(_context), format, args);
+	va_end(args);
+	strcat(context, _context);
+	CLocalActionLog::GetInstancePt()->push_log_text(type, context);
+}
+
 CLocalActionLog::CLocalActionLog():m_pThread(NULL), m_bExit(false)
 {
 
@@ -37,11 +55,12 @@ void CLocalActionLog::set_log_path(const char * path)
 	m_path = path;
 }
 
-void CLocalActionLog::push_log_text(std::string file_name, const char* log_text)
+void CLocalActionLog::push_log_text(std::string file_name, const char* log_text, bool bDayFix)
 { 
 	sActionLog str_log;
 	str_log.m_strTableName = file_name;
 	str_log.m_strText = log_text;
+	str_log.m_bDayFix = bDayFix;
 	boost::mutex::scoped_lock sl(m_logMutex);
 	log_queue.push_back(str_log);
 	m_hasLogData.notify_one();
@@ -61,7 +80,7 @@ void CLocalActionLog::start()
 		
 	m_pThread = new boost::thread(boost::bind(&CLocalActionLog::_thread, this));
 }
-void CLocalActionLog::loadFile(std::string logTableName)
+void CLocalActionLog::loadFile(std::string logTableName, bool bDayFix)
 {
 	time_t now_t = time(NULL);
 	tm nowtm;
@@ -76,16 +95,31 @@ void CLocalActionLog::loadFile(std::string logTableName)
 		map_file.clear();
 		m_nDay = nowtm.tm_mday;
 	}
-
-	if (map_file.find(logTableName) == map_file.end())
+	if(bDayFix)
 	{
-		char file_name[512];
-		_snprintf(file_name, sizeof(file_name)-1, "%s%s%d%d%d.txt", m_path.c_str(), logTableName.c_str(), (int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday);
-		file_name[sizeof(file_name)-1] = '\0';
-		ofstream* outfile = new ofstream;
-		outfile->open(file_name, ios::app);
-		map_file[logTableName] = outfile;
+		if(map_fix_file.find(logTableName) == map_fix_file.end())
+		{
+			char file_name[512];
+			_snprintf(file_name, sizeof(file_name)-1, "%s%s.txt", m_path.c_str(), logTableName.c_str());
+			file_name[sizeof(file_name)-1] = '\0';
+			ofstream* outfile = new ofstream;
+			outfile->open(file_name, ios::app);
+			map_fix_file[logTableName] = outfile;
+		}
 	}
+	else
+	{
+		if(map_file.find(logTableName) == map_file.end())
+		{
+			char file_name[512];
+			_snprintf(file_name, sizeof(file_name)-1, "%s%s%d%d%d.txt", m_path.c_str(), logTableName.c_str(), (int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday);
+			file_name[sizeof(file_name)-1] = '\0';
+			ofstream* outfile = new ofstream;
+			outfile->open(file_name, ios::app);
+			map_file[logTableName] = outfile;
+		}
+	}
+	
 }
 void CLocalActionLog::_thread()
 {
@@ -105,8 +139,11 @@ void CLocalActionLog::_thread()
 		}
 
 		//开始写入文件 
-		loadFile(str_log.m_strTableName);
-		*map_file[str_log.m_strTableName] << str_log.m_strText << endl <<flush;
+		loadFile(str_log.m_strTableName, str_log.m_bDayFix);
+		if(str_log.m_bDayFix)
+			*map_fix_file[str_log.m_strTableName] << str_log.m_strText << endl <<flush;
+		else
+			*map_file[str_log.m_strTableName] << str_log.m_strText << endl <<flush;
     }        
 }
 
@@ -129,6 +166,13 @@ CLocalActionLog::~CLocalActionLog()
 		delete iter->second;
 	}
 	map_file.clear();
+
+	for(std::map<std::string, ofstream*>::iterator iter = map_fix_file.begin(); iter != map_fix_file.end(); ++iter)
+	{
+		iter->second->close();
+		delete iter->second;
+	}
+	map_fix_file.clear();
 }
 
 void CLocalActionLog::server_start()
