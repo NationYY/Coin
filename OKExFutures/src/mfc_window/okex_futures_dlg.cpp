@@ -2443,8 +2443,9 @@ void COKExFuturesDlg::_UpdateAccountShow()
 			
 			m_todayBeginMoney = equity;
 			m_nLastUpdateDay = pTM->tm_yday;
+			m_editCapitalToday.SetWindowText(m_accountInfo.equity.c_str());
 			m_config.set_value("futures", "lastUpdateDay", CFuncCommon::ToString(m_nLastUpdateDay));
-			m_config.set_value("futures", "todayBeginMoney", m_accountInfo.equity.GetBuffer());
+			m_config.set_value("futures", "todayBeginMoney", m_accountInfo.equity.c_str());
 			m_config.save("./config.ini");
 		}
 		if(!CFuncCommon::CheckEqual(m_beginMoney, 0.0))
