@@ -2439,7 +2439,7 @@ void COKExFuturesDlg::_UpdateAccountShow()
 		{
 			double equity = stod(m_accountInfo.equity);
 			if(m_nLastUpdateDay != -1)
-				CFixActionLog("profit", "今日收益%.2f%%", (equity - m_todayBeginMoney) / m_todayBeginMoney * 100)l
+				CFixActionLog("profit", "今日收益%.2f%%", (equity - m_todayBeginMoney) / m_todayBeginMoney * 100);
 			
 			m_todayBeginMoney = equity;
 			m_nLastUpdateDay = pTM->tm_yday;
