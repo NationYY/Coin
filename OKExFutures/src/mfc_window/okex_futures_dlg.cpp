@@ -1790,7 +1790,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull)
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull && itBegin->stopLoss.orderID == "")
 					cnt++;
 				itBegin++;
 			}
@@ -1814,7 +1814,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear && itBegin->stopLoss.orderID == "")
 					cnt++;
 				itBegin++;
 			}
@@ -2000,7 +2000,7 @@ void COKExFuturesDlg::_UpdateTradeShow()
 		{
 			m_listCtrlOrderOpen.InsertItem(i, "");
 			m_listCtrlOrderClose.InsertItem(i, "");
-			szFormat.Format("%s", CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+			szFormat.Format("%s[%d]", CFuncCommon::Double2String(itB->open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str(), CFuncCommon::ToString(itB->open.stopProfit));
 			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
 			switch(itB->open.tradeType)
 			{
