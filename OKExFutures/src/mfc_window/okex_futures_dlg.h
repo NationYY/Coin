@@ -89,6 +89,7 @@ struct SFuturesTradeInfo
 	std::string filledQTY;		//成交数量
 	std::string orderID;//订单ID;
 	double price;		//订单价格
+	double priceAvg;	//成交均价
 	std::string status;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交 ）
 	eFuturesTradeType tradeType;
 	time_t waitClientOrderIDTime;
@@ -108,6 +109,7 @@ struct SFuturesTradeInfo
 		filledQTY = "0";
 		orderID = "";
 		price = 0.0;
+		priceAvg = 0.0;
 		status = "";
 		tradeType = eFuturesTradeType_OpenBull;
 		waitClientOrderIDTime = 0;
