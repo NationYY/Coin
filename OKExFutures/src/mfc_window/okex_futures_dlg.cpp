@@ -665,7 +665,7 @@ void COKExFuturesDlg::__CheckTrend_Normal()
 	double minValue;
 	if(_FindZhangKou(0, minValue))
 	{
-		__SetBollState(eBollTrend_ZhangKou, 1, minValue);
+		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 		return;
 	}
 	if(_FindShouKou())
@@ -802,18 +802,6 @@ void COKExFuturesDlg::__CheckTrend_ShouKouChannel()
 			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
 			return;
 		}
-
-		int checkBarNum = 0;
-		if(m_eLastBollState == eBollTrend_ShouKou)
-		{
-			checkBarNum = m_nShouKouConfirmBar;
-			if(BOLL_DATA_SIZE-1-m_nShouKouConfirmBar > m_nBollCycle)
-				checkBarNum = m_nBollCycle;
-			else
-				checkBarNum = BOLL_DATA_SIZE-1-m_nShouKouConfirmBar;
-		}
-		else
-			checkBarNum = m_nBollCycle;
 	}
 }
 
@@ -1068,7 +1056,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 					fprice = m_curTickData.last;
 				//if(m_curTickData.last > m_curTickBoll.dn)
 				{
-					//用卖一价格挂空单
+					//挂多单
 					if(__CheckCanTrade(eFuturesTradeType_OpenBull))
 					{
 						m_nZhangKouTradeCheckBar = 0;
@@ -1122,7 +1110,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 				double fprice = BOLL_DATA[m_nZhangKouTradeCheckBar].up * rate;
 				//if(m_curTickData.last < m_curTickBoll.up)
 				{
-					//用买一价格挂多单
+					//挂多单
 					if(__CheckCanTrade(eFuturesTradeType_OpenBull))
 					{
 						m_nZhangKouTradeCheckBar = 0;
@@ -1169,7 +1157,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 				double fprice = BOLL_DATA[m_nZhangKouTradeCheckBar].dn * rate;
 				//if(m_curTickData.last > m_curTickBoll.dn)
 				{
-					//用卖一价格挂空单
+					//挂空单
 					if(__CheckCanTrade(eFuturesTradeType_OpenBear))
 					{
 						m_nZhangKouTradeCheckBar = 0;
@@ -1315,6 +1303,7 @@ void COKExFuturesDlg::__CheckTrade_ShouKouChannel()
 {
 	if(!m_bSuccessLogin)
 		return;
+	//柱子穿插md, 如果中间纠缠的柱子不超过两个则确定趋势
 }
 
 void COKExFuturesDlg::__CheckTradeOrder()
@@ -1393,9 +1382,17 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		}
 		//如果已进行平仓交易,等待平仓完成
 		//否则判断开仓的盈亏
-		if(itB->close.orderID != "" || itB->close.strClientOrderID != "" || itB->stopLoss.orderID != "" || itB->stopLoss.strClientOrderID != "")
+		if(itB->close.orderID != "" || itB->close.strClientOrderID != "")
 		{
 		
+		}
+		else if(itB->stopLoss.orderID != "" || itB->stopLoss.strClientOrderID != "")
+		{
+			if(itB->stopLoss.orderID != "" && !CFuncCommon::CheckEqual(itB->stopLoss.priceAvg, 0.0))
+			{
+				//止损单也要做止盈止损操作
+
+			}
 		}
 		else if(itB->open.orderID != "" && !CFuncCommon::CheckEqual(itB->open.priceAvg, 0.0))
 		{
