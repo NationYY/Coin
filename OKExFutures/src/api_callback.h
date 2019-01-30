@@ -70,6 +70,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				info.filledQTY = CFuncCommon::ToString(stoi(retObj["filled_qty"].asString()));
 				info.orderID = retObj["order_id"].asString();
 				info.price = stod(retObj["price"].asString());
+				info.priceAvg = stod(retObj["price_avg"].asString());
 				info.status = retObj["status"].asString();
 				info.size = CFuncCommon::ToString(stoi(retObj["size"].asString()));
 				std::string tradeType = retObj["type"].asString();
@@ -199,6 +200,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				info.filledQTY = retObj["data"][0]["filled_qty"].asString();
 				info.orderID = retObj["data"][0]["order_id"].asString();
 				info.price = stod(retObj["data"][0]["price"].asString());
+				info.priceAvg = stod(retObj["data"][0]["price_avg"].asString());
 				info.status = retObj["data"][0]["status"].asString();
 				info.size = retObj["data"][0]["size"].asString();
 				std::string tradeType = retObj["data"][0]["type"].asString();

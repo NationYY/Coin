@@ -39,7 +39,7 @@ CFixActionLog::CFixActionLog(const char* type, const char* format, ...)
 	n = vsnprintf(_context, sizeof(_context), format, args);
 	va_end(args);
 	strcat(context, _context);
-	CLocalActionLog::GetInstancePt()->push_log_text(type, context);
+	CLocalActionLog::GetInstancePt()->push_log_text(type, context, true);
 }
 
 CLocalActionLog::CLocalActionLog():m_pThread(NULL), m_bExit(false)
