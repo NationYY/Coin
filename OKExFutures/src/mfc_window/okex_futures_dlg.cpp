@@ -79,7 +79,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_nPriceDecimal = 3;
 	m_nZhangKouCheckCycle = 20;
 	m_nShouKouCheckCycle = 20;
-	m_nZhangKouTrendCheckCycle = 2;
+	m_nZhangKouTrendCheckCycle = 3;
 	m_bRun = false;
 	m_eBollState = eBollTrend_Normal;
 	m_eLastBollState = eBollTrend_Normal;
@@ -687,11 +687,24 @@ void COKExFuturesDlg::__CheckTrend_ZhangKou()
 				CActionLog("boll", "张口不成立");
 				__SetBollState(m_eLastBollState);
 			}
-
+			else
+			{
+				
+			}
+			if(BOLL_DATA[BOLL_DATA_SIZE-1].dn > BOLL_DATA[BOLL_DATA_SIZE-2].dn)
+			{
+				CActionLog("boll", "张口不成立");
+				__SetBollState(m_eLastBollState);
+			}
 		}
 		else
 		{
 			if(BOLL_DATA[BOLL_DATA_SIZE-1].dn > BOLL_DATA[BOLL_DATA_SIZE-2].dn)
+			{
+				CActionLog("boll", "张口不成立");
+				__SetBollState(m_eLastBollState);
+			}
+			if(BOLL_DATA[BOLL_DATA_SIZE-1].up < BOLL_DATA[BOLL_DATA_SIZE-2].up)
 			{
 				CActionLog("boll", "张口不成立");
 				__SetBollState(m_eLastBollState);
@@ -861,6 +874,7 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam
 				m_nZhangKouTradeCheckBar = m_nZhangKouConfirmBar;
 				m_nZhangKouMinValue = dParam;
 				m_bZhangKouUp = bZhangkouUP;
+				m_lastZhangKouOrder = "";
 				CString szInfo;
 				szInfo.Format("张口产生<<<< 确认时间[%s] %s 趋势[%s %d:%d]", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time).c_str(), (nParam==0 ? "开口角判断" : "柱体穿插判断"), (m_bZhangKouUp?"涨":"跌"), up, down);
 				CActionLog("boll", szInfo.GetBuffer());
@@ -1805,7 +1819,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull)
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull && itBegin->stopLoss.orderID == "")
 					cnt++;
 				itBegin++;
 			}
@@ -1829,7 +1843,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear && itBegin->stopLoss.orderID == "")
 					cnt++;
 				itBegin++;
 			}
@@ -1891,6 +1905,8 @@ void COKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::string& se
 			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str());
 			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
 			bUpdate = true;
+			if(m_eBollState == eBollTrend_ZhangKou)
+				m_lastZhangKouOrder = serverOrderID;
 			break;
 		}
 		if(itB->close.strClientOrderID == clientOrderID)

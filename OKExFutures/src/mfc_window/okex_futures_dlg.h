@@ -296,4 +296,5 @@ public:
 	afx_msg void OnBnClickedButtonUpdateTradeMoment();
 	CStatic m_staticAccountState;
 	int m_nLastUpdateDay;
+	std::string m_lastZhangKouOrder;
 };
