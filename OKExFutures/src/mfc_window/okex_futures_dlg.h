@@ -97,7 +97,9 @@ struct SFuturesTradeInfo
 	std::string size;
 	double maxPrice;
 	double minPrice;
+	double lastSellStopLossPrice;
 	time_t tLastUpdate;
+	int triggerType;	//0:boll开口驱动  1:boll纠缠驱动
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -117,7 +119,9 @@ struct SFuturesTradeInfo
 		size = "0";
 		maxPrice = 0.0;
 		minPrice = 0.0;
+		lastSellStopLossPrice = 0.0;
 		tLastUpdate = 0;
+		triggerType = 0;
 	}
 };
 
