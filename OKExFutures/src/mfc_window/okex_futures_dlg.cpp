@@ -115,6 +115,7 @@ COKExFuturesDlg::COKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_bollCheckAngleFast = 1.0007;
 	m_bollCheckAngleSlow = 1.0004;
 	m_nLastUpdateDay = -1;
+	m_nLastTradeBarByShouKouChannel = 0;
 }
 
 void COKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -884,6 +885,7 @@ void COKExFuturesDlg::__SetBollState(eBollTrend state, int nParam, double dParam
 			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE-1].time);
 			CActionLog("boll", "收口通道===== 确认时间[%s] %s", strConfirmTime.c_str(), (nParam==0 ? "趋势判断" : "超时判断"));
 			m_nShouKouChannelConfirmBar = KLINE_DATA_SIZE-1;
+			m_nLastTradeBarByShouKouChannel = 0;
 		}
 		break;
 	default:
@@ -1043,7 +1045,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.size = m_strFuturesTradeSize;
 							info.open.tradeType = eFuturesTradeType_OpenBear;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "[%s]开空单%s张, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "[%s]开布林空单%s张, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=1", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), price.c_str(), "2");
 						}
 						else
@@ -1056,7 +1058,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.waitClientOrderIDTime = time(NULL);
 							info.open.tradeType = eFuturesTradeType_OpenBear;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "开空单%s张, price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "开布林空单%s张, price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 						}
 						m_bCanLogCheckCanTrade = true;
 						m_bCanStopProfit = true;
@@ -1090,7 +1092,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.tradeType = eFuturesTradeType_OpenBull;
 							info.open.size = m_strFuturesTradeSize;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "[%s]开多单%s张 price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "[%s]开布林多单%s张 price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=2", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), price.c_str(), "2");
 						}
 						else
@@ -1103,7 +1105,7 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.waitClientOrderIDTime = time(NULL);
 							info.open.tradeType = eFuturesTradeType_OpenBull;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "开多单%s张 price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "开布林多单%s张 price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 						}
 						m_bCanLogCheckCanTrade = true;
 						m_bCanStopProfit = true;
@@ -1143,8 +1145,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.status = 2;
 							info.open.size = m_strFuturesTradeSize;
 							info.open.tradeType = eFuturesTradeType_OpenBull;
+							info.open.triggerType = 0;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "[%s]开多单%s张, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "[%s]开布林多单%s张, price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=1", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), price.c_str(), "2");
 						}
 						else
@@ -1156,8 +1159,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.strClientOrderID = strClientOrderID;
 							info.open.waitClientOrderIDTime = time(NULL);
 							info.open.tradeType = eFuturesTradeType_OpenBull;
+							info.open.triggerType = 0;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "开多单%s张, price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "开布林多单%s张, price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 						}
 						m_bCanLogCheckCanTrade = true;
 						m_bCanStopProfit = true;
@@ -1190,8 +1194,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.status = 2;
 							info.open.tradeType = eFuturesTradeType_OpenBear;
 							info.open.size = m_strFuturesTradeSize;
+							info.open.triggerType = 0;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "[%s]开空单%s张 price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "[%s]开布林空单%s张 price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=2", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), price.c_str(), "2");
 						}
 						else
@@ -1203,8 +1208,9 @@ void COKExFuturesDlg::__CheckTrade_ZhangKou()
 							info.open.strClientOrderID = strClientOrderID;
 							info.open.waitClientOrderIDTime = time(NULL);
 							info.open.tradeType = eFuturesTradeType_OpenBear;
+							info.open.triggerType = 0;
 							m_listTradePairInfo.push_back(info);
-							CActionLog("trade", "开空单%s张 price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "开布林空单%s张 price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
 						}
 						m_bCanLogCheckCanTrade = true;
 						m_bCanStopProfit = true;
@@ -1319,7 +1325,7 @@ void COKExFuturesDlg::__CheckTrade_ShouKouChannel()
 	if(!m_bSuccessLogin)
 		return;
 	//柱子穿插md, 如果中间纠缠的柱子不超过两个则确定趋势
-	if(REAL_BOLL_DATA_SIZE >= 6)
+	if(REAL_BOLL_DATA_SIZE >= 6 && (KLINE_DATA_SIZE-1-m_nLastTradeBarByShouKouChannel) > 8)
 	{
 		//第1根在mb上,并且是绿柱
 		if(KLINE_DATA[KLINE_DATA_SIZE-1].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-1].mb && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > KLINE_DATA[KLINE_DATA_SIZE-1].openPrice)
@@ -1327,16 +1333,123 @@ void COKExFuturesDlg::__CheckTrade_ShouKouChannel()
 			//第2根在mb上,并且第1根收价高于第2根
 			if(KLINE_DATA[KLINE_DATA_SIZE-2].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-2].mb && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > KLINE_DATA[KLINE_DATA_SIZE-2].closePrice)
 			{
-				//第3根开始全在mb一下 或  第3根纠缠在mb,第4,5,6根在mb之下  或 第3,4根纠缠在mb,第5,6根在mb之下
-				if(KLINE_DATA[KLINE_DATA_SIZE-3].highPrice < BOLL_DATA[BOLL_DATA_SIZE-3].mb && )
+				//第3根开始全在mb之下 或  第3根纠缠在mb,第4,5,6根在mb之下  或 第3,4根纠缠在mb,第5,6根在mb之下
+				bool good = false;
+				if(KLINE_DATA[KLINE_DATA_SIZE-3].highPrice < BOLL_DATA[BOLL_DATA_SIZE-3].mb && KLINE_DATA[KLINE_DATA_SIZE-4].highPrice < BOLL_DATA[BOLL_DATA_SIZE-4].mb && KLINE_DATA[KLINE_DATA_SIZE-5].highPrice < BOLL_DATA[BOLL_DATA_SIZE-5].mb && KLINE_DATA[KLINE_DATA_SIZE-6].highPrice < BOLL_DATA[BOLL_DATA_SIZE-6].mb)
+					good = true;
+				else if(KLINE_DATA[KLINE_DATA_SIZE-3].highPrice > BOLL_DATA[BOLL_DATA_SIZE-3].mb && KLINE_DATA[KLINE_DATA_SIZE-3].lowPrice < BOLL_DATA[BOLL_DATA_SIZE-3].mb &&
+						KLINE_DATA[KLINE_DATA_SIZE-4].highPrice < BOLL_DATA[BOLL_DATA_SIZE-4].mb && KLINE_DATA[KLINE_DATA_SIZE-5].highPrice < BOLL_DATA[BOLL_DATA_SIZE-5].mb && KLINE_DATA[KLINE_DATA_SIZE-6].highPrice < BOLL_DATA[BOLL_DATA_SIZE-6].mb)
+					good = true;
+				else if(KLINE_DATA[KLINE_DATA_SIZE-3].highPrice > BOLL_DATA[BOLL_DATA_SIZE-3].mb && KLINE_DATA[KLINE_DATA_SIZE-3].lowPrice < BOLL_DATA[BOLL_DATA_SIZE-3].mb &&
+						KLINE_DATA[KLINE_DATA_SIZE-4].highPrice > BOLL_DATA[BOLL_DATA_SIZE-4].mb && KLINE_DATA[KLINE_DATA_SIZE-4].lowPrice < BOLL_DATA[BOLL_DATA_SIZE-4].mb &&
+						KLINE_DATA[KLINE_DATA_SIZE-5].highPrice < BOLL_DATA[BOLL_DATA_SIZE-5].mb && KLINE_DATA[KLINE_DATA_SIZE-6].highPrice < BOLL_DATA[BOLL_DATA_SIZE-6].mb)
+					good = true;
+				if(good)
+				{
+					if(__CheckCanTrade(eFuturesTradeType_OpenBull))
+					{
+						m_nLastTradeBarByShouKouChannel = KLINE_DATA_SIZE-1;
+						double fprice = m_curTickData.buy;
+						if(m_bTest)
+						{
+							std::string strClientOrderID = CFuncCommon::GenUUID();
+							std::string price = CFuncCommon::Double2String(fprice + DOUBLE_PRECISION, m_nPriceDecimal);
+							SFuturesTradePairInfo info;
+							info.open.strClientOrderID = strClientOrderID;
+							info.open.timeStamp = time(NULL);
+							info.open.filledQTY = m_strFuturesTradeSize;
+							info.open.orderID = CFuncCommon::GenUUID();
+							info.open.price = fprice;
+							info.open.priceAvg = fprice;
+							info.open.status = 2;
+							info.open.tradeType = eFuturesTradeType_OpenBull;
+							info.open.size = m_strFuturesTradeSize;
+							info.open.triggerType = 1;
+							m_listTradePairInfo.push_back(info);
+							CActionLog("trade", "[%s]开穿刺多单%s张 price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=2", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), price.c_str(), "2");
+						}
+						else
+						{
+							std::string strClientOrderID = CFuncCommon::GenUUID();
+							std::string price = CFuncCommon::Double2String(fprice + DOUBLE_PRECISION, m_nPriceDecimal);
+							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+							SFuturesTradePairInfo info;
+							info.open.strClientOrderID = strClientOrderID;
+							info.open.waitClientOrderIDTime = time(NULL);
+							info.open.tradeType = eFuturesTradeType_OpenBull;
+							info.open.triggerType = 1;
+							m_listTradePairInfo.push_back(info);
+							CActionLog("trade", "开穿刺多单%s张 price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+						}
+						m_bCanLogCheckCanTrade = true;
+						m_bCanStopProfit = true;
+					}
+
+				}
+			}
+		}//第1根在mb下,并且是红柱
+		else if(KLINE_DATA[KLINE_DATA_SIZE-1].highPrice < BOLL_DATA[BOLL_DATA_SIZE-1].mb && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < KLINE_DATA[KLINE_DATA_SIZE-1].openPrice)
+		{
+			//第2根在mb下,并且第1根收价低于第2根
+			if(KLINE_DATA[KLINE_DATA_SIZE-2].highPrice < BOLL_DATA[BOLL_DATA_SIZE-2].mb && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < KLINE_DATA[KLINE_DATA_SIZE-2].closePrice)
+			{
+				//第3根开始全在mb之上 或  第3根纠缠在mb,第4,5,6根在mb之上  或 第3,4根纠缠在mb,第5,6根在mb之上
+				bool good = false;
+				if(KLINE_DATA[KLINE_DATA_SIZE-3].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-3].mb && KLINE_DATA[KLINE_DATA_SIZE-4].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-4].mb && KLINE_DATA[KLINE_DATA_SIZE-5].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-5].mb && KLINE_DATA[KLINE_DATA_SIZE-6].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-6].mb)
+					good = true;
+				else if(KLINE_DATA[KLINE_DATA_SIZE-3].highPrice > BOLL_DATA[BOLL_DATA_SIZE-3].mb && KLINE_DATA[KLINE_DATA_SIZE-3].lowPrice < BOLL_DATA[BOLL_DATA_SIZE-3].mb &&
+					KLINE_DATA[KLINE_DATA_SIZE-4].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-4].mb && KLINE_DATA[KLINE_DATA_SIZE-5].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-5].mb && KLINE_DATA[KLINE_DATA_SIZE-6].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-6].mb)
+					good = true;
+				else if(KLINE_DATA[KLINE_DATA_SIZE-3].highPrice > BOLL_DATA[BOLL_DATA_SIZE-3].mb && KLINE_DATA[KLINE_DATA_SIZE-3].lowPrice < BOLL_DATA[BOLL_DATA_SIZE-3].mb &&
+					KLINE_DATA[KLINE_DATA_SIZE-4].highPrice > BOLL_DATA[BOLL_DATA_SIZE-4].mb && KLINE_DATA[KLINE_DATA_SIZE-4].lowPrice < BOLL_DATA[BOLL_DATA_SIZE-4].mb &&
+					KLINE_DATA[KLINE_DATA_SIZE-5].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-5].mb && KLINE_DATA[KLINE_DATA_SIZE-6].lowPrice > BOLL_DATA[BOLL_DATA_SIZE-6].mb)
+					good = true;
+				if(good)
+				{
+					if(__CheckCanTrade(eFuturesTradeType_OpenBear))
+					{
+						m_nLastTradeBarByShouKouChannel = KLINE_DATA_SIZE-1;
+						double fprice = m_curTickData.sell;
+						if(m_bTest)
+						{
+							std::string strClientOrderID = CFuncCommon::GenUUID();
+							std::string price = CFuncCommon::Double2String(fprice + DOUBLE_PRECISION, m_nPriceDecimal);
+							SFuturesTradePairInfo info;
+							info.open.strClientOrderID = strClientOrderID;
+							info.open.timeStamp = time(NULL);
+							info.open.filledQTY = m_strFuturesTradeSize;
+							info.open.orderID = CFuncCommon::GenUUID();
+							info.open.price = fprice;
+							info.open.priceAvg = fprice;
+							info.open.status = 2;
+							info.open.tradeType = eFuturesTradeType_OpenBear;
+							info.open.size = m_strFuturesTradeSize;
+							info.open.triggerType = 1;
+							m_listTradePairInfo.push_back(info);
+							CActionLog("trade", "[%s]开穿刺空单%s张 price=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+							CActionLog("trade", "[%s]http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=2", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), price.c_str(), "2");
+						}
+						else
+						{
+							std::string strClientOrderID = CFuncCommon::GenUUID();
+							std::string price = CFuncCommon::Double2String(fprice + DOUBLE_PRECISION, m_nPriceDecimal);
+							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+							SFuturesTradePairInfo info;
+							info.open.strClientOrderID = strClientOrderID;
+							info.open.waitClientOrderIDTime = time(NULL);
+							info.open.tradeType = eFuturesTradeType_OpenBear;
+							info.open.triggerType = 1;
+							m_listTradePairInfo.push_back(info);
+							CActionLog("trade", "开穿刺空单%s张 price=%s, client_oid=%s", m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+						}
+						m_bCanLogCheckCanTrade = true;
+						m_bCanStopProfit = true;
+					}
+				}
 			}
 		}
-		else if(KLINE_DATA[KLINE_DATA_SIZE-1].highPrice < BOLL_DATA[BOLL_DATA_SIZE-1].mb)
-		{
-			
-		}
 	}
-	
 }
 
 void COKExFuturesDlg::__CheckTradeOrder()
@@ -1362,7 +1475,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 				bWin = (itB->close.priceAvg>itB->open.priceAvg);
 			else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
 				bWin = (itB->close.priceAvg<itB->open.priceAvg);
-			CActionLog("finish_trade", "删除已完成%s交易对[%s] open_price=%s, open_num=%s, open_order=%s, close_price=%s, close_num=%s, close_order=%s", ((itB->open.tradeType == eFuturesTradeType_OpenBull) ? "多单" : "空单"), (bWin ? "赚" : "亏"), openPrice.c_str(), itB->open.filledQTY.c_str(), itB->open.orderID.c_str(), closePrice.c_str(), itB->close.filledQTY.c_str(), itB->close.orderID.c_str());
+			CActionLog("finish_trade", "删除已完成%s%s交易对[%s] open_price=%s, open_num=%s, open_order=%s, close_price=%s, close_num=%s, close_order=%s", ((itB->open.triggerType==0) ? "布林" : "穿刺"), ((itB->open.tradeType == eFuturesTradeType_OpenBull) ? "多单" : "空单"), (bWin ? "赚" : "亏"), openPrice.c_str(), itB->open.filledQTY.c_str(), itB->open.orderID.c_str(), closePrice.c_str(), itB->close.filledQTY.c_str(), itB->close.orderID.c_str());
 			itB = m_listTradePairInfo.erase(itB);
 			m_bCanLogCheckCanTrade = true;
 			m_bCanStopProfit = true;
@@ -1423,7 +1536,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		{
 			if(itB->stopLoss.orderID != "" && !CFuncCommon::CheckEqual(itB->stopLoss.priceAvg, 0.0) && m_curTickData.bValid)
 			{
-				//止损单也要做止盈止损操作
+				//止损单也要做止盈操作
 				if(itB->stopLoss.tradeType == eFuturesTradeType_OpenBull)
 				{
 					if(m_curTickData.last > itB->stopLoss.priceAvg)
@@ -1873,6 +1986,7 @@ void COKExFuturesDlg::OnLoginSuccess()
 		int triggerType = 0;
 		lineStream >> szOpenOrderID >> szOpenClientID >> triggerType >> lastSellStopLossPrice >> openMin >> openMax >> szCloseOrderID >> szCloseClientID >> 
 					closeMin >> closeMax >> szStopLossOrderID >> szStopLossClientID >> stopLossMin >> stopLossMax;
+		bool bGetOpenStopProfit = false;
 		SFuturesTradePairInfo info;
 		if(strcmp(szOpenOrderID, "0") != 0)
 		{
@@ -1904,10 +2018,17 @@ void COKExFuturesDlg::OnLoginSuccess()
 				{
 					info.open.maxPrice = openMax;
 					info.open.minPrice = openMin;
+					bGetOpenStopProfit = true;
 					if(CFuncCommon::CheckEqual(info.open.maxPrice, 0.0))
+					{
 						info.open.maxPrice = info.open.priceAvg;
+						bGetOpenStopProfit = false;
+					}
 					if(CFuncCommon::CheckEqual(info.open.minPrice, 0.0))
+					{
 						info.open.minPrice = info.open.priceAvg;
+						bGetOpenStopProfit = false;
+					}
 				}
 			}
 		}
@@ -1974,10 +2095,66 @@ void COKExFuturesDlg::OnLoginSuccess()
 				{
 					info.stopLoss.maxPrice = stopLossMax;
 					info.stopLoss.minPrice = stopLossMin;
+					bool bGetStopProfit = true;
 					if(CFuncCommon::CheckEqual(info.stopLoss.maxPrice, 0.0))
+					{
 						info.stopLoss.maxPrice = info.stopLoss.priceAvg;
+						bGetStopProfit = false;
+					}
 					if(CFuncCommon::CheckEqual(info.stopLoss.minPrice, 0.0))
+					{
 						info.stopLoss.minPrice = info.stopLoss.priceAvg;
+						bGetStopProfit = false;
+					}
+					if(bGetStopProfit)
+					{
+						if(info.stopLoss.tradeType == eFuturesTradeType_OpenBull)
+						{
+							if(info.stopLoss.maxPrice > info.stopLoss.priceAvg)
+							{
+								double up = (info.stopLoss.maxPrice - info.stopLoss.priceAvg)/info.stopLoss.priceAvg;
+								int nowStep = int(up/m_moveStopProfit);
+								if(nowStep >= 2)
+									info.stopLoss.stopProfit = nowStep-1;
+							}
+						}
+						else if(info.stopLoss.tradeType == eFuturesTradeType_OpenBear)
+						{
+							if(info.stopLoss.minPrice < info.stopLoss.priceAvg)
+							{
+								double up = (info.stopLoss.priceAvg-info.stopLoss.minPrice)/info.stopLoss.priceAvg;
+								int nowStep = int(up/m_moveStopProfit);
+								if(nowStep >= 2)
+									info.stopLoss.stopProfit = nowStep-1;
+							}
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			if(bGetOpenStopProfit)
+			{
+				if(info.open.tradeType == eFuturesTradeType_OpenBull)
+				{
+					if(info.open.maxPrice > info.open.priceAvg)
+					{
+						double up = (info.open.maxPrice - info.open.priceAvg)/info.open.priceAvg;
+						int nowStep = int(up/m_moveStopProfit);
+						if(nowStep >= 2)
+							info.open.stopProfit = nowStep-1;
+					}
+				}
+				else if(info.open.tradeType == eFuturesTradeType_OpenBear)
+				{
+					if(info.open.minPrice < info.open.priceAvg)
+					{
+						double up = (info.open.priceAvg-info.open.minPrice)/info.open.priceAvg;
+						int nowStep = int(up/m_moveStopProfit);
+						if(nowStep >= 2)
+							info.open.stopProfit = nowStep-1;
+					}
 				}
 			}
 		}
@@ -2336,9 +2513,9 @@ void COKExFuturesDlg::_UpdateTradeShow()
 		else if(itB->stopLoss.orderID != "")
 		{
 			if(CFuncCommon::CheckEqual(itB->stopLoss.priceAvg, 0.0))
-				szFormat.Format("%s[止]", CFuncCommon::Double2String(itB->stopLoss.price + DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+				szFormat.Format("%s[止%d]", CFuncCommon::Double2String(itB->stopLoss.price + DOUBLE_PRECISION, m_nPriceDecimal).c_str(), itB->stopLoss.stopProfit);
 			else
-				szFormat.Format("%s[止]", CFuncCommon::Double2String(itB->stopLoss.priceAvg + DOUBLE_PRECISION, m_nPriceDecimal).c_str());
+				szFormat.Format("%s[止%d]", CFuncCommon::Double2String(itB->stopLoss.priceAvg + DOUBLE_PRECISION, m_nPriceDecimal).c_str(), itB->stopLoss.stopProfit);
 			m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
 			szFormat.Format("%s/%s", itB->stopLoss.filledQTY.c_str(), itB->stopLoss.size.c_str());
 			m_listCtrlOrderClose.SetItemText(i, 1, szFormat);

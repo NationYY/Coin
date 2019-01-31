@@ -301,4 +301,5 @@ public:
 	CStatic m_staticAccountState;
 	int m_nLastUpdateDay;
 	std::string m_lastZhangKouOrder;
+	int m_nLastTradeBarByShouKouChannel;
 };
