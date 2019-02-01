@@ -83,7 +83,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
 				g_pDlg->UpdateTradeInfo(info);
-				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, status=%s, tradeType=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
+				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
 			else
 				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
@@ -213,7 +213,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				else if(tradeType == "4")
 					info.tradeType = eFuturesTradeType_CloseBear;
 				g_pDlg->UpdateTradeInfo(info);
-				CActionLog("trade", "ws更新订单信息 order=%s, filledQTY=%s, price=%s, status=%s, tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), info.status.c_str(), tradeType.c_str());
+				CActionLog("trade", "ws更新订单信息 order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), retObj["data"][0]["price_avg"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 			}
 		}
 		break;
