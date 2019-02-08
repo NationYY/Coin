@@ -54,9 +54,8 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 			}
 			else
 			{
-				if(retObj["client_oid"].isString())
-					g_pDlg->OnTradeFail(retObj["client_oid"].asString());
-				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+				g_pDlg->OnTradeFail(strCustomData);
+				LOCAL_ERROR("http type=%d ret=%s client_oid=%s", apiType, strRet.c_str(), strCustomData.c_str());
 			}
 		}
 		break;

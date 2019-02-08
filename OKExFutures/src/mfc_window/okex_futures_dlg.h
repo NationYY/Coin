@@ -104,6 +104,27 @@ struct SFuturesTradeInfo
 	{
 		Reset();
 	}
+	SFuturesTradeInfo& operator= (const SFuturesTradeInfo &t){
+		if(this != &t){
+			this->strClientOrderID = t.strClientOrderID;
+			this->timeStamp = t.timeStamp;
+			this->filledQTY = t.filledQTY;
+			this->orderID = t.orderID;
+			this->price = t.price;
+			this->priceAvg = t.priceAvg;
+			this->status = t.status;
+			this->tradeType = t.tradeType;
+			this->waitClientOrderIDTime = t.waitClientOrderIDTime;
+			this->stopProfit = t.stopProfit;
+			this->size = t.size;
+			this->maxPrice = t.maxPrice;
+			this->minPrice = t.minPrice;
+			this->lastSellStopLossPrice = t.lastSellStopLossPrice;
+			this->tLastUpdate = t.tLastUpdate;
+			this->triggerType = t.triggerType;
+		}
+		return *this;
+	}
 	void Reset()
 	{
 		strClientOrderID = "";

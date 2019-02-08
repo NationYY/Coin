@@ -1532,7 +1532,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 		{
 		
 		}
-		else if(itB->stopLoss.orderID != "" || itB->stopLoss.strClientOrderID != "")
+		else 
 		{
 			if(itB->stopLoss.orderID != "" && !CFuncCommon::CheckEqual(itB->stopLoss.priceAvg, 0.0) && m_curTickData.bValid)
 			{
@@ -1580,7 +1580,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 								double up = (m_curTickData.last - itB->stopLoss.priceAvg) / itB->stopLoss.priceAvg;
 								int nowStep = int(up / m_moveStopProfit);
 								if(nowStep - itB->stopLoss.stopProfit >= 2)
+								{
 									itB->stopLoss.stopProfit = nowStep - 1;
+									bUpdate = true;
+								}
 							}
 						}
 						else
@@ -1588,7 +1591,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							double up = (m_curTickData.last - itB->stopLoss.priceAvg) / itB->stopLoss.priceAvg;
 							int nowStep = int(up / m_moveStopProfit);
 							if(nowStep - itB->stopLoss.stopProfit >= 2)
+							{
 								itB->stopLoss.stopProfit = nowStep - 1;
+								bUpdate = true;
+							}
 						}
 					}
 				}
@@ -1636,7 +1642,10 @@ void COKExFuturesDlg::__CheckTradeOrder()
 								double up = (itB->stopLoss.priceAvg - m_curTickData.last) / itB->stopLoss.priceAvg;
 								int nowStep = int(up / m_moveStopProfit);
 								if(nowStep - itB->stopLoss.stopProfit >= 2)
+								{
 									itB->stopLoss.stopProfit = nowStep - 1;
+									bUpdate = true;
+								}
 							}
 						}
 						else
@@ -1644,141 +1653,151 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							double up = (itB->stopLoss.priceAvg - m_curTickData.last) / itB->stopLoss.priceAvg;
 							int nowStep = int(up / m_moveStopProfit);
 							if(nowStep - itB->stopLoss.stopProfit >= 2)
+							{
 								itB->stopLoss.stopProfit = nowStep - 1;
+								bUpdate = true;
+							}
 						}
 					}
 				}
 				
 			}
-		}
-		else if(itB->open.orderID != "" && !CFuncCommon::CheckEqual(itB->open.priceAvg, 0.0))
-		{
-			//多仓
-			if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+			if(itB->open.orderID != "" && !CFuncCommon::CheckEqual(itB->open.priceAvg, 0.0))
 			{
-				if(m_curTickData.bValid)
+				//多仓
+				if(itB->open.tradeType == eFuturesTradeType_OpenBull)
 				{
-					//超过止损线 平仓
-					double checkPrice = itB->open.priceAvg;
-					if(!CFuncCommon::CheckEqual(itB->open.lastSellStopLossPrice, 0.0))
+					if(m_curTickData.bValid)
 					{
-						if(((itB->open.priceAvg-m_curTickData.last)/itB->open.priceAvg) <= m_stopLoss/2)
+						//超过止损线 平仓
+						double checkPrice = itB->open.priceAvg;
+						if(!CFuncCommon::CheckEqual(itB->open.lastSellStopLossPrice, 0.0))
 						{
-							itB->open.lastSellStopLossPrice = 0.0;
-							bUpdate = true;
-						}
-						else
-							checkPrice = itB->open.lastSellStopLossPrice;
-					}
-						
-					if(m_curTickData.last < checkPrice && ((checkPrice-m_curTickData.last)/checkPrice >= (m_stopLoss-0.0025)) && tNow-itB->open.timeStamp>m_nKlineCycle*5)
-					{
-						std::string price = "-1";
-						if(m_bTest)
-						{
-							itB->stopLoss.strClientOrderID = CFuncCommon::GenUUID();
-							itB->stopLoss.timeStamp = time(NULL);
-							itB->stopLoss.filledQTY = m_strFuturesTradeSize;
-							itB->stopLoss.orderID = CFuncCommon::GenUUID();
-							itB->stopLoss.price = m_curTickData.buy;
-							itB->stopLoss.priceAvg = m_curTickData.buy;
-							itB->stopLoss.status = 2;
-							itB->stopLoss.size = m_strFuturesTradeSize;
-							itB->stopLoss.tradeType = eFuturesTradeType_OpenBear;
-							CActionLog("trade", "[%s]止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->stopLoss.strClientOrderID.c_str());
-						}
-						else
-						{
-							std::string strClientOrderID = CFuncCommon::GenUUID();
-							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
-							itB->stopLoss.strClientOrderID = strClientOrderID;
-							itB->stopLoss.waitClientOrderIDTime = time(NULL);
-							itB->stopLoss.tradeType = eFuturesTradeType_OpenBear;
-							CActionLog("trade", "止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
-						}
-						/*std::string price = CFuncCommon::Double2String((itB->open.priceAvg*(1-m_stopLoss))+DOUBLE_PRECISION, m_nPriceDecimal);
-						if(m_bTest)
-						{
-							itB->close.strClientOrderID = CFuncCommon::GenUUID();
-							itB->close.timeStamp = time(NULL);
-							itB->close.filledQTY = m_strFuturesTradeSize;
-							itB->close.orderID = CFuncCommon::GenUUID();
-							itB->close.price = m_curTickData.sell;
-							itB->close.priceAvg = m_curTickData.sell;
-							itB->close.status = 2;
-							itB->close.size = m_strFuturesTradeSize;
-							itB->close.tradeType = eFuturesTradeType_CloseBull;
-							CActionLog("trade", "[%s]止损平多 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->close.strClientOrderID.c_str());
-						}
-						else
-						{
-							std::string strClientOrderID = CFuncCommon::GenUUID();
-							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
-							itB->close.strClientOrderID = strClientOrderID;
-							itB->close.waitClientOrderIDTime = time(NULL);
-							itB->close.tradeType = eFuturesTradeType_CloseBull;
-							CActionLog("trade", "止损平多 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
-						}*/
-						
-					}
-					//盈利达到2倍移动平均线后开始设置止盈线, 回撤破止盈线就平仓
-					if(m_curTickData.last > itB->open.priceAvg)
-					{
-						if(itB->open.stopProfit)
-						{
-							//平仓
-							bool _bCanStopProfit = __CheckCanStopProfit(eFuturesTradeType_OpenBull, itB->open.orderID);
-							if(!_bCanStopProfit)
-								bStopProfitFail = true;
-							bool mustClose = false;
-							if((m_curTickData.last - itB->open.priceAvg)/itB->open.priceAvg > m_stopLoss)
+							if(((itB->open.priceAvg-m_curTickData.last)/itB->open.priceAvg) <= m_stopLoss/2)
 							{
-								CActionLog("trade", "达到收益上限");
-								mustClose = true;
+								itB->open.lastSellStopLossPrice = 0.0;
+								bUpdate = true;
 							}
-							double half = m_moveStopProfit/2;
-							if((m_curTickData.last <= (itB->open.priceAvg*(1+itB->open.stopProfit*m_moveStopProfit+half)) && _bCanStopProfit) || mustClose)
+							else
+								checkPrice = itB->open.lastSellStopLossPrice;
+						}
+						
+						if(m_curTickData.last < checkPrice && ((checkPrice-m_curTickData.last)/checkPrice >= (m_stopLoss-0.0025)) && tNow-itB->open.timeStamp>m_nKlineCycle*5 && itB->stopLoss.orderID == "" && itB->stopLoss.strClientOrderID == "")
+						{
+							std::string price = "-1";
+							if(m_bTest)
 							{
-								//如果open未交易完,先撤单
-								if(itB->open.status == "1")
+								itB->stopLoss.strClientOrderID = CFuncCommon::GenUUID();
+								itB->stopLoss.timeStamp = time(NULL);
+								itB->stopLoss.filledQTY = m_strFuturesTradeSize;
+								itB->stopLoss.orderID = CFuncCommon::GenUUID();
+								itB->stopLoss.price = m_curTickData.buy;
+								itB->stopLoss.priceAvg = m_curTickData.buy;
+								itB->stopLoss.status = 2;
+								itB->stopLoss.size = m_strFuturesTradeSize;
+								itB->stopLoss.tradeType = eFuturesTradeType_OpenBear;
+								CActionLog("trade", "[%s]止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->stopLoss.strClientOrderID.c_str());
+							}
+							else
+							{
+								std::string strClientOrderID = CFuncCommon::GenUUID();
+								OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+								itB->stopLoss.strClientOrderID = strClientOrderID;
+								itB->stopLoss.waitClientOrderIDTime = time(NULL);
+								itB->stopLoss.tradeType = eFuturesTradeType_OpenBear;
+								CActionLog("trade", "止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
+							}
+						}
+						//盈利达到2倍移动平均线后开始设置止盈线, 回撤破止盈线就平仓
+						if(m_curTickData.last > itB->open.priceAvg)
+						{
+							if(itB->open.stopProfit)
+							{
+								//平仓
+								bool _bCanStopProfit = __CheckCanStopProfit(eFuturesTradeType_OpenBull, itB->open.orderID);
+								if(!_bCanStopProfit)
+									bStopProfitFail = true;
+								double half = m_moveStopProfit/2;
+								if((m_curTickData.last <= (itB->open.priceAvg*(1+itB->open.stopProfit*m_moveStopProfit+half)) && _bCanStopProfit))
 								{
-									if(m_bTest)
+									bool bInStopLoss = (itB->stopLoss.orderID != "");
+									//如果open未交易完,先撤单
+									if(itB->open.status == "1")
 									{
-										itB->open.status = "-1";
-										CActionLog("trade", "[%s]撤消订单成功 order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str());
+										if(m_bTest)
+										{
+											itB->open.status = "-1";
+											CActionLog("trade", "[%s]撤消订单成功 order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str());
+										}
+										else
+											OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, itB->open.orderID);
 									}
-									else
-										OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, itB->open.orderID);
+									if(itB->open.filledQTY != "0")
+									{
+										double checkPrice = itB->open.priceAvg*(1+itB->open.stopProfit*m_moveStopProfit);
+										if(m_curTickData.sell < checkPrice)
+											checkPrice = m_curTickData.sell;
+										std::string price = CFuncCommon::Double2String(checkPrice + DOUBLE_PRECISION, m_nPriceDecimal);
+										if(itB->open.stopProfit >= 6 || bInStopLoss)
+											price = "-1";
+										if(m_bTest)
+										{
+											if(!bInStopLoss)
+											{
+												itB->close.strClientOrderID = CFuncCommon::GenUUID();
+												itB->close.timeStamp = time(NULL);
+												itB->close.filledQTY = itB->open.filledQTY;
+												itB->close.orderID = CFuncCommon::GenUUID();
+												itB->close.price = checkPrice;
+												itB->close.priceAvg = checkPrice;
+												itB->close.status = 2;
+												itB->close.tradeType = eFuturesTradeType_CloseBull;
+												itB->close.size = itB->open.filledQTY;
+												CActionLog("trade", "[%s]止盈平多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), itB->close.strClientOrderID.c_str());
+											}
+											else
+											{
+												CActionLog("trade", "[%s]止盈平多止损转开单 openClientOrder=%s, order=%s, price=%s, filledQTY=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+												itB->open = itB->stopLoss;
+												itB->open.stopProfit = 0;
+												itB->open.lastSellStopLossPrice = m_curTickData.last - itB->stopLoss.priceAvg*(m_stopLoss / 2 + 0.0025);
+												itB->stopLoss.Reset();
+												bUpdate = true;
+											}
+											
+										}
+										else
+										{
+											
+											std::string strClientOrderID = CFuncCommon::GenUUID();
+											OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClientOrderID);
+											if(!bInStopLoss)
+											{
+												itB->close.strClientOrderID = strClientOrderID;
+												itB->close.waitClientOrderIDTime = time(NULL);
+												itB->close.tradeType = eFuturesTradeType_CloseBull;
+												CActionLog("trade", "止盈平多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), strClientOrderID.c_str());
+											}
+											else
+											{
+												CActionLog("trade", "止盈平多止损转开单 openClientOrder=%s, order=%s, price=%s, filledQTY=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+												itB->open = itB->stopLoss;
+												itB->open.stopProfit = 0;
+												itB->open.lastSellStopLossPrice = m_curTickData.last - itB->stopLoss.priceAvg*(m_stopLoss / 2 + 0.0025);
+												itB->stopLoss.Reset();
+												bUpdate = true;
+											}
+										}
+									}
 								}
-								if(itB->open.filledQTY != "0")
+								else
 								{
-									double checkPrice = itB->open.priceAvg*(1+itB->open.stopProfit*m_moveStopProfit);
-									if(m_curTickData.sell < checkPrice)
-										checkPrice = m_curTickData.sell;
-									std::string price = CFuncCommon::Double2String(checkPrice + DOUBLE_PRECISION, m_nPriceDecimal);
-									if(mustClose)
-										price = "-1";
-									if(m_bTest)
+									double up = (m_curTickData.last - itB->open.priceAvg)/itB->open.priceAvg;
+									int nowStep = int(up/m_moveStopProfit);
+									if(nowStep - itB->open.stopProfit >= 2)
 									{
-										itB->close.strClientOrderID = CFuncCommon::GenUUID();
-										itB->close.timeStamp = time(NULL);
-										itB->close.filledQTY = itB->open.filledQTY;
-										itB->close.orderID = CFuncCommon::GenUUID();
-										itB->close.price = checkPrice;
-										itB->close.priceAvg = checkPrice;
-										itB->close.status = 2;
-										itB->close.tradeType = eFuturesTradeType_CloseBull;
-										itB->close.size = itB->open.filledQTY;
-										CActionLog("trade", "[%s]止盈平多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), itB->close.strClientOrderID.c_str());
-									}
-									else
-									{
-										std::string strClientOrderID = CFuncCommon::GenUUID();
-										OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBull, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClientOrderID);
-										itB->close.strClientOrderID = strClientOrderID;
-										itB->close.waitClientOrderIDTime = time(NULL);
-										itB->close.tradeType = eFuturesTradeType_CloseBull;
-										CActionLog("trade", "止盈平多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), strClientOrderID.c_str());
+										itB->open.stopProfit = nowStep-1;
+										bUpdate = true;
 									}
 								}
 							}
@@ -1786,160 +1805,158 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							{
 								double up = (m_curTickData.last - itB->open.priceAvg)/itB->open.priceAvg;
 								int nowStep = int(up/m_moveStopProfit);
-								if(nowStep - itB->open.stopProfit >= 2)
+								if(nowStep >= 2)
+								{
 									itB->open.stopProfit = nowStep-1;
+									bUpdate = true;
+								}
 							}
-						}
-						else
-						{
-							double up = (m_curTickData.last - itB->open.priceAvg)/itB->open.priceAvg;
-							int nowStep = int(up/m_moveStopProfit);
-							if(nowStep >= 2)
-								itB->open.stopProfit = nowStep-1;
 						}
 					}
 				}
-			}
-			else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
-			{
-				if(m_curTickData.bValid)
+				else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
 				{
-					//超过止损线 平仓
-					double checkPrice = itB->open.priceAvg;
-					if(!CFuncCommon::CheckEqual(itB->open.lastSellStopLossPrice, 0.0))
+					if(m_curTickData.bValid)
 					{
-						if(((m_curTickData.last-itB->open.priceAvg) / itB->open.priceAvg) <= m_stopLoss/2)
+						//超过止损线 平仓
+						double checkPrice = itB->open.priceAvg;
+						if(!CFuncCommon::CheckEqual(itB->open.lastSellStopLossPrice, 0.0))
 						{
-							itB->open.lastSellStopLossPrice = 0.0;
-							bUpdate = true;
-						}
-						else
-							checkPrice = itB->open.lastSellStopLossPrice;
-					}
-					if(m_curTickData.last > checkPrice && ((m_curTickData.last-checkPrice)/checkPrice >= (m_stopLoss-0.0025)) && tNow-itB->open.timeStamp>m_nKlineCycle*5)
-					{
-						std::string price = "-1";
-						if(m_bTest)
-						{
-							itB->stopLoss.strClientOrderID = CFuncCommon::GenUUID();
-							itB->stopLoss.timeStamp = time(NULL);
-							itB->stopLoss.filledQTY = m_strFuturesTradeSize;
-							itB->stopLoss.orderID = CFuncCommon::GenUUID();
-							itB->stopLoss.price = m_curTickData.sell;
-							itB->stopLoss.priceAvg = m_curTickData.sell;
-							itB->stopLoss.status = 2;
-							itB->stopLoss.tradeType = eFuturesTradeType_OpenBull;
-							itB->stopLoss.size = m_strFuturesTradeSize;
-							CActionLog("trade", "[%s]止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->stopLoss.strClientOrderID.c_str());
-						}
-						else
-						{
-							std::string strClientOrderID = CFuncCommon::GenUUID();
-							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
-							itB->stopLoss.strClientOrderID = strClientOrderID;
-							itB->stopLoss.waitClientOrderIDTime = time(NULL);
-							itB->stopLoss.tradeType = eFuturesTradeType_OpenBull;
-							CActionLog("trade", "止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
-						}
-						/*std::string price = CFuncCommon::Double2String((itB->open.priceAvg*(1+m_stopLoss)) + DOUBLE_PRECISION, m_nPriceDecimal);
-						if(m_bTest)
-						{
-							itB->close.strClientOrderID = CFuncCommon::GenUUID();
-							itB->close.timeStamp = time(NULL);
-							itB->close.filledQTY = m_strFuturesTradeSize;
-							itB->close.orderID = CFuncCommon::GenUUID();
-							itB->close.price = m_curTickData.buy;
-							itB->close.priceAvg = m_curTickData.buy;
-							itB->close.status = 2;
-							itB->close.tradeType = eFuturesTradeType_CloseBear;
-							itB->close.size = m_strFuturesTradeSize;
-							CActionLog("trade", "[%s]止损平空 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->close.strClientOrderID.c_str());
-						}
-						else
-						{
-							std::string strClientOrderID = CFuncCommon::GenUUID();
-							OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
-							itB->close.strClientOrderID = strClientOrderID;
-							itB->close.waitClientOrderIDTime = time(NULL);
-							itB->close.tradeType = eFuturesTradeType_CloseBear;
-							CActionLog("trade", "止损平空 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
-						}*/
-					}
-					//盈利达到2倍移动平均线后开始移动止赢
-					if(m_curTickData.last < itB->open.priceAvg)
-					{
-						if(itB->open.stopProfit)
-						{
-							bool _bCanStopProfit = __CheckCanStopProfit(eFuturesTradeType_OpenBear, itB->open.orderID);
-							if(!_bCanStopProfit)
-								bStopProfitFail = true;
-							bool mustClose = false;
-							if((itB->open.priceAvg-m_curTickData.last) / itB->open.priceAvg >= m_stopLoss)
+							if(((m_curTickData.last-itB->open.priceAvg) / itB->open.priceAvg) <= m_stopLoss/2)
 							{
-								CActionLog("trade", "达到收益上限");
-								mustClose = true;
+								itB->open.lastSellStopLossPrice = 0.0;
+								bUpdate = true;
 							}
-							double half = m_moveStopProfit/2;
-							//平仓
-							if((m_curTickData.last >= (itB->open.priceAvg*(1 - itB->open.stopProfit*m_moveStopProfit - half)) && _bCanStopProfit) || mustClose)
+							else
+								checkPrice = itB->open.lastSellStopLossPrice;
+						}
+						if(m_curTickData.last > checkPrice && ((m_curTickData.last-checkPrice)/checkPrice >= (m_stopLoss-0.0025)) && tNow-itB->open.timeStamp>m_nKlineCycle*5 && itB->stopLoss.orderID == "" && itB->stopLoss.strClientOrderID == "")
+						{
+							std::string price = "-1";
+							if(m_bTest)
 							{
-								//如果open未交易完,先撤单
-								if(itB->open.status == "1")
+								itB->stopLoss.strClientOrderID = CFuncCommon::GenUUID();
+								itB->stopLoss.timeStamp = time(NULL);
+								itB->stopLoss.filledQTY = m_strFuturesTradeSize;
+								itB->stopLoss.orderID = CFuncCommon::GenUUID();
+								itB->stopLoss.price = m_curTickData.sell;
+								itB->stopLoss.priceAvg = m_curTickData.sell;
+								itB->stopLoss.status = 2;
+								itB->stopLoss.tradeType = eFuturesTradeType_OpenBull;
+								itB->stopLoss.size = m_strFuturesTradeSize;
+								CActionLog("trade", "[%s]止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->stopLoss.strClientOrderID.c_str());
+							}
+							else
+							{
+								std::string strClientOrderID = CFuncCommon::GenUUID();
+								OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+								itB->stopLoss.strClientOrderID = strClientOrderID;
+								itB->stopLoss.waitClientOrderIDTime = time(NULL);
+								itB->stopLoss.tradeType = eFuturesTradeType_OpenBull;
+								CActionLog("trade", "止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
+							}
+						}
+						//盈利达到2倍移动平均线后开始移动止赢
+						if(m_curTickData.last < itB->open.priceAvg)
+						{
+							if(itB->open.stopProfit)
+							{
+								bool _bCanStopProfit = __CheckCanStopProfit(eFuturesTradeType_OpenBear, itB->open.orderID);
+								if(!_bCanStopProfit)
+									bStopProfitFail = true;
+								double half = m_moveStopProfit/2;
+								//平仓
+								if((m_curTickData.last >= (itB->open.priceAvg*(1 - itB->open.stopProfit*m_moveStopProfit - half)) && _bCanStopProfit))
 								{
-									if(m_bTest)
+									bool bInStopLoss = (itB->stopLoss.orderID != "");
+									//如果open未交易完,先撤单
+									if(itB->open.status == "1")
 									{
-										itB->open.status = "-1";
-										CActionLog("trade", "[%s]撤消订单成功 order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str());
+										if(m_bTest)
+										{
+											itB->open.status = "-1";
+											CActionLog("trade", "[%s]撤消订单成功 order=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str());
+										}
+										else
+											OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, itB->open.orderID);
 									}
-									else
-										OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, itB->open.orderID);
+									if(itB->open.filledQTY != "0")
+									{
+										double checkPrice = itB->open.priceAvg*(1 - itB->open.stopProfit*m_moveStopProfit);
+										if(m_curTickData.buy > checkPrice)
+											checkPrice = m_curTickData.buy;
+										std::string price = CFuncCommon::Double2String(checkPrice + DOUBLE_PRECISION, m_nPriceDecimal);
+										if(itB->open.stopProfit >= 6 || bInStopLoss)
+											price = "-1";
+										if(m_bTest)
+										{
+											if(!bInStopLoss)
+											{
+												itB->close.strClientOrderID = CFuncCommon::GenUUID();
+												itB->close.timeStamp = time(NULL);
+												itB->close.filledQTY = itB->open.filledQTY;
+												itB->close.orderID = CFuncCommon::GenUUID();
+												itB->close.price = checkPrice;
+												itB->close.priceAvg = checkPrice;
+												itB->close.status = 2;
+												itB->close.tradeType = eFuturesTradeType_CloseBear;
+												itB->close.size = itB->open.filledQTY;
+												CActionLog("trade", "[%s]止盈平空 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), itB->close.strClientOrderID.c_str());
+											}
+											else
+											{
+												CActionLog("trade", "[%s]止盈平空损转开单 order=%s, price=%s, filledQTY=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+												itB->open = itB->stopLoss;
+												itB->open.stopProfit = 0;
+												itB->open.lastSellStopLossPrice = m_curTickData.last + itB->stopLoss.priceAvg*(m_stopLoss / 2 + 0.0025);
+												itB->stopLoss.Reset();
+												bUpdate = true;
+											}
+										}
+										else
+										{
+											if(!bInStopLoss)
+											{
+												std::string strClientOrderID = CFuncCommon::GenUUID();
+												OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClientOrderID);
+												itB->close.strClientOrderID = strClientOrderID;
+												itB->close.waitClientOrderIDTime = time(NULL);
+												itB->close.tradeType = eFuturesTradeType_CloseBear;
+												CActionLog("trade", "止盈平空 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), strClientOrderID.c_str());
+											}
+											else
+											{
+												CActionLog("trade", "止盈平空损转开单 order=%s, price=%s, filledQTY=%s", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str());
+												itB->open = itB->stopLoss;
+												itB->open.stopProfit = 0;
+												itB->open.lastSellStopLossPrice = m_curTickData.last + itB->stopLoss.priceAvg*(m_stopLoss/2+0.0025);
+												itB->stopLoss.Reset();
+												bUpdate = true;
+											}
+										}
+									}
 								}
-								if(itB->open.filledQTY != "0")
+								else
 								{
-									double checkPrice = itB->open.priceAvg*(1 - itB->open.stopProfit*m_moveStopProfit);
-									if(m_curTickData.buy > checkPrice)
-										checkPrice = m_curTickData.buy;
-									std::string price = CFuncCommon::Double2String(checkPrice + DOUBLE_PRECISION, m_nPriceDecimal);
-									if(mustClose)
-										price = "-1";
-									if(m_bTest)
+									double up = (itB->open.priceAvg - m_curTickData.last) / itB->open.priceAvg;
+									int nowStep = int(up / m_moveStopProfit);
+									if(nowStep - itB->open.stopProfit >= 2)
 									{
-										itB->close.strClientOrderID = CFuncCommon::GenUUID();
-										itB->close.timeStamp = time(NULL);
-										itB->close.filledQTY = itB->open.filledQTY;
-										itB->close.orderID = CFuncCommon::GenUUID();
-										itB->close.price = checkPrice;
-										itB->close.priceAvg = checkPrice;
-										itB->close.status = 2;
-										itB->close.tradeType = eFuturesTradeType_CloseBear;
-										itB->close.size = itB->open.filledQTY;
-										CActionLog("trade", "[%s]止盈平空 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), itB->close.strClientOrderID.c_str());
-									}
-									else
-									{
-										std::string strClientOrderID = CFuncCommon::GenUUID();
-										OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_CloseBear, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClientOrderID);
-										itB->close.strClientOrderID = strClientOrderID;
-										itB->close.waitClientOrderIDTime = time(NULL);
-										itB->close.tradeType = eFuturesTradeType_CloseBear;
-										CActionLog("trade", "止盈平空 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), strClientOrderID.c_str());
+										itB->open.stopProfit = nowStep - 1;
+										bUpdate = true;
 									}
 								}
 							}
 							else
 							{
 								double up = (itB->open.priceAvg - m_curTickData.last) / itB->open.priceAvg;
-								int nowStep = int(up / m_moveStopProfit);
-								if(nowStep - itB->open.stopProfit >= 2)
-									itB->open.stopProfit = nowStep - 1;
+								int nowStep = int(up/m_moveStopProfit);
+								if(nowStep >= 2)
+								{
+									itB->open.stopProfit = nowStep-1;
+									bUpdate = true;
+								}
 							}
-						}
-						else
-						{
-							double up = (itB->open.priceAvg - m_curTickData.last) / itB->open.priceAvg;
-							int nowStep = int(up/m_moveStopProfit);
-							if(nowStep >= 2)
-								itB->open.stopProfit = nowStep-1;
 						}
 					}
 				}
@@ -1984,9 +2001,10 @@ void COKExFuturesDlg::OnLoginSuccess()
 		double stopLossMax = 0.0;
 		double lastSellStopLossPrice = 0.0;
 		int triggerType = 0;
-		lineStream >> szOpenOrderID >> szOpenClientID >> triggerType >> lastSellStopLossPrice >> openMin >> openMax >> szCloseOrderID >> szCloseClientID >> 
-					closeMin >> closeMax >> szStopLossOrderID >> szStopLossClientID >> stopLossMin >> stopLossMax;
-		bool bGetOpenStopProfit = false;
+		int openStopProfit = 0;
+		int stopLossStopProfit = 0;
+		lineStream >> szOpenOrderID >> szOpenClientID >> triggerType >> lastSellStopLossPrice >> openMin >> openMax >> openStopProfit >> szCloseOrderID >> szCloseClientID >> 
+					closeMin >> closeMax >> szStopLossOrderID >> szStopLossClientID >> stopLossMin >> stopLossMax >> stopLossStopProfit;
 		SFuturesTradePairInfo info;
 		if(strcmp(szOpenOrderID, "0") != 0)
 		{
@@ -2018,17 +2036,11 @@ void COKExFuturesDlg::OnLoginSuccess()
 				{
 					info.open.maxPrice = openMax;
 					info.open.minPrice = openMin;
-					bGetOpenStopProfit = true;
 					if(CFuncCommon::CheckEqual(info.open.maxPrice, 0.0))
-					{
 						info.open.maxPrice = info.open.priceAvg;
-						bGetOpenStopProfit = false;
-					}
 					if(CFuncCommon::CheckEqual(info.open.minPrice, 0.0))
-					{
 						info.open.minPrice = info.open.priceAvg;
-						bGetOpenStopProfit = false;
-					}
+					info.open.stopProfit = openStopProfit;
 				}
 			}
 		}
@@ -2095,66 +2107,11 @@ void COKExFuturesDlg::OnLoginSuccess()
 				{
 					info.stopLoss.maxPrice = stopLossMax;
 					info.stopLoss.minPrice = stopLossMin;
-					bool bGetStopProfit = true;
 					if(CFuncCommon::CheckEqual(info.stopLoss.maxPrice, 0.0))
-					{
 						info.stopLoss.maxPrice = info.stopLoss.priceAvg;
-						bGetStopProfit = false;
-					}
 					if(CFuncCommon::CheckEqual(info.stopLoss.minPrice, 0.0))
-					{
 						info.stopLoss.minPrice = info.stopLoss.priceAvg;
-						bGetStopProfit = false;
-					}
-					if(bGetStopProfit)
-					{
-						if(info.stopLoss.tradeType == eFuturesTradeType_OpenBull)
-						{
-							if(info.stopLoss.maxPrice > info.stopLoss.priceAvg)
-							{
-								double up = (info.stopLoss.maxPrice - info.stopLoss.priceAvg)/info.stopLoss.priceAvg;
-								int nowStep = int(up/m_moveStopProfit);
-								if(nowStep >= 2)
-									info.stopLoss.stopProfit = nowStep-1;
-							}
-						}
-						else if(info.stopLoss.tradeType == eFuturesTradeType_OpenBear)
-						{
-							if(info.stopLoss.minPrice < info.stopLoss.priceAvg)
-							{
-								double up = (info.stopLoss.priceAvg-info.stopLoss.minPrice)/info.stopLoss.priceAvg;
-								int nowStep = int(up/m_moveStopProfit);
-								if(nowStep >= 2)
-									info.stopLoss.stopProfit = nowStep-1;
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			if(bGetOpenStopProfit)
-			{
-				if(info.open.tradeType == eFuturesTradeType_OpenBull)
-				{
-					if(info.open.maxPrice > info.open.priceAvg)
-					{
-						double up = (info.open.maxPrice - info.open.priceAvg)/info.open.priceAvg;
-						int nowStep = int(up/m_moveStopProfit);
-						if(nowStep >= 2)
-							info.open.stopProfit = nowStep-1;
-					}
-				}
-				else if(info.open.tradeType == eFuturesTradeType_OpenBear)
-				{
-					if(info.open.minPrice < info.open.priceAvg)
-					{
-						double up = (info.open.priceAvg-info.open.minPrice)/info.open.priceAvg;
-						int nowStep = int(up/m_moveStopProfit);
-						if(nowStep >= 2)
-							info.open.stopProfit = nowStep-1;
-					}
+					info.stopLoss.stopProfit = stopLossStopProfit;
 				}
 			}
 		}
@@ -2308,15 +2265,15 @@ void COKExFuturesDlg::_SaveData()
 	while(itB != itE)
 	{
 		if(itB->open.orderID != "")
-			stream << itB->open.orderID << "	" << itB->open.strClientOrderID	<< "	" << itB->open.triggerType << "	" << itB->open.lastSellStopLossPrice << "	" << itB->open.minPrice << "	" << itB->open.maxPrice;
+			stream << itB->open.orderID << "	" << itB->open.strClientOrderID	<< "	" << itB->open.triggerType << "	" << itB->open.lastSellStopLossPrice << "	" << itB->open.minPrice << "	" << itB->open.maxPrice << "	" << itB->open.stopProfit;
 		if(itB->close.orderID != "")
 			stream  << "	" << itB->close.orderID << "	" << itB->close.strClientOrderID << "	"	<<	itB->close.minPrice << "	" << itB->close.maxPrice;
 		else
 			stream << "	0	0	0	0";
 		if(itB->stopLoss.orderID != "")
-			stream  << "	" << itB->stopLoss.orderID << "	" << itB->stopLoss.strClientOrderID << "	" << itB->stopLoss.minPrice << "	" << itB->stopLoss.maxPrice;
+			stream  << "	" << itB->stopLoss.orderID << "	" << itB->stopLoss.strClientOrderID << "	" << itB->stopLoss.minPrice << "	" << itB->stopLoss.maxPrice << "	" << itB->stopLoss.stopProfit;
 		else
-			stream << "	0	0	0	0";
+			stream << "	0	0	0	0	0";
 		stream << std::endl;
 		++itB;
 	}
