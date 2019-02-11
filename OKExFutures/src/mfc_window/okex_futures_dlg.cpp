@@ -1689,23 +1689,23 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							{
 								itB->stopLoss.strClientOrderID = CFuncCommon::GenUUID();
 								itB->stopLoss.timeStamp = time(NULL);
-								itB->stopLoss.filledQTY = m_strFuturesTradeSize;
+								itB->stopLoss.filledQTY = itB->open.filledQTY;
 								itB->stopLoss.orderID = CFuncCommon::GenUUID();
 								itB->stopLoss.price = m_curTickData.buy;
 								itB->stopLoss.priceAvg = m_curTickData.buy;
 								itB->stopLoss.status = 2;
-								itB->stopLoss.size = m_strFuturesTradeSize;
+								itB->stopLoss.size = itB->open.filledQTY;
 								itB->stopLoss.tradeType = eFuturesTradeType_OpenBear;
-								CActionLog("trade", "[%s]止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->stopLoss.strClientOrderID.c_str());
+								CActionLog("trade", "[%s]止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), itB->stopLoss.strClientOrderID.c_str());
 							}
 							else
 							{
 								std::string strClientOrderID = CFuncCommon::GenUUID();
-								OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+								OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClientOrderID);
 								itB->stopLoss.strClientOrderID = strClientOrderID;
 								itB->stopLoss.waitClientOrderIDTime = time(NULL);
 								itB->stopLoss.tradeType = eFuturesTradeType_OpenBear;
-								CActionLog("trade", "止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
+								CActionLog("trade", "止损开空 order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), strClientOrderID.c_str());
 							}
 						}
 						//盈利达到2倍移动平均线后开始设置止盈线, 回撤破止盈线就平仓
@@ -1837,23 +1837,23 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							{
 								itB->stopLoss.strClientOrderID = CFuncCommon::GenUUID();
 								itB->stopLoss.timeStamp = time(NULL);
-								itB->stopLoss.filledQTY = m_strFuturesTradeSize;
+								itB->stopLoss.filledQTY = itB->open.filledQTY;
 								itB->stopLoss.orderID = CFuncCommon::GenUUID();
 								itB->stopLoss.price = m_curTickData.sell;
 								itB->stopLoss.priceAvg = m_curTickData.sell;
 								itB->stopLoss.status = 2;
 								itB->stopLoss.tradeType = eFuturesTradeType_OpenBull;
-								itB->stopLoss.size = m_strFuturesTradeSize;
-								CActionLog("trade", "[%s]止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), itB->stopLoss.strClientOrderID.c_str());
+								itB->stopLoss.size = itB->open.filledQTY;
+								CActionLog("trade", "[%s]止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), CFuncCommon::FormatTimeStr(m_curTickData.time).c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), itB->stopLoss.strClientOrderID.c_str());
 							}
 							else
 							{
 								std::string strClientOrderID = CFuncCommon::GenUUID();
-								OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+								OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, eFuturesTradeType_OpenBull, m_strCoinType, m_strFuturesCycle, price, itB->open.filledQTY, m_strLeverage, strClientOrderID);
 								itB->stopLoss.strClientOrderID = strClientOrderID;
 								itB->stopLoss.waitClientOrderIDTime = time(NULL);
 								itB->stopLoss.tradeType = eFuturesTradeType_OpenBull;
-								CActionLog("trade", "止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), m_strFuturesTradeSize.c_str(), strClientOrderID.c_str());
+								CActionLog("trade", "止损开多 openClientOrder=%s, order=%s, price=%s, filledQTY=%s, client_oid=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str(), price.c_str(), itB->open.filledQTY.c_str(), strClientOrderID.c_str());
 							}
 						}
 						//盈利达到2倍移动平均线后开始移动止赢
