@@ -1681,8 +1681,8 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							else
 								checkPrice = itB->open.lastSellStopLossPrice;
 						}
-						
-						if(m_curTickData.last < checkPrice && ((checkPrice-m_curTickData.last)/checkPrice >= (m_stopLoss-0.0025)) && tNow-itB->open.timeStamp>m_nKlineCycle*5 && itB->stopLoss.orderID == "" && itB->stopLoss.strClientOrderID == "")
+						double delPrice = itB->open.priceAvg*(m_stopLoss-0.0025);
+						if(m_curTickData.last < checkPrice && (checkPrice-m_curTickData.last >= delPrice) && tNow-itB->open.timeStamp>m_nKlineCycle*5 && itB->stopLoss.orderID == "" && itB->stopLoss.strClientOrderID == "")
 						{
 							std::string price = "-1";
 							if(m_bTest)
@@ -1830,7 +1830,8 @@ void COKExFuturesDlg::__CheckTradeOrder()
 							else
 								checkPrice = itB->open.lastSellStopLossPrice;
 						}
-						if(m_curTickData.last > checkPrice && ((m_curTickData.last-checkPrice)/checkPrice >= (m_stopLoss-0.0025)) && tNow-itB->open.timeStamp>m_nKlineCycle*5 && itB->stopLoss.orderID == "" && itB->stopLoss.strClientOrderID == "")
+						double delPrice = itB->open.priceAvg*(m_stopLoss-0.0025);
+						if(m_curTickData.last > checkPrice && (m_curTickData.last-checkPrice >= delPrice) && tNow-itB->open.timeStamp>m_nKlineCycle*5 && itB->stopLoss.orderID == "" && itB->stopLoss.strClientOrderID == "")
 						{
 							std::string price = "-1";
 							if(m_bTest)
