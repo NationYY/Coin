@@ -2141,7 +2141,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull && itBegin->stopLoss.orderID == "")
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBull)
 					cnt++;
 				itBegin++;
 			}
@@ -2165,7 +2165,7 @@ bool COKExFuturesDlg::__CheckCanTrade(eFuturesTradeType eType)
 			int cnt = 0;
 			while(itBegin != itEnd)
 			{
-				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear && itBegin->stopLoss.orderID == "")
+				if(itBegin->open.orderID != "" && itBegin->open.tradeType == eFuturesTradeType_OpenBear)
 					cnt++;
 				itBegin++;
 			}
