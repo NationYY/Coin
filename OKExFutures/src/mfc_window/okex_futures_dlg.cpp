@@ -1324,6 +1324,8 @@ void COKExFuturesDlg::__CheckTrade_ShouKouChannel()
 {
 	if(!m_bSuccessLogin)
 		return;
+	if(m_bStopWhenFinish)
+		return;
 	//柱子穿插md, 如果中间纠缠的柱子不超过两个则确定趋势
 	if(REAL_BOLL_DATA_SIZE >= 6 && (KLINE_DATA_SIZE-1-m_nLastTradeBarByShouKouChannel) > 8)
 	{
