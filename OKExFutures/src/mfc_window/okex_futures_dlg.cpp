@@ -1573,7 +1573,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 										CActionLog("trade", "Ö¹Ó¯Æ½¶àËð stopClientOrder=%s, order=%s, price=%s, filledQTY=%s", itB->stopLoss.strClientOrderID.c_str(), itB->stopLoss.orderID.c_str(), price.c_str(), itB->stopLoss.filledQTY.c_str());
 									}
 								}
-								itB->open.lastSellStopLossPrice = m_curTickData.last - itB->stopLoss.priceAvg*(m_stopLoss/2+0.0025);
+								itB->open.lastSellStopLossPrice = m_curTickData.last - itB->open.priceAvg*(m_stopLoss/2+0.0025);
 								itB->stopLoss.Reset();
 								bUpdate = true;
 							}
@@ -1635,7 +1635,7 @@ void COKExFuturesDlg::__CheckTradeOrder()
 										CActionLog("trade", "Ö¹Ó¯Æ½¿ÕËð order=%s, price=%s, filledQTY=%s", itB->stopLoss.orderID.c_str(), price.c_str(), itB->stopLoss.filledQTY.c_str());
 									}
 								}
-								itB->open.lastSellStopLossPrice = m_curTickData.last + itB->stopLoss.priceAvg*(m_stopLoss/2+0.0025);
+								itB->open.lastSellStopLossPrice = m_curTickData.last + itB->open.priceAvg*(m_stopLoss/2+0.0025);
 								itB->stopLoss.Reset();
 								bUpdate = true;
 							}
