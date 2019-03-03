@@ -39,6 +39,7 @@ enum eWebsocketAPIType
 	eWebsocketAPIType_SpotTicker,	//现货行情
 	eWebsocketAPIType_SpotOrderInfo,	//现货个人交易信息
 	eWebsocketAPIType_SpotAccountInfo,	//现货个人账户信息
+	eWebsocketAPIType_FuturesEntrustDepth,//期货深度
 	eWebsocketAPIType_Max,
 };
 

@@ -108,12 +108,21 @@ char* CFuncCommon::ToString(unsigned int number)
 	return szBuff;
 }
 
-std::string CFuncCommon::FormatTimeStr(__int64 time)
+std::string CFuncCommon::FormatDateStr(__int64 time)
 {
 	tm _tm;
 	localtime_s(&_tm, (const time_t*)&time);
 	char szBuff[128] = {0};
 	_snprintf(szBuff, 128, "%d-%02d-%02d %02d:%02d:%02d", _tm.tm_year+1900, _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
+	return szBuff;
+}
+
+std::string CFuncCommon::FormatTimeStr(__int64 time)
+{
+	tm _tm;
+	localtime_s(&_tm, (const time_t*)&time);
+	char szBuff[128] = { 0 };
+	_snprintf(szBuff, 128, "%02d:%02d:%02d", _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
 	return szBuff;
 }
 

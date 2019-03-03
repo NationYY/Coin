@@ -12,6 +12,7 @@ public:
 	static char* ToString(int number);
 	static char* ToString(unsigned int number);
 	static double Round(double value, int decimal);
+	static std::string FormatDateStr(__int64 time);
 	static std::string FormatTimeStr(__int64 time);
 	static void GetAllFileInDirectory(const char* szPath, std::set<std::string>& setFiles);
 	static std::string LocaltimeToISO8601(time_t time);

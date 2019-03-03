@@ -131,4 +131,14 @@ void COkexWebsocketAPI::API_SpotOrderInfo(bool bAdd, std::string& strCoinType, s
 	Request(szBuffer);
 
 }
+
+void COkexWebsocketAPI::API_FuturesEntrustDepth(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle)
+{
+	char szBuffer[512] = { 0 };
+	if(bSwap)
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"swap/depth:%s-USD-SWAP\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	else
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/depth:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
+	Request(szBuffer);
+}
 #endif 

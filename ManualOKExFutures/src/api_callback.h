@@ -1,14 +1,15 @@
 #pragma once
-#include "mfc_window/okex_futures_dlg.h"
+#include "mfc_window/ManualOKExFuturesDlg.h"
 #include "exchange/okex/okex_websocket_api.h"
 #include "exchange/okex/okex_http_api.h"
-extern COKExFuturesDlg* g_pDlg;
+extern CManualOKExFuturesDlg* g_pDlg;
 extern CExchange* pExchange;
 #define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pExchange->GetHttp())
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
+	/*
 	switch(apiType)
 	{
 	case eHttpAPIType_FuturesAccountInfoByCurrency:
@@ -101,6 +102,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	default:
 		break;
 	}
+	*/
 }
 
 void local_websocket_callbak_open(const char* szExchangeName)
@@ -110,7 +112,7 @@ void local_websocket_callbak_open(const char* szExchangeName)
 	if(g_pDlg->m_bRun)
 	{
 		g_pDlg->m_bRun = false;
-		g_pDlg->OnBnClickedButtonStart();
+		g_pDlg->OnBnClickedStart();
 	}
 }
 
@@ -126,44 +128,11 @@ void local_websocket_callbak_fail(const char* szExchangeName)
 	g_pDlg->m_tListenPong = 0;
 }
 
-time_t lastKlineTime = 0;
-std::string lastKlineRetStr = "";
-Json::Value lastKlineJson;
+
 void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	switch(apiType)
 	{
-	case eWebsocketAPIType_FuturesKline:
-		{
-			char* szEnd = NULL;
-			time_t curTime = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
-			if(g_pDlg->m_bFirstKLine)
-			{
-				g_pDlg->m_bFirstKLine = false;
-				g_pDlg->ComplementedKLine(curTime, g_pDlg->m_nBollCycle*2);
-			}
-			CActionLog("all_kline", "%s", strRet.c_str());
-			if(curTime >= lastKlineTime)
-			{
-				if(curTime > lastKlineTime && lastKlineTime != 0)
-				{
-					CActionLog("market", "%s", lastKlineRetStr.c_str());
-					SKlineData data;
-					data.time = CFuncCommon::ISO8601ToTime(lastKlineJson["data"][0]["candle"][0].asString());
-					data.openPrice = stod(lastKlineJson["data"][0]["candle"][1].asString());
-					data.highPrice = stod(lastKlineJson["data"][0]["candle"][2].asString());
-					data.lowPrice = stod(lastKlineJson["data"][0]["candle"][3].asString());
-					data.closePrice = stod(lastKlineJson["data"][0]["candle"][4].asString());
-					data.volume = stoi(lastKlineJson["data"][0]["candle"][5].asString());
-					data.volumeByCurrency = stod(lastKlineJson["data"][0]["candle"][6].asString());
-					g_pDlg->AddKlineData(data);
-				}
-				lastKlineTime = curTime;
-				lastKlineRetStr = strRet;
-				lastKlineJson = retObj;
-			}
-		}
-		break;
 	case eWebsocketAPIType_FuturesTicker:
 		{
 			char* szEnd = NULL;
@@ -231,7 +200,53 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
+	case eWebsocketAPIType_FuturesEntrustDepth:
+		{
+			if(retObj.isObject() && retObj["data"].isArray() && retObj["action"].isString())
+			{
+				//LOCAL_ERROR("depth %s", strRet.c_str());
+				if(retObj["action"].asString() == "partial")
+					g_pDlg->ClearDepth();
+
+				Json::Value& data = retObj["data"][0];
+				if(data["bids"].isArray())
+				{
+					for(int i = 0; i < (int)data["bids"].size(); ++i)
+					{
+						SFuturesDepth depthInfo;
+						if(g_pDlg->m_bSwapFutures)
+							depthInfo.price = data["bids"][i][0].asString();
+						else
+							depthInfo.price = CFuncCommon::Double2String(data["bids"][i][0].asDouble(), g_pDlg->m_nPriceDecimal);
+
+						
+						depthInfo.size = data["bids"][i][1].asString();
+						depthInfo.brokenSize = data["bids"][i][2].asInt();
+						depthInfo.tradeNum = data["bids"][i][3].asInt();
+						g_pDlg->UpdateDepthInfo(true, depthInfo);
+					}
+				}
+				if(data["asks"].isArray())
+				{
+					for(int i = 0; i < (int)data["asks"].size(); ++i)
+					{
+						SFuturesDepth depthInfo;
+						if(g_pDlg->m_bSwapFutures)
+							depthInfo.price = data["asks"][i][0].asString();
+						else
+							depthInfo.price = CFuncCommon::Double2String(data["asks"][i][0].asDouble(), g_pDlg->m_nPriceDecimal);
+						depthInfo.size = data["asks"][i][1].asString();
+						depthInfo.brokenSize = data["asks"][i][2].asInt();
+						depthInfo.tradeNum = data["asks"][i][3].asInt();
+						g_pDlg->UpdateDepthInfo(false, depthInfo);
+					}
+				}
+				//LOCAL_ERROR("num=%d", num);
+			}
+		}
+		break;
 	default:
 		break;
 	}
 }
+

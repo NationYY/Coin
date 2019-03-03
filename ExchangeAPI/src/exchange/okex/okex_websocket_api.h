@@ -20,6 +20,7 @@ public:
 
 	void API_FuturesOrderInfo(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle);
 	void API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strMoneyType);
+	void API_FuturesEntrustDepth(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle);
 
 	void API_FuturesAccountInfoByCurrency(bool bAdd, bool bSwap, std::string& strCoinType);
 	void API_SpotAccountInfoByCurrency(bool bAdd, std::string& strCoinType);

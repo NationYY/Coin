@@ -9,7 +9,7 @@
 #define LOCAL_INFO		CLocalLogger::GetInstancePt()->LogInfo
 #define LOCAL_FUNCTION		CLocalLogger::GetInstancePt()->LogFunction 
 #define MAX_UUID_CACHE_COUNT 10000
-#define MAX_LOCAL_LOG_CONTENT_LEN 2048
+#define MAX_LOCAL_LOG_CONTENT_LEN 15360
 
 //----------------------------------------------------------
 //名称： 日志本地写入管理类,
