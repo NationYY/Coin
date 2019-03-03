@@ -4,6 +4,8 @@
 
 #pragma once
 #include <clib/lib/util/config.h>
+#include "afxwin.h"
+#define DOUBLE_PRECISION 0.00000001
 enum eTimerType
 {
 	eTimerType_APIUpdate,
@@ -75,6 +77,15 @@ struct SFuturesTradePairInfo
 {
 	SFuturesTradeInfo open;
 	SFuturesTradeInfo close;
+	SFuturesTradePairInfo()
+	{
+		Reset();
+	}
+	void Reset()
+	{
+		open.Reset();
+		close.Reset();
+	}
 };
 
 struct SFuturesDepth
@@ -113,11 +124,16 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 private:
-	void __InitConfigCtrl();
-	bool __SaveConfigCtrl();
+	void __InitBaseConfigCtrl();
+	void __InitTradeConfigCtrl();
+	bool __SaveBaseConfigCtrl();
+	bool __SaveTradeConfigCtrl();
 	void _UpdateTradeShow();
 	void _UpdateAccountShow();
 	void _UpdateDepthShow();
+	int _GetFreeOrderIndex();
+	void _OpenOrder(eFuturesTradeType type);
+	void _SaveData();
 public:
 	void OnRevTickerInfo(STickerData &data);
 	void Pong();
@@ -126,6 +142,8 @@ public:
 	void UpdateAccountInfo(SFuturesAccountInfo& info);
 	void ClearDepth();
 	void UpdateDepthInfo(bool bBuy, SFuturesDepth& info);
+	void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
+	void OnTradeFail(std::string& clientOrderID);
 	void SetHScroll();
 public:
 	time_t m_tListenPong;
@@ -167,4 +185,7 @@ public:
 	CEdit m_editOpenPrice;
 	afx_msg void OnBnClickedButtonOpenBull();
 	afx_msg void OnBnClickedButtonOpenBear();
+	CStatic m_staticProfit;
+	CStatic m_staticTodayProfit;
+	CStatic m_staticAccountInfo;
 };
