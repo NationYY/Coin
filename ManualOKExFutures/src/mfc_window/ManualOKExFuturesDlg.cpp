@@ -158,7 +158,7 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_listCtrlOrderClose.InsertColumn(0, "价格", LVCFMT_CENTER, 85);
 	m_listCtrlOrderClose.InsertColumn(1, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderClose.InsertColumn(2, "状态", LVCFMT_CENTER, 45);
-	m_listCtrlOrderClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+	m_listCtrlOrderClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
 
 	m_listCtrlDepth.InsertColumn(0, "", LVCFMT_CENTER, 30);
 	m_listCtrlDepth.InsertColumn(1, "价", LVCFMT_CENTER, 70);

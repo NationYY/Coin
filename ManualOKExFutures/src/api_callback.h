@@ -135,7 +135,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 	case eWebsocketAPIType_FuturesTicker:
 		{
 			char* szEnd = NULL;
-			CActionLog("market", "%s", strRet.c_str());
+			//CActionLog("market", "%s", strRet.c_str());
 			STickerData data;
 			data.volume = stoi(retObj["data"][0]["volume_24h"].asString());
 			data.sell = stod(retObj["data"][0]["best_ask"].asString());
