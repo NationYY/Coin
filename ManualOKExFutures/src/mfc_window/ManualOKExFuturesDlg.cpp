@@ -108,6 +108,7 @@ END_MESSAGE_MAP()
 
 BOOL CManualOKExFuturesDlg::OnInitDialog()
 {
+int a= 3876444392;
 	CDialog::OnInitDialog();
 	// 将“关于...”菜单项添加到系统菜单中。
 
@@ -1293,16 +1294,18 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	checkSrc = "";
 	while(nIndex < 25)
 	{
+		bool have = false;
 		if(itBB != itBE)
 		{
 			if(nIndex != 0)
 				checkSrc.append(":");
 			checkSrc.append(itBB->second.price).append(":").append(itBB->second.size);
+			have = true;
 			++itBB;
 		}
 		if(itSB != itSE)
 		{
-			if(nIndex != 0)
+			if(nIndex != 0 || have)
 				checkSrc.append(":");
 			checkSrc.append(itSB->second.price).append(":").append(itSB->second.size);
 			++itSB;
