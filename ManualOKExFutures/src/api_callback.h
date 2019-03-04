@@ -207,6 +207,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				if(retObj["action"].asString() == "partial")
 				{
 					g_pDlg->ClearDepth();
+					g_pDlg->m_bWaitDepthBegin = false;
 				}
 				else
 				{
