@@ -162,6 +162,7 @@ public:
 	std::string m_secretKey;
 	std::string m_passphrase;
 	int m_nPriceDecimal;
+	bool m_bWaitDepthBegin;
 	std::vector<SFuturesTradePairInfo> m_vecTradePairInfo;
 
 	std::string m_strCoinType;			//ªı±“¿‡–Õ

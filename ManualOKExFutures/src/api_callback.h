@@ -208,6 +208,11 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				{
 					g_pDlg->ClearDepth();
 				}
+				else
+				{
+					if(g_pDlg->m_bWaitDepthBegin)
+						break;
+				}
 
 				Json::Value& data = retObj["data"][0];
 				if(data["bids"].isArray())
@@ -218,7 +223,9 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 						if(g_pDlg->m_bSwapFutures)
 							depthInfo.price = data["bids"][i][0].asString();
 						else
-							depthInfo.price = data["bids"][i][0].asString();//CFuncCommon::Double2String(data["bids"][i][0].asDouble()+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+						{
+							depthInfo.price = CFuncCommon::Double2String(data["bids"][i][0].asDouble()+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+						}
 
 						
 						depthInfo.size = data["bids"][i][1].asString();
@@ -235,7 +242,9 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 						if(g_pDlg->m_bSwapFutures)
 							depthInfo.price = data["asks"][i][0].asString();
 						else
-							depthInfo.price = data["asks"][i][0].asString();//CFuncCommon::Double2String(data["asks"][i][0].asDouble()+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+						{
+							depthInfo.price = CFuncCommon::Double2String(data["asks"][i][0].asDouble()+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+						}
 						depthInfo.size = data["asks"][i][1].asString();
 						depthInfo.brokenSize = data["asks"][i][2].asInt();
 						depthInfo.tradeNum = data["asks"][i][3].asInt();
@@ -245,8 +254,8 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				std::string src = "";
 				if(!g_pDlg->CheckDepthInfo(data["checksum"].asInt(), src))
 				{
-					LOCAL_ERROR("check %s", src.c_str());
-					LOCAL_ERROR("depth %s", strRet.c_str());
+					//LOCAL_ERROR("check %s", src.c_str());
+					//LOCAL_ERROR("depth %s", strRet.c_str());
 				}
 				//LOCAL_ERROR("num=%d", num);
 			}

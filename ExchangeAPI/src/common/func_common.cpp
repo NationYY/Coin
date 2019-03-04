@@ -55,7 +55,20 @@ std::string CFuncCommon::Double2String(double value, int decimal)
 	else if(decimal == 9)
 		sprintf(szBuff, "%.10f", value);
 	if(decimal > 0)
+	{
 		szBuff[strlen(szBuff)-1] = '\0';
+		int nPos = strlen(szBuff)-1;
+		while(szBuff[nPos] == '0')
+		{
+			szBuff[nPos] = '\0';
+			nPos = strlen(szBuff)-1;
+			if(szBuff[nPos] == '.')
+			{
+				szBuff[nPos] = '\0';
+				break;
+			}
+		}
+	}
 	return szBuff;
 }
 

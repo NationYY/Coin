@@ -68,6 +68,8 @@ CManualOKExFuturesDlg::CManualOKExFuturesDlg(CWnd* pParent /*=NULL*/)
 {
 	g_pDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	m_bWaitDepthBegin = true;
 }
 
 void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -108,7 +110,6 @@ END_MESSAGE_MAP()
 
 BOOL CManualOKExFuturesDlg::OnInitDialog()
 {
-int a= 3876444392;
 	CDialog::OnInitDialog();
 	// 将“关于...”菜单项添加到系统菜单中。
 
@@ -1316,6 +1317,9 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	if(checkNum != crc)
 	{
 		LOCAL_ERROR("crc校验失败 checknum=%d local=%d", checkNum, crc);
+		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		m_bWaitDepthBegin = true;
 		return false;
 	}
 	return true;
