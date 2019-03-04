@@ -1309,7 +1309,7 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 		}
 		++nIndex;
 	}
-	int crc = CFuncCommon::crc32(checkSrc.c_str(), checkSrc.size());
+	int crc = CFuncCommon::crc32((const unsigned char*)checkSrc.c_str(), checkSrc.size());
 	if(checkNum != crc)
 	{
 		LOCAL_ERROR("crc–£—È ß∞‹ checknum=%d local=%d", checkNum, crc);
