@@ -19,5 +19,6 @@ public:
 	static time_t ISO8601ToTime(std::string& time);
 	static char* GenUUID();
 	static time_t ToTime(const char *sz);
+	static int crc32(const unsigned char *buf, unsigned int size);
 };
 

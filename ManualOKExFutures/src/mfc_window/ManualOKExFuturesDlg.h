@@ -53,6 +53,7 @@ struct SFuturesTradeInfo
 	time_t waitClientOrderIDTime;
 	std::string size;
 	time_t tLastUpdate;
+	bool bModifyQTY;
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -70,6 +71,7 @@ struct SFuturesTradeInfo
 		waitClientOrderIDTime = 0;
 		size = "0";
 		tLastUpdate = 0;
+		bModifyQTY = false;
 	}
 };
 
@@ -77,6 +79,8 @@ struct SFuturesTradePairInfo
 {
 	SFuturesTradeInfo open;
 	SFuturesTradeInfo close;
+	std::string closePlanPrice;
+	std::string closePlanSize;
 	SFuturesTradePairInfo()
 	{
 		Reset();
@@ -85,6 +89,8 @@ struct SFuturesTradePairInfo
 	{
 		open.Reset();
 		close.Reset();
+		closePlanPrice = "";
+		closePlanSize = "";
 	}
 };
 
@@ -134,6 +140,7 @@ private:
 	int _GetFreeOrderIndex();
 	void _OpenOrder(eFuturesTradeType type);
 	void _SaveData();
+	void _CheckAllOrder();
 public:
 	void OnRevTickerInfo(STickerData &data);
 	void Pong();
@@ -142,6 +149,7 @@ public:
 	void UpdateAccountInfo(SFuturesAccountInfo& info);
 	void ClearDepth();
 	void UpdateDepthInfo(bool bBuy, SFuturesDepth& info);
+	bool CheckDepthInfo(int checkNum, std::string& checkSrc);
 	void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 	void OnTradeFail(std::string& clientOrderID);
 	void SetHScroll();
@@ -153,7 +161,6 @@ public:
 	std::string m_apiKey;
 	std::string m_secretKey;
 	std::string m_passphrase;
-	int m_nLastUpdateDay;
 	int m_nPriceDecimal;
 	std::vector<SFuturesTradePairInfo> m_vecTradePairInfo;
 
@@ -165,7 +172,6 @@ public:
 	STickerData m_curTickData;
 	SFuturesAccountInfo m_accountInfo;
 	double m_beginMoney;
-	double m_todayBeginMoney;
 	std::map<std::string, SFuturesDepth> m_mapDepthSell;
 	std::map<std::string, SFuturesDepth> m_mapDepthBuy;
 public:
@@ -177,7 +183,6 @@ public:
 	CEdit m_editFuturesTradeSize;
 	CComboBox m_combFuturesType;
 	CEdit m_editCapital;
-	CEdit m_editCapitalToday;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedStart();
 	CListBox m_ctrlListLog;
@@ -186,6 +191,10 @@ public:
 	afx_msg void OnBnClickedButtonOpenBull();
 	afx_msg void OnBnClickedButtonOpenBear();
 	CStatic m_staticProfit;
-	CStatic m_staticTodayProfit;
 	CStatic m_staticAccountInfo;
+	CEdit m_editClosePrice;
+	CEdit m_editCloseSize;
+	afx_msg void OnBnClickedButtonClose();
+	afx_msg void OnBnClickedButtonCancel();
+	afx_msg void OnBnClickedButtonUpdateBeginMoney();
 };

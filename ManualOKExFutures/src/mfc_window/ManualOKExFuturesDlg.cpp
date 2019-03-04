@@ -81,13 +81,13 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT2, m_editFuturesTradeSize);
 	DDX_Control(pDX, IDC_COMBO3, m_combFuturesType);
 	DDX_Control(pDX, IDC_EDIT3, m_editCapital);
-	DDX_Control(pDX, IDC_EDIT4, m_editCapitalToday);
 	DDX_Control(pDX, IDC_LIST1, m_ctrlListLog);
 	DDX_Control(pDX, IDC_LIST_CLOSE2, m_listCtrlDepth);
 	DDX_Control(pDX, IDC_EDIT5, m_editOpenPrice);
 	DDX_Control(pDX, IDC_STATIC_PROFIT, m_staticProfit);
-	DDX_Control(pDX, IDC_STATIC_TODAY_PROFIT, m_staticTodayProfit);
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT, m_staticAccountInfo);
+	DDX_Control(pDX, IDC_EDIT6, m_editClosePrice);
+	DDX_Control(pDX, IDC_EDIT7, m_editCloseSize);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
@@ -98,6 +98,9 @@ BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
 	ON_BN_CLICKED(IDOK, &CManualOKExFuturesDlg::OnBnClickedStart)
 	ON_BN_CLICKED(IDC_BUTTON1, &CManualOKExFuturesDlg::OnBnClickedButtonOpenBull)
 	ON_BN_CLICKED(IDC_BUTTON2, &CManualOKExFuturesDlg::OnBnClickedButtonOpenBear)
+	ON_BN_CLICKED(IDC_BUTTON3, &CManualOKExFuturesDlg::OnBnClickedButtonClose)
+	ON_BN_CLICKED(IDC_BUTTON4, &CManualOKExFuturesDlg::OnBnClickedButtonCancel)
+	ON_BN_CLICKED(IDC_BUTTON5, &CManualOKExFuturesDlg::OnBnClickedButtonUpdateBeginMoney)
 END_MESSAGE_MAP()
 
 
@@ -170,7 +173,6 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_apiKey = m_config.get("futures", "apiKey", "");
 	m_secretKey = m_config.get("futures", "secretKey", "");
 	m_passphrase = m_config.get("futures", "passphrase", "");
-	m_nLastUpdateDay = m_config.get_int("futures", "lastUpdateDay", -1);
 	__InitBaseConfigCtrl();
 	__InitTradeConfigCtrl();
 
@@ -283,14 +285,13 @@ void CManualOKExFuturesDlg::__InitBaseConfigCtrl()
 		m_combFuturesType.SetCurSel(1);
 	strTemp = m_config.get("futures", "beginMoney", "");
 	m_editCapital.SetWindowText(strTemp.c_str());
-	strTemp = m_config.get("futures", "todayBeginMoney", "");
-	m_editCapitalToday.SetWindowText(strTemp.c_str());
 }
 
 void CManualOKExFuturesDlg::__InitTradeConfigCtrl()
 {
 	std::string strTemp = m_config.get("futures", "futuresTradeSize", "");
 	m_editFuturesTradeSize.SetWindowText(strTemp.c_str());
+	m_strFuturesTradeSize = strTemp.c_str();
 }
 
 bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
@@ -316,13 +317,6 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 		MessageBox("未填写合约交割期");
 		return false;
 	}
-	CString strFuturesTradeSize;
-	m_editFuturesTradeSize.GetWindowText(strFuturesTradeSize);
-	if(strFuturesTradeSize == "")
-	{
-		MessageBox("未填写下单张数");
-		return false;
-	}
 	CString strLeverage;
 	m_combLeverage.GetWindowText(strLeverage);
 	if(strLeverage == "")
@@ -334,9 +328,6 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 	CString szCost = "";
 	m_editCapital.GetWindowText(szCost);
 
-	CString szTodayCost = "";
-	m_editCapitalToday.GetWindowText(szTodayCost);
-
 	m_strCoinType = strCoinType.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strLeverage = strLeverage.GetBuffer();
@@ -347,15 +338,12 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 		m_bSwapFutures = false;
 	if(szCost != "")
 		m_beginMoney = stod(szCost.GetBuffer());
-	if(szTodayCost != "")
-		m_todayBeginMoney = stod(szTodayCost.GetBuffer());
+
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
-	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
 	m_config.set_value("futures", "leverage", m_strLeverage.c_str());
 	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
 	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
-	m_config.set_value("futures", "todayBeginMoney", szTodayCost.GetBuffer());
 	m_config.save("./config.ini");
 
 	return true;
@@ -400,6 +388,7 @@ void CManualOKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 				pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 				pExchange->Run();
 			}
+			_CheckAllOrder();
 		}
 		break;
 	case eTimerType_Ping:
@@ -540,7 +529,8 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 		char szOpenOrderID[128] = { 0 };
 		char szCloseClientID[128] = { 0 };
 		char szCloseOrderID[128] = { 0 };
-		lineStream >> szOpenOrderID >> szOpenClientID >> szCloseOrderID >> szCloseClientID;
+		char szOpenQTY[128] = { 0 };
+		lineStream >> szOpenOrderID >> szOpenClientID >> szOpenQTY >> szCloseOrderID >> szCloseClientID;
 		SFuturesTradePairInfo info;
 		if(strcmp(szOpenOrderID, "0") != 0)
 		{
@@ -566,6 +556,11 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 					info.open.tradeType = eFuturesTradeType_CloseBull;
 				else if(tradeType == "4")
 					info.open.tradeType = eFuturesTradeType_CloseBear;
+				if(strcmp(szOpenQTY, "0") != 0)
+				{
+					info.open.filledQTY = szOpenQTY;
+					info.open.bModifyQTY = true;
+				}
 			}
 		}
 		if(strcmp(szCloseOrderID, "0") != 0)
@@ -726,21 +721,6 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 	if(m_accountInfo.bValid)
 	{
 		m_staticAccountInfo.SetWindowText(m_accountInfo.equity.c_str());
-		time_t tNow = time(NULL);
-		tm* pTM = localtime(&tNow);
-		if(pTM->tm_yday != m_nLastUpdateDay)
-		{
-			double equity = stod(m_accountInfo.equity);
-			if(m_nLastUpdateDay != -1)
-				CFixActionLog("profit", "今日收益%.2f%%", (equity - m_todayBeginMoney) / m_todayBeginMoney * 100);
-
-			m_todayBeginMoney = equity;
-			m_nLastUpdateDay = pTM->tm_yday;
-			m_editCapitalToday.SetWindowText(m_accountInfo.equity.c_str());
-			m_config.set_value("futures", "lastUpdateDay", CFuncCommon::ToString(m_nLastUpdateDay));
-			m_config.set_value("futures", "todayBeginMoney", m_accountInfo.equity.c_str());
-			m_config.save("./config.ini");
-		}
 		if(!CFuncCommon::CheckEqual(m_beginMoney, 0.0))
 		{
 			double equity = stod(m_accountInfo.equity);
@@ -750,16 +730,6 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 			else
 				strTemp.Format("-%.4f(-%.2f%%)", m_beginMoney - equity, (m_beginMoney - equity) / m_beginMoney * 100);
 			m_staticProfit.SetWindowText(strTemp);
-		}
-		if(!CFuncCommon::CheckEqual(m_todayBeginMoney, 0.0))
-		{
-			double equity = stod(m_accountInfo.equity);
-			CString strTemp;
-			if(equity >= m_todayBeginMoney)
-				strTemp.Format("%.4f(%.2f%%)", equity - m_todayBeginMoney, (equity - m_todayBeginMoney) / m_todayBeginMoney * 100);
-			else
-				strTemp.Format("-%.4f(-%.2f%%)", m_todayBeginMoney - equity, (m_todayBeginMoney - equity) / m_todayBeginMoney * 100);
-			m_staticTodayProfit.SetWindowText(strTemp);
 		}
 	}
 }
@@ -888,7 +858,7 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 
 void CManualOKExFuturesDlg::_UpdateDepthShow()
 {
-	const int showLines = 5;
+	const int showLines = 8;
 	m_listCtrlDepth.DeleteAllItems();
 	int sellLine = min(m_mapDepthSell.size(), showLines);
 	for(int i = 0; i < sellLine; ++i)
@@ -1048,13 +1018,302 @@ void CManualOKExFuturesDlg::_SaveData()
 	while(itB != itE)
 	{
 		if(itB->open.orderID != "")
-			stream << itB->open.orderID << "	" << itB->open.strClientOrderID;
-		if(itB->close.orderID != "")
-			stream  << "	" << itB->close.orderID << "	" << itB->close.strClientOrderID;
-		else
-			stream << "	0	0";
-		stream << std::endl;
+		{
+			stream << itB->open.orderID << "	" << itB->open.strClientOrderID << "	";
+			if(itB->open.bModifyQTY)
+				stream << itB->open.filledQTY;
+			else
+				stream << "0";
+			if(itB->close.orderID != "")
+				stream  << "	" << itB->close.orderID << "	" << itB->close.strClientOrderID;
+			else
+				stream << "	0	0";
+			stream << std::endl;
+		}
 		++itB;
 	}
 	stream.close();
+}
+
+void CManualOKExFuturesDlg::OnBnClickedButtonClose()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
+	{
+		SFuturesTradePairInfo& info = m_vecTradePairInfo[i];
+		if(info.open.orderID != "")
+		{
+			if(m_listCtrlOrderOpen.GetCheck(i))
+			{
+				if(info.close.orderID == "")
+				{
+
+					std::string price;
+					CString closePrice;
+					m_editClosePrice.GetWindowText(closePrice);
+					if(closePrice == "")
+						price = "-1";
+					else
+						price = closePrice.GetBuffer();
+
+					std::string size;
+					CString closeSize;
+					m_editCloseSize.GetWindowText(closeSize);
+					if(closeSize == "")
+						size = info.open.filledQTY;
+					else
+						size = closeSize.GetBuffer();
+					if(info.open.status == "0")
+					{
+						if(price == "-1")
+							return;
+						info.closePlanPrice = price;
+						if(closeSize == "")
+							info.closePlanSize = info.open.size;
+						else
+							info.closePlanSize = size;
+						MessageBox("计划开平仓成功!");
+					}
+					else if(info.open.status == "1")
+					{
+						OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID);
+						
+						std::string strClientOrderID = CFuncCommon::GenUUID();
+						eFuturesTradeType tradeType;
+						if(info.open.tradeType == eFuturesTradeType_OpenBull)
+							tradeType = eFuturesTradeType_CloseBull;
+						else
+							tradeType = eFuturesTradeType_CloseBear;
+						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, price, size, m_strLeverage, strClientOrderID);
+						info.close.strClientOrderID = strClientOrderID;
+						info.close.waitClientOrderIDTime = time(NULL);
+						info.close.tradeType = tradeType;
+						CActionLog("trade", "开平仓单");
+					}
+					else if(info.open.status == "2")
+					{
+						std::string strClientOrderID = CFuncCommon::GenUUID();
+						eFuturesTradeType tradeType;
+						if(info.open.tradeType == eFuturesTradeType_OpenBull)
+							tradeType = eFuturesTradeType_CloseBull;
+						else
+							tradeType = eFuturesTradeType_CloseBear;
+						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, price, size, m_strLeverage, strClientOrderID);
+						info.close.strClientOrderID = strClientOrderID;
+						info.close.waitClientOrderIDTime = time(NULL);
+						info.close.tradeType = tradeType;
+						CActionLog("trade", "开平仓单");
+					}
+				}
+			}
+		}
+	}
+}
+
+
+void CManualOKExFuturesDlg::OnBnClickedButtonCancel()
+{
+	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
+	{
+		SFuturesTradePairInfo& info = m_vecTradePairInfo[i];
+		if(info.open.orderID != "")
+		{
+			if(m_listCtrlOrderOpen.GetCheck(i))
+			{
+				if(info.open.status == "0" || info.open.status == "1")
+					OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID);
+			}
+			if(info.close.orderID != "" && m_listCtrlOrderClose.GetCheck(i))
+			{
+				if(info.close.status == "0" || info.close.status == "1")
+					OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.close.orderID);
+			}
+		}
+	}
+}
+
+
+void CManualOKExFuturesDlg::_CheckAllOrder()
+{
+	bool bUpdate = false;
+	std::vector<SFuturesTradePairInfo>::iterator itB = m_vecTradePairInfo.begin();
+	std::vector<SFuturesTradePairInfo>::iterator itE = m_vecTradePairInfo.end();
+	while(itB != itE)
+	{
+		if(itB->open.orderID != "")
+		{
+			if(itB->open.status == "-1")
+			{
+				if(itB->close.orderID == "")
+				{
+					if(itB->open.filledQTY == "0")
+					{
+						itB->Reset();
+						bUpdate = true;
+					}
+				}
+				else
+				{
+					if(itB->close.status == "-1")
+					{
+						if(itB->close.filledQTY == "0")
+						{
+							itB->close.Reset();
+							bUpdate = true;
+						}
+						else
+						{
+							int openQTY = stoi(itB->open.filledQTY);
+							int closeQTY = stoi(itB->close.filledQTY);
+							int last = openQTY - closeQTY;
+							if(last)
+							{
+								itB->open.filledQTY = CFuncCommon::ToString(last);
+								itB->open.bModifyQTY = true;
+								bUpdate = true;
+								itB->close.Reset();
+							}
+						}
+					}
+					else if(itB->close.status == "2")
+					{
+						int openQTY = stoi(itB->open.filledQTY);
+						int closeQTY = stoi(itB->close.filledQTY);
+						int last = openQTY - closeQTY;
+						if(last)
+						{
+							itB->open.filledQTY = CFuncCommon::ToString(last);
+							itB->open.bModifyQTY = true;
+							bUpdate = true;
+							itB->close.Reset();
+						}
+						else
+						{
+							itB->Reset();
+							bUpdate = true;
+						}
+					}
+				}
+
+			}
+			else if(itB->open.status == "2")
+			{
+				if(itB->close.orderID != "")
+				{
+					if(itB->close.status == "-1")
+					{
+						if(itB->close.filledQTY == "0")
+						{
+							itB->close.Reset();
+							bUpdate = true;
+						}
+						else
+						{
+							int openQTY = stoi(itB->open.filledQTY);
+							int closeQTY = stoi(itB->close.filledQTY);
+							int last = openQTY - closeQTY;
+							if(last == 0)
+							{
+								itB->Reset();
+								bUpdate = true;
+							}
+							else
+							{
+								itB->open.filledQTY = CFuncCommon::ToString(last);
+								itB->open.bModifyQTY = true;
+								bUpdate = true;
+								itB->close.Reset();
+							}
+						}
+					}
+					else if(itB->close.status == "2")
+					{
+						int openQTY = stoi(itB->open.filledQTY);
+						int closeQTY = stoi(itB->close.filledQTY);
+						int last = openQTY - closeQTY;
+						if(last == 0)
+						{
+							itB->Reset();
+							bUpdate = true;
+						}
+						else
+						{
+							itB->open.filledQTY = CFuncCommon::ToString(last);
+							itB->open.bModifyQTY = true;
+							bUpdate = true;
+							itB->close.Reset();
+						}
+					}
+				}
+				else
+				{
+					if(itB->closePlanPrice != "" && itB->closePlanSize != "")
+					{
+						std::string strClientOrderID = CFuncCommon::GenUUID();
+						eFuturesTradeType tradeType;
+						if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+							tradeType = eFuturesTradeType_CloseBull;
+						else
+							tradeType = eFuturesTradeType_CloseBear;
+						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, itB->closePlanPrice, itB->closePlanSize, m_strLeverage, strClientOrderID);
+						itB->close.strClientOrderID = strClientOrderID;
+						itB->close.waitClientOrderIDTime = time(NULL);
+						itB->close.tradeType = tradeType;
+						CActionLog("trade", "开平仓单");
+						itB->closePlanPrice = "";
+						itB->closePlanSize = "";
+					}
+				}
+			}
+		}
+		itB++;
+	}
+	if(bUpdate)
+		_SaveData();
+}
+
+void CManualOKExFuturesDlg::OnBnClickedButtonUpdateBeginMoney()
+{
+	m_beginMoney = 0.0;
+	CString szCost;
+	m_editCapital.GetWindowText(szCost);
+	m_beginMoney = stod(szCost.GetBuffer());
+	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
+	m_config.save("./config.ini");
+}
+
+
+bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
+{
+	std::map<std::string, SFuturesDepth>::reverse_iterator itBB = m_mapDepthBuy.rbegin();
+	std::map<std::string, SFuturesDepth>::reverse_iterator itBE = m_mapDepthBuy.rend();
+	std::map<std::string, SFuturesDepth>::iterator itSB = m_mapDepthSell.begin();
+	std::map<std::string, SFuturesDepth>::iterator itSE = m_mapDepthSell.end();
+	int nIndex = 0;
+	checkSrc = "";
+	while(nIndex < 25)
+	{
+		if(itBB != itBE)
+		{
+			if(nIndex != 0)
+				checkSrc.append(":");
+			checkSrc.append(itBB->second.price).append(":").append(itBB->second.size);
+			++itBB;
+		}
+		if(itSB != itSE)
+		{
+			if(nIndex != 0)
+				checkSrc.append(":");
+			checkSrc.append(itSB->second.price).append(":").append(itSB->second.size);
+			++itSB;
+		}
+		++nIndex;
+	}
+	int crc = CFuncCommon::crc32(checkSrc.c_str(), checkSrc.size());
+	if(checkNum != crc)
+	{
+		LOCAL_ERROR("crc校验失败 checknum=%d local=%d", checkNum, crc);
+		return false;
+	}
+	return true;
 }

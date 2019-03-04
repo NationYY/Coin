@@ -205,7 +205,9 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			{
 				//LOCAL_ERROR("depth %s", strRet.c_str());
 				if(retObj["action"].asString() == "partial")
+				{
 					g_pDlg->ClearDepth();
+				}
 
 				Json::Value& data = retObj["data"][0];
 				if(data["bids"].isArray())
@@ -239,6 +241,12 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 						depthInfo.tradeNum = data["asks"][i][3].asInt();
 						g_pDlg->UpdateDepthInfo(false, depthInfo);
 					}
+				}
+				std::string src = "";
+				if(!g_pDlg->CheckDepthInfo(data["checksum"].asInt(), src))
+				{
+					LOCAL_ERROR("check %s", src.c_str());
+					LOCAL_ERROR("depth %s", strRet.c_str());
 				}
 				//LOCAL_ERROR("num=%d", num);
 			}
