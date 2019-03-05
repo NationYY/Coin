@@ -60,6 +60,8 @@ std::string CFuncCommon::Double2String(double value, int decimal)
 		int nPos = strlen(szBuff)-1;
 		while(szBuff[nPos] == '0')
 		{
+			if(szBuff[nPos-1] == '.')
+				break;
 			szBuff[nPos] = '\0';
 			nPos = strlen(szBuff)-1;
 			if(szBuff[nPos] == '.')

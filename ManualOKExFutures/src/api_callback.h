@@ -255,8 +255,13 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				std::string src = "";
 				if(!g_pDlg->CheckDepthInfo(data["checksum"].asInt(), src))
 				{
-					//LOCAL_ERROR("check %s", src.c_str());
-					//LOCAL_ERROR("depth %s", strRet.c_str());
+					LOCAL_ERROR("check %s", src.c_str());
+					LOCAL_ERROR("depth %s", strRet.c_str());
+				}
+				else
+				{
+					if(retObj["action"].asString() == "partial")
+						LOCAL_ERROR("第一次crc校验成功");
 				}
 				//LOCAL_ERROR("num=%d", num);
 			}

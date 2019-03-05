@@ -70,6 +70,20 @@ CManualOKExFuturesDlg::CManualOKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	m_bWaitDepthBegin = true;
+	m_tListenPong = 0;
+	m_bRun = false;
+	m_bSwapFutures = false;
+	m_apiKey = "";
+	m_secretKey = "";
+	m_passphrase = "";
+	m_nPriceDecimal = 0;
+	m_tWaitNewSubDepth = 0;
+	m_strCoinType = "";
+	m_strFuturesCycle = "";
+	m_strFuturesTradeSize = "";
+	m_strLeverage = "";
+	m_nLeverage = 0;
+	m_beginMoney = 0.0;
 }
 
 void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
@@ -390,6 +404,11 @@ void CManualOKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 				pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
 				pExchange->Run();
 			}
+			if(m_tWaitNewSubDepth && tNow - m_tWaitNewSubDepth >= 5)
+			{
+				OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+				m_tWaitNewSubDepth = 0;
+			}
 			_CheckAllOrder();
 		}
 		break;
@@ -529,10 +548,14 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 		std::stringstream lineStream(lineBuffer, std::ios_base::in);
 		char szOpenClientID[128] = { 0 };
 		char szOpenOrderID[128] = { 0 };
+
+		char szClosePlanPrice[128] = { 0 };
+		char szClosePlanSize[128] = { 0 };
+
 		char szCloseClientID[128] = { 0 };
 		char szCloseOrderID[128] = { 0 };
 		char szOpenQTY[128] = { 0 };
-		lineStream >> szOpenOrderID >> szOpenClientID >> szOpenQTY >> szCloseOrderID >> szCloseClientID;
+		lineStream >> szOpenOrderID >> szOpenClientID >> szOpenQTY >> szClosePlanPrice >> szClosePlanSize >> szCloseOrderID >> szCloseClientID;
 		SFuturesTradePairInfo info;
 		if(strcmp(szOpenOrderID, "0") != 0)
 		{
@@ -563,6 +586,11 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 					info.open.filledQTY = szOpenQTY;
 					info.open.bModifyQTY = true;
 				}
+			}
+			if(strcmp(szClosePlanPrice, "0") != 0 && strcmp(szClosePlanSize, "0") != 0)
+			{
+				info.closePlanPrice = szClosePlanPrice;
+				info.closePlanSize = szClosePlanSize;
 			}
 		}
 		if(strcmp(szCloseOrderID, "0") != 0)
@@ -824,6 +852,31 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 			localtime_s(&_tm, ((const time_t*)&(info.open.timeStamp)));
 			szFormat.Format("%02d-%02d %02d:%02d:%02d", _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
 			m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+
+			if(info.close.orderID != "")
+			{
+				if(CFuncCommon::CheckEqual(info.close.priceAvg, 0.0))
+					szFormat = CFuncCommon::Double2String(info.close.price + DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+				else
+					szFormat = CFuncCommon::Double2String(info.close.priceAvg + DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+				m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
+				szFormat.Format("%s/%s", info.close.filledQTY.c_str(), info.close.size.c_str());
+				m_listCtrlOrderClose.SetItemText(i, 1, szFormat);
+				if(info.open.status == "-1")
+					m_listCtrlOrderClose.SetItemText(i, 2, "cancelled");
+				else if(info.open.status == "0")
+					m_listCtrlOrderClose.SetItemText(i, 2, "open");
+				else if(info.open.status == "1")
+					m_listCtrlOrderClose.SetItemText(i, 2, "part_filled");
+				else if(info.open.status == "2")
+					m_listCtrlOrderClose.SetItemText(i, 2, "filled");
+			}
+			else if(info.closePlanPrice != "" && info.closePlanSize != "")
+			{
+				m_listCtrlOrderClose.SetItemText(i, 0, info.closePlanPrice.c_str());
+				m_listCtrlOrderClose.SetItemText(i, 1, info.closePlanSize.c_str());
+				m_listCtrlOrderClose.SetItemText(i, 2, "plan");
+			}
 		}
 		else
 		{
@@ -1026,6 +1079,10 @@ void CManualOKExFuturesDlg::_SaveData()
 				stream << itB->open.filledQTY;
 			else
 				stream << "0";
+			if(itB->closePlanPrice != "" && itB->closePlanSize != "")
+				stream << "	" << itB->closePlanPrice << "	" << itB->closePlanSize;
+			else
+				stream << "	0	0";
 			if(itB->close.orderID != "")
 				stream  << "	" << itB->close.orderID << "	" << itB->close.strClientOrderID;
 			else
@@ -1040,6 +1097,7 @@ void CManualOKExFuturesDlg::_SaveData()
 void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 {
 	// TODO:  在此添加控件通知处理程序代码
+	bool bUpdate = false;
 	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
 	{
 		SFuturesTradePairInfo& info = m_vecTradePairInfo[i];
@@ -1074,7 +1132,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 							info.closePlanSize = info.open.size;
 						else
 							info.closePlanSize = size;
-						MessageBox("计划开平仓成功!");
+						bUpdate = true;
 					}
 					else if(info.open.status == "1")
 					{
@@ -1110,11 +1168,14 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 			}
 		}
 	}
+	if(bUpdate)
+		_SaveData();
 }
 
 
 void CManualOKExFuturesDlg::OnBnClickedButtonCancel()
 {
+	bool bUpdate = false;
 	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
 	{
 		SFuturesTradePairInfo& info = m_vecTradePairInfo[i];
@@ -1125,13 +1186,24 @@ void CManualOKExFuturesDlg::OnBnClickedButtonCancel()
 				if(info.open.status == "0" || info.open.status == "1")
 					OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID);
 			}
-			if(info.close.orderID != "" && m_listCtrlOrderClose.GetCheck(i))
+			if(m_listCtrlOrderClose.GetCheck(i))
 			{
-				if(info.close.status == "0" || info.close.status == "1")
-					OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.close.orderID);
+				if(info.close.orderID != "")
+				{
+					if(info.close.status == "0" || info.close.status == "1")
+						OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.close.orderID);
+				}
+				else if(info.closePlanPrice != "" && info.closePlanSize != "")
+				{
+					info.closePlanPrice = "";
+					info.closePlanSize = "";
+					bUpdate = true;
+				}
 			}
 		}
 	}
+	if(bUpdate)
+		_SaveData();
 }
 
 
@@ -1318,7 +1390,7 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	{
 		LOCAL_ERROR("crc校验失败 checknum=%d local=%d", checkNum, crc);
 		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
-		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		m_tWaitNewSubDepth = time(NULL);
 		m_bWaitDepthBegin = true;
 		return false;
 	}

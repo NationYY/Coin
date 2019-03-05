@@ -163,6 +163,7 @@ public:
 	std::string m_passphrase;
 	int m_nPriceDecimal;
 	bool m_bWaitDepthBegin;
+	time_t m_tWaitNewSubDepth;
 	std::vector<SFuturesTradePairInfo> m_vecTradePairInfo;
 
 	std::string m_strCoinType;			//ªı±“¿‡–Õ
