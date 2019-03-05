@@ -273,6 +273,8 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			{
 				SFuturesPositionInfo info;
 				if(retObj["table"].asString() == "swap/position")
+				{
+				}
 				else
 				{
 					info.bullCount = retObj["data"][0]["long_qty"].asString();

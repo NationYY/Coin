@@ -647,15 +647,15 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 		}
 		else
 		{
-			positionInfo.bullCount = resInfo.retObj["data"][0]["long_qty"].asString();
-			positionInfo.bullFreeCount = resInfo.retObj["data"][0]["long_avail_qty"].asString();
-			positionInfo.bullPriceAvg = resInfo.retObj["data"][0]["long_avg_cost"].asString();
-			positionInfo.bearCount = resInfo.retObj["data"][0]["short_qty"].asString();
-			positionInfo.bearFreeCount = resInfo.retObj["data"][0]["short_avail_qty"].asString();
-			positionInfo.bearPriceAvg = resInfo.retObj["data"][0]["short_avg_cost"].asString();
-			positionInfo.broken = resInfo.retObj["data"][0]["liquidation_price"].asString();
+			positionInfo.bullCount = resInfo.retObj["holding"][0]["long_qty"].asString();
+			positionInfo.bullFreeCount = resInfo.retObj["holding"][0]["long_avail_qty"].asString();
+			positionInfo.bullPriceAvg = resInfo.retObj["holding"][0]["long_avg_cost"].asString();
+			positionInfo.bearCount = resInfo.retObj["holding"][0]["short_qty"].asString();
+			positionInfo.bearFreeCount = resInfo.retObj["holding"][0]["short_avail_qty"].asString();
+			positionInfo.bearPriceAvg = resInfo.retObj["holding"][0]["short_avg_cost"].asString();
+			positionInfo.broken = resInfo.retObj["holding"][0]["liquidation_price"].asString();
 		}
-		UpdatePositionInfo(info);
+		UpdatePositionInfo(positionInfo);
 		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
 
 	}
