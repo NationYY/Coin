@@ -132,7 +132,6 @@ void COkexHttpAPI::API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& 
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesPositionInfo;
 	info.reqType = eHttpReqType_Get;
-	api/futures/v3/ BTC-USD-180309 /position
 	if(bSwap)
 		info.strMethod = "api/swap/v3/" + strCoinType + "-USD-SWAP/position";
 	else
