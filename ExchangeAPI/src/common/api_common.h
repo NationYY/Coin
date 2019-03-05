@@ -22,6 +22,7 @@ enum eHttpAPIType
 	eHttpAPIType_SpotAccountInfoByCurrency,		//单一币种现货账户信息
 	eHttpAPIType_SpotCancelOrder,				//现货撤单
 	eHttpAPIType_SpotInstruments,				//获取现货币对信息
+	eHttpAPIType_FuturesPositionInfo,			//单一币种持仓信息
 	eHttpAPIType_Max,
 };
 
@@ -40,6 +41,7 @@ enum eWebsocketAPIType
 	eWebsocketAPIType_SpotOrderInfo,	//现货个人交易信息
 	eWebsocketAPIType_SpotAccountInfo,	//现货个人账户信息
 	eWebsocketAPIType_FuturesEntrustDepth,//期货深度
+	eWebsocketAPIType_FuturesPositionInfo,//合约个人持仓信息
 	eWebsocketAPIType_Max,
 };
 

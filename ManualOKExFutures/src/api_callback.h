@@ -267,6 +267,26 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			}
 		}
 		break;
+	case eWebsocketAPIType_FuturesPositionInfo:
+		{
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+				SFuturesPositionInfo info;
+				if(retObj["table"].asString() == "swap/position")
+				else
+				{
+					info.bullCount = retObj["data"][0]["long_qty"].asString();
+					info.bullFreeCount = retObj["data"][0]["long_avail_qty"].asString();
+					info.bullPriceAvg = retObj["data"][0]["long_avg_cost"].asString();
+					info.bearCount = retObj["data"][0]["short_qty"].asString();
+					info.bearFreeCount = retObj["data"][0]["short_avail_qty"].asString();
+					info.bearPriceAvg = retObj["data"][0]["short_avg_cost"].asString();
+					info.broken = retObj["data"][0]["liquidation_price"].asString();
+				}
+				g_pDlg->UpdatePositionInfo(info);
+			}
+		}
+		break;
 	default:
 		break;
 	}

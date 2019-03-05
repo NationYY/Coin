@@ -90,6 +90,16 @@ void COkexWebsocketAPI::API_FuturesOrderInfo(bool bAdd, bool bSwap, std::string&
 	Request(szBuffer);
 }
 
+void COkexWebsocketAPI::API_FuturesPositionInfo(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle)
+{
+	char szBuffer[512] = {0};
+	if(bSwap)
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"swap/position:%s-USD-SWAP\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str());
+	else
+		_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"futures/position:%s-USD-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strFuturesCycle.c_str());
+	Request(szBuffer);
+}
+
 void COkexWebsocketAPI::API_FuturesAccountInfoByCurrency(bool bAdd, bool bSwap, std::string& strCoinType)
 {
 	char szBuffer[512] = { 0 };

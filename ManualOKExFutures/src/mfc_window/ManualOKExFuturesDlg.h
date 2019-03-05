@@ -5,6 +5,7 @@
 #pragma once
 #include <clib/lib/util/config.h>
 #include "afxwin.h"
+#include "afxcmn.h"
 #define DOUBLE_PRECISION 0.00000001
 enum eTimerType
 {
@@ -35,6 +36,22 @@ struct SFuturesAccountInfo
 	std::string equity;	//账户权益
 	bool bValid;
 	SFuturesAccountInfo() : equity("0"), bValid(false)
+	{
+
+	}
+};
+
+struct SFuturesPositionInfo
+{
+	std::string bullCount;		//多单数量
+	std::string bullFreeCount;	//多单可平数量
+	std::string bullPriceAvg;	//多单均价
+	std::string bearCount;		//空单数量
+	std::string bearFreeCount;	//空单可平数量
+	std::string bearPriceAvg;	//空单均价
+	std::string broken;			//爆仓价
+	bool bValid;
+	SFuturesPositionInfo() : bullCount("0"), bullFreeCount("0"), bullPriceAvg("0"), bearCount("0"), bearFreeCount("0"), bearPriceAvg("0"), broken("0"), bValid(false)
 	{
 
 	}
@@ -136,6 +153,7 @@ private:
 	bool __SaveTradeConfigCtrl();
 	void _UpdateTradeShow();
 	void _UpdateAccountShow();
+	void _UpdatePositionShow();
 	void _UpdateDepthShow();
 	int _GetFreeOrderIndex();
 	void _OpenOrder(eFuturesTradeType type);
@@ -147,6 +165,7 @@ public:
 	void OnLoginSuccess();
 	void UpdateTradeInfo(SFuturesTradeInfo& info);
 	void UpdateAccountInfo(SFuturesAccountInfo& info);
+	void UpdatePositionInfo(SFuturesPositionInfo& info);
 	void ClearDepth();
 	void UpdateDepthInfo(bool bBuy, SFuturesDepth& info);
 	bool CheckDepthInfo(int checkNum, std::string& checkSrc);
@@ -173,6 +192,7 @@ public:
 	int m_nLeverage;					//合约倍数
 	STickerData m_curTickData;
 	SFuturesAccountInfo m_accountInfo;
+	SFuturesPositionInfo m_positionInfo;
 	double m_beginMoney;
 	std::map<std::string, SFuturesDepth> m_mapDepthSell;
 	std::map<std::string, SFuturesDepth> m_mapDepthBuy;
@@ -199,4 +219,5 @@ public:
 	afx_msg void OnBnClickedButtonClose();
 	afx_msg void OnBnClickedButtonCancel();
 	afx_msg void OnBnClickedButtonUpdateBeginMoney();
+	CListCtrl m_listCtrlPostionInfo;
 };

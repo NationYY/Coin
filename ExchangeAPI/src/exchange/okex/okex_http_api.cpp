@@ -127,6 +127,24 @@ void COkexHttpAPI::API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& str
 		Request(info, pResInfo);
 }
 
+void COkexHttpAPI::API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_FuturesPositionInfo;
+	info.reqType = eHttpReqType_Get;
+	api/futures/v3/ BTC-USD-180309 /position
+	if(bSwap)
+		info.strMethod = "api/swap/v3/" + strCoinType + "-USD-SWAP/position";
+	else
+		info.strMethod = "api/futures/v3/" + strCoinType + "-USD-" + strFuturesCycle + "/position";
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+}
+
 void COkexHttpAPI::API_FuturesCancelOrder(bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID)
 {
 	SHttpReqInfo info;

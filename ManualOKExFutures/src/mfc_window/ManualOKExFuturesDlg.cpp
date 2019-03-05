@@ -104,6 +104,7 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT, m_staticAccountInfo);
 	DDX_Control(pDX, IDC_EDIT6, m_editClosePrice);
 	DDX_Control(pDX, IDC_EDIT7, m_editCloseSize);
+	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlPostionInfo);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
@@ -183,6 +184,16 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_listCtrlDepth.InsertColumn(1, "价", LVCFMT_CENTER, 70);
 	m_listCtrlDepth.InsertColumn(2, "量", LVCFMT_CENTER, 80);
 	m_listCtrlDepth.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
+
+	m_listCtrlPostionInfo.InsertColumn(0, "多仓", LVCFMT_CENTER, 55);
+	m_listCtrlPostionInfo.InsertColumn(1, "多可平", LVCFMT_CENTER, 54);
+	m_listCtrlPostionInfo.InsertColumn(2, "多均价", LVCFMT_CENTER, 65);
+	m_listCtrlPostionInfo.InsertColumn(3, "空仓", LVCFMT_CENTER, 55);
+	m_listCtrlPostionInfo.InsertColumn(4, "空可平", LVCFMT_CENTER, 54);
+	m_listCtrlPostionInfo.InsertColumn(5, "空均价", LVCFMT_CENTER, 65);
+	m_listCtrlPostionInfo.InsertColumn(6, "爆仓价", LVCFMT_CENTER, 65);
+	m_listCtrlPostionInfo.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	// TODO:  在此添加额外的初始化代码
 	if(!m_config.open("./config.ini"))
 		return FALSE;
@@ -624,6 +635,30 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 	}
 	stream.close();
 	_UpdateTradeShow();
+	SHttpResponse resInfo;
+	OKEX_HTTP->API_FuturesPositionInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, &resInfo);
+	if(resInfo.retObj["holding"].isArray())
+	{
+		SFuturesPositionInfo positionInfo;
+		if(m_bSwapFutures)
+		{
+
+
+		}
+		else
+		{
+			positionInfo.bullCount = resInfo.retObj["data"][0]["long_qty"].asString();
+			positionInfo.bullFreeCount = resInfo.retObj["data"][0]["long_avail_qty"].asString();
+			positionInfo.bullPriceAvg = resInfo.retObj["data"][0]["long_avg_cost"].asString();
+			positionInfo.bearCount = resInfo.retObj["data"][0]["short_qty"].asString();
+			positionInfo.bearFreeCount = resInfo.retObj["data"][0]["short_avail_qty"].asString();
+			positionInfo.bearPriceAvg = resInfo.retObj["data"][0]["short_avg_cost"].asString();
+			positionInfo.broken = resInfo.retObj["data"][0]["liquidation_price"].asString();
+		}
+		UpdatePositionInfo(info);
+		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+
+	}
 }
 
 void CManualOKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
@@ -670,6 +705,30 @@ void CManualOKExFuturesDlg::UpdateAccountInfo(SFuturesAccountInfo& info)
 	_UpdateAccountShow();
 }
 
+void CManualOKExFuturesDlg::UpdatePositionInfo(SFuturesPositionInfo& info)
+{
+	m_positionInfo = info;
+	m_positionInfo.bValid = true;
+	_UpdatePositionShow();
+}
+
+void CManualOKExFuturesDlg::_UpdatePositionShow()
+{
+	if(m_positionInfo.bValid)
+	{
+		if(m_listCtrlPostionInfo.GetItemCount() == 0)
+		{
+			m_listCtrlPostionInfo.InsertItem(0, "");
+		}
+		m_listCtrlPostionInfo.SetItemText(0, 0, m_positionInfo.bullCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 1, m_positionInfo.bullFreeCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 2, m_positionInfo.bullPriceAvg.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 3, m_positionInfo.bearCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 4, m_positionInfo.bearFreeCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 5, m_positionInfo.bearPriceAvg.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 6, m_positionInfo.broken.c_str());
+	}
+}
 void CManualOKExFuturesDlg::ClearDepth()
 {
 	m_mapDepthSell.clear();
@@ -809,41 +868,37 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 				int sizePrice = 10;
 				if(m_strCoinType == "BTC")
 					sizePrice = 100;
-				double baozhengjin = (sizePrice*count/info.open.priceAvg)/m_nLeverage;
+				double baozhengjin = (sizePrice/info.open.priceAvg)/m_nLeverage*count;
 				if(info.open.tradeType == eFuturesTradeType_OpenBull)
 				{
-					double calcuPrice = m_curTickData.last;
+					double calcuPrice = stod(m_mapDepthBuy.rbegin()->second.price);
+					double profitPersent = ((sizePrice/info.open.priceAvg - sizePrice/calcuPrice)*count)/baozhengjin;
+					double profit = profitPersent*baozhengjin;
 					if(calcuPrice >= info.open.priceAvg)
 					{
-						double profitPersent = (calcuPrice-info.open.priceAvg)/info.open.priceAvg;
-						double profit = profitPersent*m_nLeverage*baozhengjin;
 						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
 					}
 					else
 					{
-						double profitPersent = (info.open.priceAvg-calcuPrice)/info.open.priceAvg;
-						double profit = profitPersent*m_nLeverage*baozhengjin;
-						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
 					}
 
 				}
 				else if(info.open.tradeType == eFuturesTradeType_OpenBear)
 				{
-					double calcuPrice = m_curTickData.last;
+					double calcuPrice = stod(m_mapDepthSell.begin()->second.price);
+					double profitPersent = ((sizePrice/calcuPrice - sizePrice/info.open.priceAvg)*count)/baozhengjin;
+					double profit = profitPersent*baozhengjin;
 					if(calcuPrice <= info.open.priceAvg)
 					{
-						double profitPersent = (info.open.priceAvg-calcuPrice)/info.open.priceAvg;
-						double profit = profitPersent*m_nLeverage*baozhengjin;
-						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
 					}
 					else
 					{
-						double profitPersent = (calcuPrice-info.open.priceAvg)/info.open.priceAvg;
-						double profit = profitPersent*m_nLeverage*baozhengjin;
-						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
 						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
 					}
 				}

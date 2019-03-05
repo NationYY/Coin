@@ -24,5 +24,7 @@ public:
 
 	void API_FuturesAccountInfoByCurrency(bool bAdd, bool bSwap, std::string& strCoinType);
 	void API_SpotAccountInfoByCurrency(bool bAdd, std::string& strCoinType);
+
+	void API_FuturesPositionInfo(bool bAdd, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle);
 };
 #endif
