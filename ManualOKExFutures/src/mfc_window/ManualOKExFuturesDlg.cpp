@@ -796,7 +796,7 @@ void CManualOKExFuturesDlg::OnTradeFail(std::string& clientOrderID)
 	{
 		if(itB->open.strClientOrderID == clientOrderID && itB->open.waitClientOrderIDTime)
 		{
-			m_vecTradePairInfo.erase(itB);
+			itB->Reset();
 			return;
 		}
 		else if(itB->close.strClientOrderID == clientOrderID && itB->close.waitClientOrderIDTime)
