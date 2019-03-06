@@ -24,7 +24,13 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					{
 						bRet = true;
 						if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+						{
 							data.equity = retObj["info"]["equity"].asString();
+							std::string szMargin = retObj["info"]["margin"].asString();
+							double equity = stod(data.equity);
+							double margin = stod(szMargin);
+							data.availBalance = CFuncCommon::Double2String(equity-margin, 4);
+						}
 					}
 				}
 				else
@@ -33,7 +39,13 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 					{
 						bRet = true;
 						if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+						{
 							data.equity = retObj["equity"].asString();
+							std::string szMargin = retObj["margin"].asString();
+							double equity = stod(data.equity);
+							double margin = stod(szMargin);
+							data.availBalance = CFuncCommon::Double2String(equity-margin, 4);
+						}
 					}
 				}
 				g_pDlg->UpdateAccountInfo(data);
@@ -190,9 +202,21 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			{
 				SFuturesAccountInfo info;
 				if(g_pDlg->m_bSwapFutures)
+				{
 					info.equity = retObj["data"][0]["equity"].asString();
+					std::string szMargin = retObj["data"][0]["margin"].asString();
+					double equity = stod(info.equity);
+					double margin = stod(szMargin);
+					info.availBalance = CFuncCommon::Double2String(equity-margin, 4);
+				}
 				else
+				{
 					info.equity = retObj["data"][0][g_pDlg->m_strCoinType]["equity"].asString();
+					std::string szMargin = retObj["data"][0][g_pDlg->m_strCoinType]["margin"].asString();
+					double equity = stod(info.equity);
+					double margin = stod(szMargin);
+					info.availBalance = CFuncCommon::Double2String(equity-margin, 4);
+				}
 				g_pDlg->UpdateAccountInfo(info);
 			}
 			else

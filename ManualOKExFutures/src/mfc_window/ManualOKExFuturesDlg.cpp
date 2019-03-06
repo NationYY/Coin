@@ -105,6 +105,8 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT6, m_editClosePrice);
 	DDX_Control(pDX, IDC_EDIT7, m_editCloseSize);
 	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlPostionInfo);
+	DDX_Control(pDX, IDC_STATIC_ACCOUNT2, m_staticAccountAvailInfo);
+	DDX_Control(pDX, IDC_STATIC_ACCOUNT3, m_staticCanOpenSize);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
@@ -533,6 +535,7 @@ void CManualOKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 	m_curTickData.bValid = true;
 	
 	_UpdateTradeShow();
+	_UpdateAccountShow();
 }
 
 void CManualOKExFuturesDlg::Pong()
@@ -819,6 +822,20 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 			else
 				strTemp.Format("-%.4f(-%.2f%%)", m_beginMoney - equity, (m_beginMoney - equity) / m_beginMoney * 100);
 			m_staticProfit.SetWindowText(strTemp);
+		}
+		m_staticAccountAvailInfo.SetWindowText(m_accountInfo.availBalance.c_str());
+		if(m_curTickData.bValid)
+		{
+			int sizePrice = 10;
+			if(m_strCoinType == "BTC")
+				sizePrice = 100;
+			double availBalance = stod(m_accountInfo.availBalance);
+			availBalance *= m_nLeverage;
+			availBalance *= m_curTickData.last;
+			int canOpenSize = int(availBalance/sizePrice);
+			CString szTemp;
+			szTemp.Format("%d’≈", canOpenSize);
+			m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
 		}
 	}
 }
@@ -1223,6 +1240,16 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 			}
 		}
 	}
+	int cnt = m_listCtrlOrderOpen.GetItemCount();
+	for(int i = 0; i<cnt; ++i)
+	{
+		m_listCtrlOrderOpen.SetCheck(i, FALSE);
+	}
+	cnt = m_listCtrlOrderClose.GetItemCount();
+	for(int i = 0; i<cnt; ++i)
+	{
+		m_listCtrlOrderClose.SetCheck(i, FALSE);
+	}
 	if(bUpdate)
 		_SaveData();
 }
@@ -1256,6 +1283,16 @@ void CManualOKExFuturesDlg::OnBnClickedButtonCancel()
 				}
 			}
 		}
+	}
+	int cnt = m_listCtrlOrderOpen.GetItemCount();
+	for(int i = 0; i<cnt; ++i)
+	{
+		m_listCtrlOrderOpen.SetCheck(i, FALSE);
+	}
+	cnt = m_listCtrlOrderClose.GetItemCount();
+	for(int i = 0; i<cnt; ++i)
+	{
+		m_listCtrlOrderClose.SetCheck(i, FALSE);
 	}
 	if(bUpdate)
 		_SaveData();
