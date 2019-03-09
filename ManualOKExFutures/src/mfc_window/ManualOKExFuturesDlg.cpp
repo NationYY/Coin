@@ -600,6 +600,7 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 					info.open.filledQTY = szOpenQTY;
 					info.open.bModifyQTY = true;
 				}
+				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.open.strClientOrderID.c_str(), info.open.orderID.c_str(), info.open.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.open.status.c_str(), tradeType.c_str());
 			}
 			if(strcmp(szClosePlanPrice, "0") != 0 && strcmp(szClosePlanSize, "0") != 0)
 			{
@@ -631,6 +632,7 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 					info.close.tradeType = eFuturesTradeType_CloseBull;
 				else if(tradeType == "4")
 					info.close.tradeType = eFuturesTradeType_CloseBear;
+				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.close.strClientOrderID.c_str(), info.close.orderID.c_str(), info.close.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.close.status.c_str(), tradeType.c_str());
 			}
 		}
 		if(strcmp(szOpenOrderID, "0") != 0)
@@ -934,13 +936,13 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 				m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
 				szFormat.Format("%s/%s", info.close.filledQTY.c_str(), info.close.size.c_str());
 				m_listCtrlOrderClose.SetItemText(i, 1, szFormat);
-				if(info.open.status == "-1")
+				if(info.close.status == "-1")
 					m_listCtrlOrderClose.SetItemText(i, 2, "cancelled");
-				else if(info.open.status == "0")
+				else if(info.close.status == "0")
 					m_listCtrlOrderClose.SetItemText(i, 2, "open");
-				else if(info.open.status == "1")
+				else if(info.close.status == "1")
 					m_listCtrlOrderClose.SetItemText(i, 2, "part_filled");
-				else if(info.open.status == "2")
+				else if(info.close.status == "2")
 					m_listCtrlOrderClose.SetItemText(i, 2, "filled");
 			}
 			else if(info.closePlanPrice != "" && info.closePlanSize != "")
