@@ -951,6 +951,12 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 				m_listCtrlOrderClose.SetItemText(i, 1, info.closePlanSize.c_str());
 				m_listCtrlOrderClose.SetItemText(i, 2, "plan");
 			}
+			else
+			{
+				m_listCtrlOrderClose.SetItemText(i, 0, "");
+				m_listCtrlOrderClose.SetItemText(i, 1, "");
+				m_listCtrlOrderClose.SetItemText(i, 2, "");
+			}
 		}
 		else
 		{
