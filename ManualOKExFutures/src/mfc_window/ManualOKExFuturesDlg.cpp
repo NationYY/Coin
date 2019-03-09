@@ -168,7 +168,7 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
 
-	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 90);
+	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 85);
 	m_listCtrlOrderOpen.InsertColumn(1, "类型", LVCFMT_CENTER, 45);
 	m_listCtrlOrderOpen.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 45);
