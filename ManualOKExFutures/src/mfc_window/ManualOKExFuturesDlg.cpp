@@ -168,7 +168,7 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
 
-	m_listCtrlOrderOpen.InsertColumn(0, "序号", LVCFMT_CENTER, 35);
+	m_listCtrlOrderOpen.InsertColumn(0, "序号", LVCFMT_CENTER, 40);
 	m_listCtrlOrderOpen.InsertColumn(1, "价格", LVCFMT_CENTER, 75);
 	m_listCtrlOrderOpen.InsertColumn(2, "类型", LVCFMT_CENTER, 45);
 	m_listCtrlOrderOpen.InsertColumn(3, "成交量", LVCFMT_CENTER, 70);
@@ -178,7 +178,7 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_listCtrlOrderOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
 
 
-	m_listCtrlOrderClose.InsertColumn(0, "序号", LVCFMT_CENTER, 35);
+	m_listCtrlOrderClose.InsertColumn(0, "序号", LVCFMT_CENTER, 40);
 	m_listCtrlOrderClose.InsertColumn(1, "价格", LVCFMT_CENTER, 75);
 	m_listCtrlOrderClose.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderClose.InsertColumn(3, "状态", LVCFMT_CENTER, 45);
