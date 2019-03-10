@@ -168,18 +168,20 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
 
-	m_listCtrlOrderOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 85);
-	m_listCtrlOrderOpen.InsertColumn(1, "类型", LVCFMT_CENTER, 45);
-	m_listCtrlOrderOpen.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
-	m_listCtrlOrderOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 45);
-	m_listCtrlOrderOpen.InsertColumn(4, "参考利润", LVCFMT_CENTER, 120);
-	m_listCtrlOrderOpen.InsertColumn(5, "下单时间", LVCFMT_CENTER, 115);
+	m_listCtrlOrderOpen.InsertColumn(0, "序号", LVCFMT_CENTER, 35);
+	m_listCtrlOrderOpen.InsertColumn(1, "价格", LVCFMT_CENTER, 75);
+	m_listCtrlOrderOpen.InsertColumn(2, "类型", LVCFMT_CENTER, 45);
+	m_listCtrlOrderOpen.InsertColumn(3, "成交量", LVCFMT_CENTER, 70);
+	m_listCtrlOrderOpen.InsertColumn(4, "状态", LVCFMT_CENTER, 45);
+	m_listCtrlOrderOpen.InsertColumn(5, "参考利润", LVCFMT_CENTER, 120);
+	m_listCtrlOrderOpen.InsertColumn(6, "下单时间", LVCFMT_CENTER, 115);
 	m_listCtrlOrderOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
 
 
-	m_listCtrlOrderClose.InsertColumn(0, "价格", LVCFMT_CENTER, 85);
-	m_listCtrlOrderClose.InsertColumn(1, "成交量", LVCFMT_CENTER, 70);
-	m_listCtrlOrderClose.InsertColumn(2, "状态", LVCFMT_CENTER, 45);
+	m_listCtrlOrderClose.InsertColumn(0, "序号", LVCFMT_CENTER, 35);
+	m_listCtrlOrderClose.InsertColumn(1, "价格", LVCFMT_CENTER, 75);
+	m_listCtrlOrderClose.InsertColumn(2, "成交量", LVCFMT_CENTER, 70);
+	m_listCtrlOrderClose.InsertColumn(3, "状态", LVCFMT_CENTER, 45);
 	m_listCtrlOrderClose.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
 
 	m_listCtrlDepth.InsertColumn(0, "", LVCFMT_CENTER, 30);
@@ -855,32 +857,34 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 		}
 		if(info.open.orderID != "")
 		{
+			szFormat.Format("%d", i+1);
+			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
 			if(CFuncCommon::CheckEqual(info.open.priceAvg, 0.0))
 				szFormat = CFuncCommon::Double2String(info.open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
 			else
 				szFormat = CFuncCommon::Double2String(info.open.priceAvg+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
-			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
+			m_listCtrlOrderOpen.SetItemText(i, 1, szFormat);
 			switch(info.open.tradeType)
 			{
 			case eFuturesTradeType_OpenBull:
-				m_listCtrlOrderOpen.SetItemText(i, 1, "开多");
+				m_listCtrlOrderOpen.SetItemText(i, 2, "开多");
 				break;
 			case eFuturesTradeType_OpenBear:
-				m_listCtrlOrderOpen.SetItemText(i, 1, "开空");
+				m_listCtrlOrderOpen.SetItemText(i, 2, "开空");
 				break;
 			default:
 				break;
 			}
 			szFormat.Format("%s/%s", info.open.filledQTY.c_str(), info.open.size.c_str());
-			m_listCtrlOrderOpen.SetItemText(i, 2, szFormat);
+			m_listCtrlOrderOpen.SetItemText(i, 3, szFormat);
 			if(info.open.status == "-1")
-				m_listCtrlOrderOpen.SetItemText(i, 3, "cancelled");
+				m_listCtrlOrderOpen.SetItemText(i, 4, "cancelled");
 			else if(info.open.status == "0")
-				m_listCtrlOrderOpen.SetItemText(i, 3, "open");
+				m_listCtrlOrderOpen.SetItemText(i, 4, "open");
 			else if(info.open.status == "1")
-				m_listCtrlOrderOpen.SetItemText(i, 3, "part_filled");
+				m_listCtrlOrderOpen.SetItemText(i, 4, "part_filled");
 			else if(info.open.status == "2")
-				m_listCtrlOrderOpen.SetItemText(i, 3, "filled");
+				m_listCtrlOrderOpen.SetItemText(i, 4, "filled");
 			if(info.open.filledQTY != "0")
 			{
 				int count = stoi(info.open.filledQTY);
@@ -896,12 +900,12 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 					if(calcuPrice >= info.open.priceAvg)
 					{
 						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
+						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
 					}
 					else
 					{
 						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
+						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
 					}
 
 				}
@@ -913,49 +917,54 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 					if(calcuPrice <= info.open.priceAvg)
 					{
 						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
+						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
 					}
 					else
 					{
 						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 4, szFormat.GetBuffer());
+						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
 					}
 				}
 			}
 			tm _tm;
 			localtime_s(&_tm, ((const time_t*)&(info.open.timeStamp)));
 			szFormat.Format("%02d-%02d %02d:%02d:%02d", _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
-			m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+			m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
 
 			if(info.close.orderID != "")
 			{
+				szFormat.Format("%d", i+1);
+				m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
 				if(CFuncCommon::CheckEqual(info.close.priceAvg, 0.0))
 					szFormat = CFuncCommon::Double2String(info.close.price + DOUBLE_PRECISION, m_nPriceDecimal).c_str();
 				else
 					szFormat = CFuncCommon::Double2String(info.close.priceAvg + DOUBLE_PRECISION, m_nPriceDecimal).c_str();
-				m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
-				szFormat.Format("%s/%s", info.close.filledQTY.c_str(), info.close.size.c_str());
 				m_listCtrlOrderClose.SetItemText(i, 1, szFormat);
+				szFormat.Format("%s/%s", info.close.filledQTY.c_str(), info.close.size.c_str());
+				m_listCtrlOrderClose.SetItemText(i, 2, szFormat);
 				if(info.close.status == "-1")
-					m_listCtrlOrderClose.SetItemText(i, 2, "cancelled");
+					m_listCtrlOrderClose.SetItemText(i, 3, "cancelled");
 				else if(info.close.status == "0")
-					m_listCtrlOrderClose.SetItemText(i, 2, "open");
+					m_listCtrlOrderClose.SetItemText(i, 3, "open");
 				else if(info.close.status == "1")
-					m_listCtrlOrderClose.SetItemText(i, 2, "part_filled");
+					m_listCtrlOrderClose.SetItemText(i, 3, "part_filled");
 				else if(info.close.status == "2")
-					m_listCtrlOrderClose.SetItemText(i, 2, "filled");
+					m_listCtrlOrderClose.SetItemText(i, 3, "filled");
 			}
 			else if(info.closePlanPrice != "" && info.closePlanSize != "")
 			{
-				m_listCtrlOrderClose.SetItemText(i, 0, info.closePlanPrice.c_str());
-				m_listCtrlOrderClose.SetItemText(i, 1, info.closePlanSize.c_str());
-				m_listCtrlOrderClose.SetItemText(i, 2, "plan");
+				szFormat.Format("%d", i + 1);
+				m_listCtrlOrderClose.SetItemText(i, 0, szFormat);
+				m_listCtrlOrderClose.SetItemText(i, 1, info.closePlanPrice.c_str());
+				m_listCtrlOrderClose.SetItemText(i, 2, info.closePlanSize.c_str());
+				m_listCtrlOrderClose.SetItemText(i, 3, "plan");
 			}
 			else
 			{
 				m_listCtrlOrderClose.SetItemText(i, 0, "");
 				m_listCtrlOrderClose.SetItemText(i, 1, "");
 				m_listCtrlOrderClose.SetItemText(i, 2, "");
+				m_listCtrlOrderClose.SetItemText(i, 3, "");
 			}
 		}
 		else
@@ -966,10 +975,12 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 			m_listCtrlOrderOpen.SetItemText(i, 3, "");
 			m_listCtrlOrderOpen.SetItemText(i, 4, "");
 			m_listCtrlOrderOpen.SetItemText(i, 5, "");
+			m_listCtrlOrderOpen.SetItemText(i, 6, "");
 
 			m_listCtrlOrderClose.SetItemText(i, 0, "");
 			m_listCtrlOrderClose.SetItemText(i, 1, "");
 			m_listCtrlOrderClose.SetItemText(i, 2, "");
+			m_listCtrlOrderClose.SetItemText(i, 3, "");
 		}
 
 	}
@@ -1496,3 +1507,4 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	}
 	return true;
 }
+
