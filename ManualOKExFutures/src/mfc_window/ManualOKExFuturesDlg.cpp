@@ -1534,8 +1534,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonSaveProfit()
 void CManualOKExFuturesDlg::OnBnClickedButtonClearFreeLine()
 {
 	std::vector<SFuturesTradePairInfo>::iterator itB = m_vecTradePairInfo.begin();
-	std::vector<SFuturesTradePairInfo>::iterator itE = m_vecTradePairInfo.end();
-	while(itB != itE)
+	while(itB != m_vecTradePairInfo.end())
 	{
 		if(itB->open.strClientOrderID == "" && itB->open.orderID == "" && itB->close.strClientOrderID == "" && itB->close.orderID == "")
 		{
