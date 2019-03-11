@@ -120,6 +120,10 @@ BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON3, &CManualOKExFuturesDlg::OnBnClickedButtonClose)
 	ON_BN_CLICKED(IDC_BUTTON4, &CManualOKExFuturesDlg::OnBnClickedButtonCancel)
 	ON_BN_CLICKED(IDC_BUTTON5, &CManualOKExFuturesDlg::OnBnClickedButtonUpdateBeginMoney)
+	ON_BN_CLICKED(IDC_BUTTON6, &CManualOKExFuturesDlg::OnBnClickedButtonSaveProfit)
+	ON_BN_CLICKED(IDC_BUTTON7, &CManualOKExFuturesDlg::OnBnClickedButtonClearFreeLine)
+	ON_BN_CLICKED(IDC_BUTTON8, &CManualOKExFuturesDlg::OnBnClickedButtonBearFirst)
+	ON_BN_CLICKED(IDC_BUTTON9, &CManualOKExFuturesDlg::OnBnClickedButtonBullFirst)
 END_MESSAGE_MAP()
 
 
@@ -926,6 +930,8 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 					}
 				}
 			}
+			else
+				m_listCtrlOrderOpen.SetItemText(i, 5, "");
 			tm _tm;
 			localtime_s(&_tm, ((const time_t*)&(info.open.timeStamp)));
 			szFormat.Format("%02d-%02d %02d:%02d:%02d", _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
@@ -1508,3 +1514,149 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	return true;
 }
 
+
+
+void CManualOKExFuturesDlg::OnBnClickedButtonSaveProfit()
+{
+	if(!CFuncCommon::CheckEqual(m_beginMoney, 0.0))
+	{
+		double equity = stod(m_accountInfo.equity);
+		if(equity >= m_beginMoney)
+		{
+			CFixActionLog("profit", "收益%.4f个(%.2f%%)", equity - m_beginMoney, (equity - m_beginMoney) / m_beginMoney * 100);
+			MessageBox("收益保存成功");
+		}
+	}
+	// TODO:  在此添加控件通知处理程序代码
+}
+
+
+void CManualOKExFuturesDlg::OnBnClickedButtonClearFreeLine()
+{
+	std::vector<SFuturesTradePairInfo>::iterator itB = m_vecTradePairInfo.begin();
+	std::vector<SFuturesTradePairInfo>::iterator itE = m_vecTradePairInfo.end();
+	while(itB != itE)
+	{
+		if(itB->open.strClientOrderID == "" && itB->open.orderID == "" && itB->close.strClientOrderID == "" && itB->close.orderID == "")
+		{
+			itB = m_vecTradePairInfo.erase(itB);
+			continue;
+		}
+		++itB;
+	}
+	_UpdateTradeShow();
+}
+
+
+void CManualOKExFuturesDlg::OnBnClickedButtonBearFirst()
+{
+	std::list<SFuturesTradePairInfo> bearFinish;
+	std::list<SFuturesTradePairInfo> bearNotFinish;
+	std::list<SFuturesTradePairInfo> bullFinish;
+	std::list<SFuturesTradePairInfo> bullNotFinish;
+	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
+	{
+		if(m_vecTradePairInfo[i].open.tradeType == eFuturesTradeType_OpenBull)
+		{
+			if(m_vecTradePairInfo[i].open.status == "2")
+				bullFinish.push_back(m_vecTradePairInfo[i]);
+			else
+				bullNotFinish.push_back(m_vecTradePairInfo[i]);
+				
+		}
+		else if(m_vecTradePairInfo[i].open.tradeType == eFuturesTradeType_OpenBear)
+		{
+			if(m_vecTradePairInfo[i].open.status == "2")
+				bearFinish.push_back(m_vecTradePairInfo[i]);
+			else
+				bearNotFinish.push_back(m_vecTradePairInfo[i]);
+		}
+	}
+	m_vecTradePairInfo.clear();
+	std::list<SFuturesTradePairInfo>::iterator itB = bearFinish.begin();
+	std::list<SFuturesTradePairInfo>::iterator itE = bearFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	itB = bullFinish.begin();
+	itE = bullFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	itB = bearNotFinish.begin();
+	itE = bearNotFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	itB = bullNotFinish.begin();
+	itE = bullNotFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	_UpdateTradeShow();
+}
+
+
+void CManualOKExFuturesDlg::OnBnClickedButtonBullFirst()
+{
+	std::list<SFuturesTradePairInfo> bearFinish;
+	std::list<SFuturesTradePairInfo> bearNotFinish;
+	std::list<SFuturesTradePairInfo> bullFinish;
+	std::list<SFuturesTradePairInfo> bullNotFinish;
+	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
+	{
+		if(m_vecTradePairInfo[i].open.tradeType == eFuturesTradeType_OpenBull)
+		{
+			if(m_vecTradePairInfo[i].open.status == "2")
+				bullFinish.push_back(m_vecTradePairInfo[i]);
+			else
+				bullNotFinish.push_back(m_vecTradePairInfo[i]);
+
+		}
+		else if(m_vecTradePairInfo[i].open.tradeType == eFuturesTradeType_OpenBear)
+		{
+			if(m_vecTradePairInfo[i].open.status == "2")
+				bearFinish.push_back(m_vecTradePairInfo[i]);
+			else
+				bearNotFinish.push_back(m_vecTradePairInfo[i]);
+		}
+	}
+	m_vecTradePairInfo.clear();
+	std::list<SFuturesTradePairInfo>::iterator itB = bullFinish.begin();
+	std::list<SFuturesTradePairInfo>::iterator itE = bullFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	itB = bearFinish.begin();
+	itE = bearFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	itB = bullNotFinish.begin();
+	itE = bullNotFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	itB = bearNotFinish.begin();
+	itE = bearNotFinish.end();
+	while(itB != itE)
+	{
+		m_vecTradePairInfo.push_back(*itB);
+		++itB;
+	}
+	_UpdateTradeShow();
+}

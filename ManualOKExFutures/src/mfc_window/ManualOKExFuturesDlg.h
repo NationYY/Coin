@@ -91,6 +91,23 @@ struct SFuturesTradeInfo
 		tLastUpdate = 0;
 		bModifyQTY = false;
 	}
+	SFuturesTradeInfo& operator= (const SFuturesTradeInfo &t){
+		if(this != &t){
+			this->strClientOrderID = t.strClientOrderID;
+			this->timeStamp = t.timeStamp;
+			this->filledQTY = t.filledQTY;
+			this->orderID = t.orderID;
+			this->price = t.price;
+			this->priceAvg = t.priceAvg;
+			this->status = t.status;
+			this->tradeType = t.tradeType;
+			this->waitClientOrderIDTime = t.waitClientOrderIDTime;
+			this->size = t.size;
+			this->tLastUpdate = t.tLastUpdate;
+			this->bModifyQTY = t.bModifyQTY;
+		}
+		return *this;
+	}
 };
 
 struct SFuturesTradePairInfo
@@ -109,6 +126,15 @@ struct SFuturesTradePairInfo
 		close.Reset();
 		closePlanPrice = "";
 		closePlanSize = "";
+	}
+	SFuturesTradePairInfo& operator= (const SFuturesTradePairInfo &t){
+		if(this != &t){
+			this->open = t.open;
+			this->close = t.close;
+			this->closePlanPrice = t.closePlanPrice;
+			this->closePlanSize = t.closePlanSize;
+		}
+		return *this;
 	}
 };
 
@@ -223,4 +249,8 @@ public:
 	CListCtrl m_listCtrlPostionInfo;
 	CStatic m_staticAccountAvailInfo;
 	CStatic m_staticCanOpenSize;
+	afx_msg void OnBnClickedButtonSaveProfit();
+	afx_msg void OnBnClickedButtonClearFreeLine();
+	afx_msg void OnBnClickedButtonBearFirst();
+	afx_msg void OnBnClickedButtonBullFirst();
 };
