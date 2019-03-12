@@ -680,6 +680,8 @@ void CManualOKExFuturesDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 	{
 		if(info.tradeType == itB->open.tradeType && itB->open.orderID == info.orderID)
 		{
+			if(itB->open.status != "2" && info.status == "2")
+				itB->open.tLastALLFillTime = time(NULL);
 			itB->open.timeStamp = info.timeStamp;
 			itB->open.filledQTY = info.filledQTY;
 			itB->open.price = info.price;
@@ -1000,10 +1002,12 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 			m_listCtrlOrderOpen.SetItemText(i, 3, "");
 			m_listCtrlOrderOpen.SetItemText(i, 4, "");
 			m_listCtrlOrderOpen.SetItemText(i, 5, "");
+			m_listCtrlOrderOpen.SetItemText(i, 6, "");
 
 			m_listCtrlOrderClose.SetItemText(i, 0, "");
 			m_listCtrlOrderClose.SetItemText(i, 1, "");
 			m_listCtrlOrderClose.SetItemText(i, 2, "");
+			m_listCtrlOrderClose.SetItemText(i, 3, "");
 		}
 	}
 }
@@ -1326,6 +1330,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonCancel()
 
 void CManualOKExFuturesDlg::_CheckAllOrder()
 {
+	time_t tNow = time(NULL);
 	bool bUpdate = false;
 	std::vector<SFuturesTradePairInfo>::iterator itB = m_vecTradePairInfo.begin();
 	std::vector<SFuturesTradePairInfo>::iterator itE = m_vecTradePairInfo.end();
@@ -1438,7 +1443,8 @@ void CManualOKExFuturesDlg::_CheckAllOrder()
 				}
 				else
 				{
-					if(itB->closePlanPrice != "" && itB->closePlanSize != "")
+					
+					if(itB->closePlanPrice != "" && itB->closePlanSize != "" && tNow-itB->open.tLastALLFillTime > 3)
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
 						eFuturesTradeType tradeType;

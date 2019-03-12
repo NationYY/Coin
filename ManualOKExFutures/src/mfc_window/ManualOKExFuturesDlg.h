@@ -72,6 +72,7 @@ struct SFuturesTradeInfo
 	std::string size;
 	time_t tLastUpdate;
 	bool bModifyQTY;
+	time_t tLastALLFillTime;
 	SFuturesTradeInfo()
 	{
 		Reset();
@@ -90,6 +91,7 @@ struct SFuturesTradeInfo
 		size = "0";
 		tLastUpdate = 0;
 		bModifyQTY = false;
+		tLastALLFillTime = 0;
 	}
 	SFuturesTradeInfo& operator= (const SFuturesTradeInfo &t){
 		if(this != &t){
@@ -105,6 +107,7 @@ struct SFuturesTradeInfo
 			this->size = t.size;
 			this->tLastUpdate = t.tLastUpdate;
 			this->bModifyQTY = t.bModifyQTY;
+			this->tLastALLFillTime = t.tLastALLFillTime;
 		}
 		return *this;
 	}
