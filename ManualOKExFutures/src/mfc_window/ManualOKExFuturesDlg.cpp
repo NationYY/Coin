@@ -601,6 +601,8 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 					info.open.tradeType = eFuturesTradeType_CloseBull;
 				else if(tradeType == "4")
 					info.open.tradeType = eFuturesTradeType_CloseBear;
+				else
+					LOCAL_ERROR("未知交易类型[%s]", tradeType.c_str());
 				if(strcmp(szOpenQTY, "0") != 0)
 				{
 					info.open.filledQTY = szOpenQTY;
@@ -638,6 +640,8 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 					info.close.tradeType = eFuturesTradeType_CloseBull;
 				else if(tradeType == "4")
 					info.close.tradeType = eFuturesTradeType_CloseBear;
+				else
+					LOCAL_ERROR("未知交易类型[%s]", tradeType.c_str());
 				CActionLog("trade", "http更新订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.close.strClientOrderID.c_str(), info.close.orderID.c_str(), info.close.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.close.status.c_str(), tradeType.c_str());
 			}
 		}
@@ -1208,7 +1212,6 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 			{
 				if(info.close.orderID == "")
 				{
-
 					std::string price;
 					CString closePrice;
 					m_editClosePrice.GetWindowText(closePrice);
@@ -1251,7 +1254,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 						info.close.tradeType = tradeType;
 						CActionLog("trade", "开平仓单");
 					}
-					else if(info.open.status == "2")
+					else if(info.open.status == "2" || info.open.status == "-1")
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
 						eFuturesTradeType tradeType;
@@ -1552,18 +1555,34 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClearFreeLine()
 	_UpdateTradeShow();
 }
 
+bool CompareLowPrice(const SFuturesTradePairInfo &value1, const SFuturesTradePairInfo &value2)
+{
+	if(CFuncCommon::CheckEqual(value1.open.priceAvg, 0.0))
+		return value1.open.price < value2.open.price;
+	else
+		return value1.open.priceAvg < value2.open.priceAvg;
+}
+
+bool CompareHightPrice(const SFuturesTradePairInfo &value1, const SFuturesTradePairInfo &value2)
+{
+	if(CFuncCommon::CheckEqual(value1.open.priceAvg, 0.0))
+		return value1.open.price > value2.open.price;
+	else
+		return value1.open.priceAvg > value2.open.priceAvg;
+}
 
 void CManualOKExFuturesDlg::OnBnClickedButtonBearFirst()
 {
-	std::list<SFuturesTradePairInfo> bearFinish;
-	std::list<SFuturesTradePairInfo> bearNotFinish;
-	std::list<SFuturesTradePairInfo> bullFinish;
-	std::list<SFuturesTradePairInfo> bullNotFinish;
+	std::vector<SFuturesTradePairInfo> bearFinish;
+	std::vector<SFuturesTradePairInfo> bearNotFinish;
+	std::vector<SFuturesTradePairInfo> bullFinish;
+	std::vector<SFuturesTradePairInfo> bullNotFinish;
+
 	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
 	{
 		if(m_vecTradePairInfo[i].open.tradeType == eFuturesTradeType_OpenBull)
 		{
-			if(m_vecTradePairInfo[i].open.status == "2")
+			if(m_vecTradePairInfo[i].open.status == "2" || m_vecTradePairInfo[i].open.status == "1")
 				bullFinish.push_back(m_vecTradePairInfo[i]);
 			else
 				bullNotFinish.push_back(m_vecTradePairInfo[i]);
@@ -1571,15 +1590,19 @@ void CManualOKExFuturesDlg::OnBnClickedButtonBearFirst()
 		}
 		else if(m_vecTradePairInfo[i].open.tradeType == eFuturesTradeType_OpenBear)
 		{
-			if(m_vecTradePairInfo[i].open.status == "2")
+			if(m_vecTradePairInfo[i].open.status == "2" || m_vecTradePairInfo[i].open.status == "1")
 				bearFinish.push_back(m_vecTradePairInfo[i]);
 			else
 				bearNotFinish.push_back(m_vecTradePairInfo[i]);
 		}
 	}
+	std::sort(bearFinish.begin(), bearFinish.end(), CompareHightPrice);
+	std::sort(bearNotFinish.begin(), bearNotFinish.end(), CompareLowPrice);
+	std::sort(bullFinish.begin(), bullFinish.end(), CompareLowPrice);
+	std::sort(bullNotFinish.begin(), bullNotFinish.end(), CompareHightPrice);
 	m_vecTradePairInfo.clear();
-	std::list<SFuturesTradePairInfo>::iterator itB = bearFinish.begin();
-	std::list<SFuturesTradePairInfo>::iterator itE = bearFinish.end();
+	std::vector<SFuturesTradePairInfo>::iterator itB = bearFinish.begin();
+	std::vector<SFuturesTradePairInfo>::iterator itE = bearFinish.end();
 	while(itB != itE)
 	{
 		m_vecTradePairInfo.push_back(*itB);
