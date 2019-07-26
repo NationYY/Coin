@@ -23,37 +23,12 @@ COkexExchange::~COkexExchange()
 
 void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {  
-	if(retObj.isArray() && retObj[0].isObject() && retObj[0]["channel"].isString() && retObj[0]["channel"].asString().find("ok_sub_spot") != std::string::npos && retObj[0]["channel"].asString().find("depth") != std::string::npos)
+	if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "spot/depth")
 	{
-		Json::Value& data = retObj[0]["data"];
-		if(data["bids"].isArray())
-		{
-			for(int i = 0; i<(int)data["bids"].size(); ++i)
-			{
-				std::string price = data["bids"][i][0].asString();
-				std::string volume = data["bids"][i][1].asString();
-				if(volume == "0")
-					m_dataCenter.DelBuyEntrustDepth(price, (int)time(NULL));
-				else
-					m_dataCenter.UpdateBuyEntrustDepth(price, volume, (int)time(NULL));
-			}
-		}
-		if(data["asks"].isArray())
-		{
-			for(int i = 0; i<(int)data["asks"].size(); ++i)
-			{
-				std::string price = data["asks"][i][0].asString();
-				std::string volume = data["asks"][i][1].asString();
-				if(volume == "0")
-					m_dataCenter.DelSellEntrustDepth(price, (int)time(NULL));
-				else
-					m_dataCenter.UpdateSellEntrustDepth(price, volume, (int)time(NULL));
-			}
-		}
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_EntrustDepth, szExchangeName, retObj, strRet);
 	}
-	if(strRet == "pong")
+	else if(strRet == "pong")
 	{
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_Pong, szExchangeName, retObj, strRet);
@@ -101,6 +76,7 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 	}
 	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "spot/order")
 	{
+		LOCAL_ERROR("°¡%s", strRet.c_str());
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_SpotOrderInfo, szExchangeName, retObj, strRet);
 	}

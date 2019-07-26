@@ -56,7 +56,7 @@ public:
 	void PushRet(int type, Json::Value& retObj, const char* szRet);
 	static unsigned __stdcall CWebsocketAPI::RunThread(LPVOID arg);
 	//订阅现货交易深度
-	virtual void API_EntrustDepth(eMarketType type, int depthSize, bool bAdd) = 0;
+	virtual void API_EntrustDepth(bool bAdd, std::string& strInstrumentID) = 0;
 	//订阅最新成交的订单
 	virtual void API_LatestExecutedOrder(eMarketType type) = 0;
 	virtual bool Ping() = 0;

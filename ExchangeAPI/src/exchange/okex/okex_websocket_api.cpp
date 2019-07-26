@@ -23,12 +23,12 @@ bool COkexWebsocketAPI::Ping()
 	return Request("ping");
 }
 
-void COkexWebsocketAPI::API_EntrustDepth(eMarketType type, int depthSize, bool bAdd)
+void COkexWebsocketAPI::API_EntrustDepth(bool bAdd, std::string& strInstrumentID)
 {
 	if(m_pExchange)
 		m_pExchange->GetDataCenter()->ClearAllEntrustDepth();
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"event\":\"%s\",\"channel\":\"ok_sub_spot_%s_depth\"}", (bAdd ? "addChannel" : "removeChannel"), m_pExchange->GetMarketString(type, false));
+	_snprintf(szBuffer, 512, "{\"op\": \"%s\", \"args\": [\"spot/depth:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strInstrumentID.c_str());
 	Request(szBuffer);
 }
 
@@ -119,11 +119,11 @@ void COkexWebsocketAPI::API_SpotKlineData(bool bAdd, std::string& strKlineType, 
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_SpotTickerData(bool bAdd, std::string& strCoinType, std::string& strMoneyType)
+void COkexWebsocketAPI::API_SpotTickerData(bool bAdd, std::string& strInstrumentID)
 {
 	m_spotTickerCheck = "spot/ticker";
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/ticker:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strMoneyType.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/ticker:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strInstrumentID.c_str());
 	Request(szBuffer);
 }
 
@@ -134,10 +134,10 @@ void COkexWebsocketAPI::API_SpotAccountInfoByCurrency(bool bAdd, std::string& st
 	Request(szBuffer);
 }
 
-void COkexWebsocketAPI::API_SpotOrderInfo(bool bAdd, std::string& strCoinType, std::string& strMoneyType)
+void COkexWebsocketAPI::API_SpotOrderInfo(bool bAdd, std::string& strInstrumentID)
 {
 	char szBuffer[512] = {0};
-	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/order:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strMoneyType.c_str());
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/order:%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strInstrumentID.c_str());
 	Request(szBuffer);
 
 }

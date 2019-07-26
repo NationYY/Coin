@@ -2,7 +2,7 @@
 #include "okex_http_api.h"
 #ifdef _OPEN_OKEX_
 COkexHttpAPI::COkexHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase):
-m_futuresAccountInfoByCurrencyIndex(0)
+m_futuresAccountInfoByCurrencyIndex(0), m_SpotAccountInfoByCurrencyIndex(0)
 {
 	SetKey(strAPIKey, strSecretKey, strPassphrase);
 	SetURL("https://www.okex.com");
@@ -158,7 +158,7 @@ void COkexHttpAPI::API_FuturesCancelOrder(bool bSwap, std::string& strCoinType, 
 	RequestAsync(info);
 }
 
-void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, eTradeType tradeType, std::string price, std::string size, const char* clientOrderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, std::string& tradeType, std::string& price, std::string& size, std::string& clientOrderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotTrade;
@@ -167,11 +167,11 @@ void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, eTradeTy
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
-	info.mapParams["type"] = SHttpParam(eHttpParamType_String, "limit");
-	if(tradeType == eTradeType_buy)
-		info.mapParams["side"] = SHttpParam(eHttpParamType_String, "buy");
-	else if(tradeType == eTradeType_sell)
-		info.mapParams["side"] = SHttpParam(eHttpParamType_String, "sell");
+	if(price == "-1")
+		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "market");
+	else
+		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "limit");
+	info.mapParams["side"] = SHttpParam(eHttpParamType_String, tradeType);
 	info.mapParams["instrument_id"] = SHttpParam(eHttpParamType_String, instrumentID);
 	info.mapParams["margin_trading"] = SHttpParam(eHttpParamType_String, "1");
 	info.mapParams["price"] = SHttpParam(eHttpParamType_String, price);
@@ -204,6 +204,7 @@ void COkexHttpAPI::API_SpotAccountInfoByCurrency(bool bSync, std::string& strMon
 	info.strMethod = "api/spot/v3/accounts/" + strMoneyType;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
+	info.customData = ++m_SpotAccountInfoByCurrencyIndex;
 	if(bSync)
 		RequestAsync(info);
 	else
