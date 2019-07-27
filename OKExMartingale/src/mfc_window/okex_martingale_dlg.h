@@ -172,22 +172,18 @@ private:
 	void __CheckTrend_ShouKouChannel();
 	void __SetBollState(eBollTrend state, int nParam = 0, double dParam = 0.0);
 	void __CheckTrade();
-	void Test();
-	void TestCfg();
 	void _UpdateProfitShow();
 	void _UpdateTradeShow();
 	bool _CheckMoney(std::string& strCurrency);
 	void _SetTradeState(eTradeState state);
 public:
 	afx_msg void OnBnClickedButtonStart();
-	afx_msg void OnBnClickedButtonTest();
 	CListBox m_ctrlListLog;
 private:
 	clib::config m_config;
 	std::string m_apiKey;
 	std::string m_secretKey;
 	std::string m_passphrase;
-	std::set<std::string> m_setAllTestFile;
 private:
 	std::vector<SKlineData> m_vecKlineData;
 	std::vector<SBollInfo> m_vecBollData;
@@ -199,8 +195,6 @@ private:
 	int m_nShouKouChannelConfirmBar;
 	bool m_bZhangKouUp;
 	int m_nZhangKouTradeCheckBar;
-	bool m_bTest;
-	bool m_bTestCfg;
 	STickerData m_curTickData;
 	SSpotAccountInfo m_coinAccountInfo;
 	SSpotAccountInfo m_moneyAccountInfo;
@@ -237,7 +231,7 @@ public:
 	std::string m_strInstrumentID;		//币对名称
 	double m_stopProfitFactor;			//头单止盈系数
 	bool m_bStopProfitMove;
-	CComboBox m_combInstrumentID;
+	CComboBox m_combCoinType;
 	CEdit m_editMartingaleStepCnt;
 	CEdit m_editMartingaleMovePersent;
 	CEdit m_editFixedMoneyCnt;
@@ -260,4 +254,7 @@ public:
 	CButton m_btnStopProfitFix;
 	afx_msg void OnBnClickedStopProfitMove();
 	afx_msg void OnBnClickedRadioStopProfitFix();
+	CEdit m_editFuturesCycle;
+	CComboBox m_combLeverage;
+	CComboBox m_combFuturesType;
 };
