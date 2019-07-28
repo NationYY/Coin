@@ -46,66 +46,106 @@ struct STickerData
 	}
 };
 
-struct SSpotAccountInfo
+struct SFuturesAccountInfo
 {
+	std::string equity;	//账户权益
+	std::string availBalance;//账户余额
 	bool bValid;
-	std::string currency;	//币种
-	double balance;			//余额
-	double hold;			//冻结(不可用)
-	double available;		//可用于交易或资金划转的数量
-	SSpotAccountInfo() : bValid(false), currency(""), balance(0), hold(0), available(0)
+	SFuturesAccountInfo() : equity("0"), bValid(false), availBalance("0")
 	{
+
 	}
 };
 
-struct SSPotTradeInfo
+struct SFuturesPositionInfo
 {
-	std::string orderID;//订单ID;
-	std::string price;	//订单价格
-	std::string size;	//成交数量
-	std::string side;	//交易类型
-	std::string strTimeStamp;//委托时间
+	std::string bullCount;		//多单数量
+	std::string bullFreeCount;	//多单可平数量
+	std::string bullPriceAvg;	//多单均价
+	std::string bearCount;		//空单数量
+	std::string bearFreeCount;	//空单可平数量
+	std::string bearPriceAvg;	//空单均价
+	std::string broken;			//爆仓价
+	bool bValid;
+	SFuturesPositionInfo() : bullCount("0"), bullFreeCount("0"), bullPriceAvg("0"), bearCount("0"), bearFreeCount("0"), bearPriceAvg("0"), broken("0"), bValid(false)
+	{
+
+	}
+};
+
+
+struct SFuturesTradeInfo
+{
+	std::string strClientOrderID;
 	time_t timeStamp;	//委托时间
-	std::string filledSize;//已成交数量
-	std::string filledNotional;//已成交金额
-	std::string status;	//订单状态(open:未成交 part_filled:部分成交 filled:已成交 cancelled:已撤销 failure:订单失败）
-	std::string closeSize;//已卖出数量
-	bool bBeginStopProfit;
+	std::string filledQTY;		//成交数量
+	std::string orderID;//订单ID;
+	double price;		//订单价格
+	double priceAvg;	//成交均价
+	std::string status;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交)
+	eFuturesTradeType tradeType;
+	time_t waitClientOrderIDTime;
+	std::string size;
+	time_t tLastUpdate;
+	bool bModifyQTY;
+	time_t tLastALLFillTime;
 	int stopProfit;
 	double minPrice;
 	double maxPrice;
-	SSPotTradeInfo()
+	SFuturesTradeInfo()
 	{
 		Reset();
 	}
 	void Reset()
 	{
+		strClientOrderID = "";
 		timeStamp = 0;
+		filledQTY = "0";
 		orderID = "";
-		price = "0";
-		status = "0";
-		size = "0";
-		side = "buy";
-		filledSize = "0";
-		filledNotional = "0";
-		closeSize = "0";
+		price = 0.0;
+		priceAvg = 0.0;
 		status = "";
-		strTimeStamp = "";
-		bBeginStopProfit = false;
+		tradeType = eFuturesTradeType_OpenBull;
+		waitClientOrderIDTime = 0;
+		size = "0";
+		tLastUpdate = 0;
+		bModifyQTY = false;
+		tLastALLFillTime = 0;
 		stopProfit = 0;
 		minPrice = 0.0;
 		maxPrice = 0.0;
 	}
+	SFuturesTradeInfo& operator= (const SFuturesTradeInfo &t){
+		if(this != &t){
+			this->strClientOrderID = t.strClientOrderID;
+			this->timeStamp = t.timeStamp;
+			this->filledQTY = t.filledQTY;
+			this->orderID = t.orderID;
+			this->price = t.price;
+			this->priceAvg = t.priceAvg;
+			this->status = t.status;
+			this->tradeType = t.tradeType;
+			this->waitClientOrderIDTime = t.waitClientOrderIDTime;
+			this->size = t.size;
+			this->tLastUpdate = t.tLastUpdate;
+			this->bModifyQTY = t.bModifyQTY;
+			this->tLastALLFillTime = t.tLastALLFillTime;
+			this->stopProfit = t.stopProfit;
+			this->minPrice = t.minPrice;
+			this->maxPrice = t.maxPrice;
+		}
+		return *this;
+	}
 };
 
-struct SSPotTradePairInfo
+struct SFuturesTradePairInfo
 {
-	SSPotTradeInfo open;
-	SSPotTradeInfo close;
+	SFuturesTradeInfo open;
+	SFuturesTradeInfo close;
 };
 
 // COKExMartingaleDlg 对话框
-class COKExMartingaleDlg : public CDialogEx
+class COKExMartingaleDlg : public CDialog
 {
 // 构造
 public:
@@ -130,12 +170,14 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void AddKlineData(SKlineData& data);
+	void ComplementedKLine(time_t tNowKlineTick, int kLineCnt);
 	void OnRevTickerInfo(STickerData &data);
 	void Pong();
 	void OnLoginSuccess();
 	void SetHScroll();
-	void UpdateAccountInfo(SSpotAccountInfo& info);
-	void UpdateTradeInfo(SSPotTradeInfo& info);
+	void UpdateAccountInfo(SFuturesAccountInfo& info);
+	void UpdatePositionInfo(SFuturesPositionInfo& info);
+	void UpdateTradeInfo(SFuturesTradeInfo& info);
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
 private:
@@ -162,10 +204,10 @@ private:
 	bool m_bZhangKouUp;
 	int m_nZhangKouTradeCheckBar;
 	STickerData m_curTickData;
-	SSpotAccountInfo m_coinAccountInfo;
-	SSpotAccountInfo m_moneyAccountInfo;
+	SFuturesAccountInfo m_accountInfo;
+	SFuturesPositionInfo m_positionInfo;
 	eTradeState m_eTradeState;
-	std::vector<SSPotTradePairInfo> m_vectorTradePairs;
+	std::vector<SFuturesTradePairInfo> m_vectorTradePairs;
 	int m_curOpenFinishIndex;		//当前open交易完成的序号
 	time_t m_tOpenTime;
 	bool m_bStopWhenFinish;
@@ -203,7 +245,6 @@ public:
 	CEdit m_editProfit;
 	CStatic m_staticCoin;
 	CStatic m_staticMoney;
-	CEdit m_editMoney;
 	CEdit m_editCost;
 	afx_msg void OnBnClickedButtonUpdateCost();
 	CListCtrl m_listCtrlOpen;

@@ -128,7 +128,6 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT7, m_editProfit);
 	DDX_Control(pDX, IDC_STATIC_COIN, m_staticCoin);
 	DDX_Control(pDX, IDC_STATIC_MONEY, m_staticMoney);
-	DDX_Control(pDX, IDC_EDIT9, m_editMoney);
 	DDX_Control(pDX, IDC_EDIT8, m_editCost);
 	DDX_Control(pDX, IDC_LIST3, m_listCtrlOpen);
 	DDX_Control(pDX, IDC_LIST2, m_listCtrlClose);
@@ -399,13 +398,80 @@ void COKExMartingaleDlg::AddKlineData(SKlineData& data)
 		if(data.time - KLINE_DATA[KLINE_DATA_SIZE - 1].time != m_nKlineCycle)
 		{
 			CActionLog("kline", "差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE - 1].time);
-			KLINE_DATA.clear();
+			ComplementedKLine(data.time, int(data.time - KLINE_DATA[KLINE_DATA_SIZE-1].time - m_nKlineCycle)/m_nKlineCycle);
 		}
 	}
 	tm _tm;
 	localtime_s(&_tm, &data.time);
 	_snprintf(data.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
 	KLINE_DATA.push_back(data);
+}
+
+void COKExMartingaleDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
+{
+	time_t endTick = tNowKlineTick - m_nKlineCycle;
+	time_t beginTick = endTick - (kLineCnt - 1)*m_nKlineCycle;
+	std::string strFrom = CFuncCommon::LocaltimeToISO8601(beginTick);
+	std::string strTo = CFuncCommon::LocaltimeToISO8601(endTick);
+	std::string strKlineCycle = CFuncCommon::ToString(m_nKlineCycle);
+	SHttpResponse resInfo;
+	OKEX_HTTP->API_GetFuturesSomeKline(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, strKlineCycle, strFrom, strTo, &resInfo);
+	Json::Value& retObj = resInfo.retObj;
+	if(retObj.isArray())
+	{
+		for(int i = retObj.size() - 1; i >= 0; --i)
+		{
+			SKlineData data;
+			if(m_bSwapFutures)
+			{
+				data.time = CFuncCommon::ISO8601ToTime(retObj[i][0].asString());
+				data.openPrice = stod(retObj[i][1].asString());
+				data.highPrice = stod(retObj[i][2].asString());
+				data.lowPrice = stod(retObj[i][3].asString());
+				data.closePrice = stod(retObj[i][4].asString());
+				data.volume = stoi(retObj[i][5].asString());
+				data.volumeByCurrency = stod(retObj[i][6].asString());
+			}
+			else
+			{
+				data.time = CFuncCommon::ISO8601ToTime(retObj[i][0].asString());
+				data.openPrice = stod(retObj[i][1].asString());
+				data.highPrice = stod(retObj[i][2].asString());
+				data.lowPrice = stod(retObj[i][3].asString());
+				data.closePrice = stod(retObj[i][4].asString());
+				data.volume = stoi(retObj[i][5].asString());
+				data.volumeByCurrency = stod(retObj[i][6].asString());
+			}
+			CString strlocalLog;
+			if(m_bSwapFutures)
+			{
+				strlocalLog.Format("{\"table\":\"swap/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-USD-SWAP\"}]}",
+					m_strKlineCycle.c_str(), CFuncCommon::LocaltimeToISO8601(data.time).c_str(),
+					CFuncCommon::Double2String(data.openPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.highPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.lowPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.closePrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					data.volume,
+					CFuncCommon::Double2String(data.volumeByCurrency + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					m_strCoinType.c_str());
+			}
+			else
+			{
+				strlocalLog.Format("{\"table\":\"futures/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-USD-%s\"}]}",
+					m_strKlineCycle.c_str(), CFuncCommon::LocaltimeToISO8601(data.time).c_str(),
+					CFuncCommon::Double2String(data.openPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.highPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.lowPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.closePrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					data.volume,
+					CFuncCommon::Double2String(data.volumeByCurrency + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					m_strCoinType.c_str(),
+					m_strFuturesCycle.c_str());
+			}
+			CActionLog("market", "%s", strlocalLog.GetBuffer());
+			g_pDlg->AddKlineData(data);
+		}
+	}
 }
 
 
@@ -447,30 +513,30 @@ void COKExMartingaleDlg::OnLoginSuccess()
 			if(m_vectorTradePairs[i].open.orderID != "" && m_vectorTradePairs[i].open.status != "filled" && m_vectorTradePairs[i].open.status != "cancelled")
 			{
 				BEGIN_API_CHECK;
-					SHttpResponse _resInfo;
-					OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, m_vectorTradePairs[i].open.orderID, &_resInfo);
-					Json::Value& _retObj = _resInfo.retObj;
-					if(_retObj.isObject() && _retObj["order_id"].isString())
-					{
-						SSPotTradeInfo info;
-						info.orderID = _retObj["order_id"].asString();
-						info.price = _retObj["price"].asString();
-						info.size = _retObj["size"].asString();
-						info.side = _retObj["side"].asString();
-						info.strTimeStamp = _retObj["timestamp"].asString();
-						info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-						info.filledSize = _retObj["filled_size"].asString();
-						info.filledNotional = _retObj["filled_notional"].asString();
-						info.status = _retObj["status"].asString();
-						g_pDlg->UpdateTradeInfo(info);
-						CActionLog("trade", "[断线 订单更新] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
-						API_OK;
-					}
-					else
-					{
-						_checkStr = _resInfo.strRet;
-						boost::this_thread::sleep(boost::posix_time::seconds(1));
-					}
+				SHttpResponse _resInfo;
+				OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].open..orderID, &resInfo);
+				Json::Value& _retObj = _resInfo.retObj;
+				if(_retObj.isObject() && _retObj["order_id"].isString())
+				{
+					SSPotTradeInfo info;
+					info.orderID = _retObj["order_id"].asString();
+					info.price = _retObj["price"].asString();
+					info.size = _retObj["size"].asString();
+					info.side = _retObj["side"].asString();
+					info.strTimeStamp = _retObj["timestamp"].asString();
+					info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+					info.filledSize = _retObj["filled_size"].asString();
+					info.filledNotional = _retObj["filled_notional"].asString();
+					info.status = _retObj["status"].asString();
+					g_pDlg->UpdateTradeInfo(info);
+					CActionLog("trade", "[断线 订单更新] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+					API_OK;
+				}
+				else
+				{
+					_checkStr = _resInfo.strRet;
+					boost::this_thread::sleep(boost::posix_time::seconds(1));
+				}
 				API_CHECK;
 				END_API_CHECK;
 			
@@ -478,30 +544,30 @@ void COKExMartingaleDlg::OnLoginSuccess()
 			if(m_vectorTradePairs[i].close.orderID != "" && m_vectorTradePairs[i].close.status != "filled" && m_vectorTradePairs[i].close.status != "cancelled")
 			{
 				BEGIN_API_CHECK;
-					SHttpResponse _resInfo;
-					OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, m_vectorTradePairs[i].close.orderID, &_resInfo);
-					Json::Value& _retObj = _resInfo.retObj;
-					if(_retObj.isObject() && _retObj["order_id"].isString())
-					{
-						SSPotTradeInfo info;
-						info.orderID = _retObj["order_id"].asString();
-						info.price = _retObj["price"].asString();
-						info.size = _retObj["size"].asString();
-						info.side = _retObj["side"].asString();
-						info.strTimeStamp = _retObj["timestamp"].asString();
-						info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-						info.filledSize = _retObj["filled_size"].asString();
-						info.filledNotional = _retObj["filled_notional"].asString();
-						info.status = _retObj["status"].asString();
-						g_pDlg->UpdateTradeInfo(info);
-						CActionLog("trade", "[断线 订单更新] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
-						API_OK;
-					}
-					else
-					{
-						_checkStr = _resInfo.strRet;
-						boost::this_thread::sleep(boost::posix_time::seconds(1));
-					}
+				SHttpResponse _resInfo;
+				OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentID, m_vectorTradePairs[i].close.orderID, &_resInfo);
+				Json::Value& _retObj = _resInfo.retObj;
+				if(_retObj.isObject() && _retObj["order_id"].isString())
+				{
+					SSPotTradeInfo info;
+					info.orderID = _retObj["order_id"].asString();
+					info.price = _retObj["price"].asString();
+					info.size = _retObj["size"].asString();
+					info.side = _retObj["side"].asString();
+					info.strTimeStamp = _retObj["timestamp"].asString();
+					info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
+					info.filledSize = _retObj["filled_size"].asString();
+					info.filledNotional = _retObj["filled_notional"].asString();
+					info.status = _retObj["status"].asString();
+					g_pDlg->UpdateTradeInfo(info);
+					CActionLog("trade", "[断线 订单更新] order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+					API_OK;
+				}
+				else
+				{
+					_checkStr = _resInfo.strRet;
+					boost::this_thread::sleep(boost::posix_time::seconds(1));
+				}
 				API_CHECK;
 				END_API_CHECK;
 			}
@@ -513,64 +579,21 @@ void COKExMartingaleDlg::OnLoginSuccess()
 	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strMoneyType);
 }
 
-void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
+void COKExMartingaleDlg::UpdateAccountInfo(SFuturesAccountInfo& info)
 {
-	if(info.currency == m_strMoneyType)
-	{
-		m_moneyAccountInfo = info;
-		m_moneyAccountInfo.bValid = true;
-		std::string moneyNum = CFuncCommon::Double2String(m_moneyAccountInfo.balance + DOUBLE_PRECISION, 7);
-		{
-			char szTemp[128];
-			strcpy(szTemp, moneyNum.c_str());
-			for(int i = strlen(szTemp) - 1; i >= 0; --i)
-			{
-				if(szTemp[i] == '0')
-					szTemp[i] = '\0';
-				else if(szTemp[i] == '.')
-				{
-					szTemp[i] = '\0';
-					break;
-				}
-				else
-					break;
-			}
-			moneyNum = szTemp;
-		}
-		m_editMoney.SetWindowText(moneyNum.c_str());
-		std::string strMoney = m_strMoneyType;
-		strMoney += ":";
-		m_staticMoney.SetWindowText(strMoney.c_str());
-	}
-	else if(info.currency == m_strCoinType)
-	{
-		m_coinAccountInfo = info;
-		m_coinAccountInfo.bValid = true;
-
-		std::string coinNum = CFuncCommon::Double2String(m_coinAccountInfo.balance + DOUBLE_PRECISION, 7);
-		{
-			char szTemp[128];
-			strcpy(szTemp, coinNum.c_str());
-			for(int i = strlen(szTemp) - 1; i >= 0; --i)
-			{
-				if(szTemp[i] == '0')
-					szTemp[i] = '\0';
-				else if(szTemp[i] == '.')
-				{
-					szTemp[i] = '\0';
-					break;
-				}
-				else
-					break;
-			}
-			coinNum = szTemp;
-		}
-		m_editCoin.SetWindowText(coinNum.c_str());
-		std::string strCoin = m_strCoinType;
-		strCoin += ":";
-		m_staticCoin.SetWindowText(strCoin.c_str());
-	}
+	m_accountInfo = info;
+	m_accountInfo.bValid = true;
+	m_editCoin.SetWindowText(m_accountInfo.equity.c_str());
+	std::string strCoin = m_strCoinType;
+	strCoin += ":";
+	m_staticCoin.SetWindowText(strCoin.c_str());
 	_UpdateProfitShow();
+}
+
+void CManualOKExFuturesDlg::UpdatePositionInfo(SFuturesPositionInfo& info)
+{
+	m_positionInfo = info;
+	m_positionInfo.bValid = true;
 }
 
 void COKExMartingaleDlg::__CheckTrade()
@@ -585,8 +608,6 @@ void COKExMartingaleDlg::__CheckTrade()
 		{
 			if(m_bStopWhenFinish)
 				break;
-			//if(KLINE_DATA_SIZE < m_nBollCycle)
-			//	break;
 			if(!m_curTickData.bValid)
 				break;
 			if(!m_moneyAccountInfo.bValid)
@@ -1310,7 +1331,7 @@ ReCheckMoney:
 
 }
 
-void COKExMartingaleDlg::UpdateTradeInfo(SSPotTradeInfo& info)
+void COKExMartingaleDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 {
 	for(int i = 0; i<(int)m_vectorTradePairs.size(); i++)
 	{

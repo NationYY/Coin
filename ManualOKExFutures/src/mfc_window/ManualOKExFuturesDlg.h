@@ -31,16 +31,7 @@ struct STickerData
 	}
 };
 
-struct SFuturesAccountInfo
-{
-	std::string equity;	//账户权益
-	std::string availBalance;//账户余额
-	bool bValid;
-	SFuturesAccountInfo() : equity("0"), bValid(false), availBalance("0")
-	{
 
-	}
-};
 
 struct SFuturesPositionInfo
 {
