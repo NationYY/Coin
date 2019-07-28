@@ -18,9 +18,6 @@
 #define new DEBUG_NEW
 #endif
 
-#define BOLL_DATA m_vecBollData
-#define BOLL_DATA_SIZE ((int)m_vecBollData.size())
-#define REAL_BOLL_DATA_SIZE ((int)m_vecBollData.size() - m_nBollCycle -1)
 #define KLINE_DATA m_vecKlineData
 #define KLINE_DATA_SIZE ((int)m_vecKlineData.size())
 #define OKEX_CHANGE ((COkexExchange*)pExchange)
@@ -95,21 +92,11 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 {
 	g_pDlg = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_nBollCycle = 20;
 	m_nPriceDecimal = 4;
 	m_nVolumeDecimal = 3;
-	m_nZhangKouCheckCycle = 20;
-	m_nShouKouCheckCycle = 20;
-	m_nZhangKouTrendCheckCycle = 5;
 	m_bRun = false;
-	m_eBollState = eBollTrend_Normal;
-	m_eLastBollState = eBollTrend_Normal;
-	m_nZhangKouDoubleConfirmCycle = 2;
-	m_nShoukouDoubleConfirmCycle = 3;
 	m_tListenPong = 0;
-	m_strInstrumentID = "btc-usdt";
 	m_strCoinType = "BTC";
-	m_strMoneyType = "USDT";
 	m_eTradeState = eTradeState_WaitOpen;
 	m_martingaleStepCnt = 5;
 	m_martingaleMovePersent = 0.02;
@@ -297,34 +284,27 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	if(m_bRun)
 		return;
 	bool bFound = false;
+	std::string instrumentID;
+	if (m_bSwapFutures)
+		instrumentID = m_strCoinType + "-USD-SWAP";
+	else
+		instrumentID = m_strCoinType + "-USD-" + m_strFuturesCycle;
 	for(int i=0; i<3; ++i)
 	{
 		SHttpResponse resInfo;
-		OKEX_HTTP->API_SpotInstruments(false, &resInfo);
+		OKEX_HTTP->API_FuturesInstruments(false, m_bSwapFutures, &resInfo);
 		bFound = false;
 		if(resInfo.retObj.isArray())
 		{
 			for(int j=0; j<(int)resInfo.retObj.size(); ++j)
 			{
-				if(resInfo.retObj[j]["instrument_id"].asString() == m_strInstrumentID)
+				if (resInfo.retObj[j]["instrument_id"].asString() == instrumentID)
 				{
-					std::string strMinSize = resInfo.retObj[j]["min_size"].asString();
-					int pos = strMinSize.find_first_of(".");
-					if(pos != std::string::npos)
+					std::string strTickSize = resInfo.retObj[j]["tick_size"].asString();
+					int pos = strTickSize.find_first_of(".");
+					if (pos != std::string::npos)
 					{
-						m_nVolumeDecimal = strMinSize.size() - pos - 1;
-						bFound = true;
-					}
-					else
-					{
-						m_nVolumeDecimal = 0;
-						bFound = true;
-					}
-					std::string strQuoteIncrement = resInfo.retObj[j]["quote_increment"].asString();
-					pos = strQuoteIncrement.find_first_of(".");
-					if(pos != std::string::npos)
-					{
-						m_nPriceDecimal = strQuoteIncrement.size() - pos - 1;
+						m_nPriceDecimal = strTickSize.size() - pos - 1;
 						bFound = true;
 					}
 					else
@@ -332,8 +312,8 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 						m_nPriceDecimal = 0;
 						bFound = true;
 					}
-					LOCAL_INFO("VolumeDecimal=%d PriceDecimal=%d", m_nVolumeDecimal, m_nPriceDecimal);
-					if(bFound)
+					LOCAL_INFO("PriceDecimal=%d", m_nPriceDecimal);
+					if (bFound)
 						break;
 				}
 			}
@@ -346,17 +326,30 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 		MessageBox("未得到交易对详细信息");
 		return;
 	}
-	m_bRun = true;
-	m_coinAccountInfo.bValid = false;
-	m_moneyAccountInfo.bValid = false;
 	{
-		if(!_CheckMoney(m_strMoneyType))
+		SHttpResponse resInfo;
+		std::string strLeverage = CFuncCommon::ToString(m_nLeverage);
+		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, strLeverage, &resInfo);
+		if (m_bSwapFutures)
 		{
-			std::string msg = "未查询到币种信息[" + m_strMoneyType + "]";
-			MessageBox(msg.c_str());
-			return;
+			std::string strInstrumentID = m_strCoinType + "-USD-SWAP";
+			if (!resInfo.retObj.isObject() || ((resInfo.retObj["instrument_id"].asString() != strInstrumentID) && (resInfo.retObj["code"].asInt() != 35017)))
+			{
+				MessageBox("设置杠杆失败");
+				return;
+			}
+		}
+		else
+		{
+			if (!resInfo.retObj.isObject() || (resInfo.retObj["result"].asString() != "true"))
+			{
+				MessageBox("设置杠杆失败");
+				return;
+			}
 		}
 	}
+	m_coinAccountInfo.bValid = false;
+	m_moneyAccountInfo.bValid = false;
 	{
 		if(!_CheckMoney(m_strCoinType))
 		{
@@ -367,10 +360,16 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	}
 	if(OKEX_WEB_SOCKET)
 	{
-		OKEX_WEB_SOCKET->API_SpotKlineData(true, m_strKlineCycle, m_strCoinType, m_strMoneyType);
-		OKEX_WEB_SOCKET->API_SpotTickerData(true, m_strInstrumentID);
+		OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
+		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_bSwapFutures, m_strKlineCycle, m_strCoinType, m_strFuturesCycle);
 	}
+	CString strTitle;
+	strTitle.Format("%s-%s", (m_bSwapFutures ? "永续合约" : "交割合约"), m_strCoinType.c_str());
+	CWnd *m_pMainWnd;
+	m_pMainWnd = AfxGetMainWnd();
+	m_pMainWnd->SetWindowText(strTitle);
 }
 
 
@@ -399,49 +398,14 @@ void COKExMartingaleDlg::AddKlineData(SKlineData& data)
 	{
 		if(data.time - KLINE_DATA[KLINE_DATA_SIZE - 1].time != m_nKlineCycle)
 		{
-			CActionLog("boll", "差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE - 1].time);
+			CActionLog("kline", "差距%d秒", data.time - KLINE_DATA[KLINE_DATA_SIZE - 1].time);
 			KLINE_DATA.clear();
-			BOLL_DATA.clear();
 		}
 	}
 	tm _tm;
 	localtime_s(&_tm, &data.time);
 	_snprintf(data.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
 	KLINE_DATA.push_back(data);
-	if(KLINE_DATA_SIZE >= m_nBollCycle)
-	{
-		double totalClosePrice = 0.0;
-		for(int i = KLINE_DATA_SIZE - 1; i >= KLINE_DATA_SIZE - m_nBollCycle; --i)
-		{
-			totalClosePrice += KLINE_DATA[i].closePrice;
-		}
-		double ma = totalClosePrice / m_nBollCycle;
-		double totalDifClosePriceSQ = 0.0;
-		for(int i = KLINE_DATA_SIZE - 1; i >= KLINE_DATA_SIZE - m_nBollCycle; --i)
-		{
-			totalDifClosePriceSQ += ((KLINE_DATA[i].closePrice - ma)*(KLINE_DATA[i].closePrice - ma));
-		}
-		double md = sqrt(totalDifClosePriceSQ / m_nBollCycle);
-		SBollInfo info;
-		info.mb = ma;
-		info.up = info.mb + 2 * md;
-		info.dn = info.mb - 2 * md;
-		info.mb = CFuncCommon::Round(info.mb + DOUBLE_PRECISION, m_nPriceDecimal);
-		info.up = CFuncCommon::Round(info.up + DOUBLE_PRECISION, m_nPriceDecimal);
-		info.dn = CFuncCommon::Round(info.dn + DOUBLE_PRECISION, m_nPriceDecimal);
-		info.time = data.time;
-		tm _tm;
-		localtime_s(&_tm, &info.time);
-		_snprintf(info.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
-		BOLL_DATA.push_back(info);
-		OnBollUpdate();
-	}
-	else
-	{
-		SBollInfo info;
-		BOLL_DATA.push_back(info);
-	}
-
 }
 
 
@@ -547,454 +511,6 @@ void COKExMartingaleDlg::OnLoginSuccess()
 	OKEX_WEB_SOCKET->API_SpotOrderInfo(true, m_strInstrumentID);
 	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strCoinType);
 	OKEX_WEB_SOCKET->API_SpotAccountInfoByCurrency(true, m_strMoneyType);
-}
-
-
-void COKExMartingaleDlg::OnBollUpdate()
-{
-	CheckBollTrend();
-}
-
-void COKExMartingaleDlg::CheckBollTrend()
-{
-	switch(m_eBollState)
-	{
-	case eBollTrend_Normal:
-		__CheckTrend_Normal();
-		break;
-	case eBollTrend_ShouKou:
-		__CheckTrend_ShouKou();
-		break;
-	case eBollTrend_ShouKouChannel:
-		__CheckTrend_ShouKouChannel();
-		break;
-	case eBollTrend_ZhangKou:
-		__CheckTrend_ZhangKou();
-		break;
-	default:
-		break;
-	}
-}
-
-void COKExMartingaleDlg::__CheckTrend_Normal()
-{
-	if(REAL_BOLL_DATA_SIZE >= m_nZhangKouCheckCycle)//判断张口
-	{
-		int minBar = 0;
-		double minValue = 100000.0;
-		for(int i = BOLL_DATA_SIZE - 1; i >= BOLL_DATA_SIZE - m_nZhangKouCheckCycle; --i)
-		{
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset < minValue)
-			{
-				minValue = offset;
-				minBar = i;
-			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
-		if(offset / minValue > 2.5)
-		{
-			__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-			return;
-		}
-		else if(offset / minValue > 1.5)
-		{
-			int check = m_nZhangKouTrendCheckCycle / 2 + 1;
-			if(KLINE_DATA_SIZE >= check)
-			{
-				int up = 0;
-				int down = 0;
-				for(int i = KLINE_DATA_SIZE - 1; i >= KLINE_DATA_SIZE - check; --i)
-				{
-					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
-						down++;
-				}
-				if(up == check && KLINE_DATA[KLINE_DATA_SIZE - 1].closePrice > BOLL_DATA[BOLL_DATA_SIZE - 1].up)
-				{
-					double min_up = 100.0;
-					for(int i = BOLL_DATA_SIZE - 1; i >= BOLL_DATA_SIZE - m_nZhangKouCheckCycle; --i)
-					{
-						if(BOLL_DATA[i].up < min_up)
-							min_up = BOLL_DATA[i].up;
-					}
-					if((BOLL_DATA[BOLL_DATA_SIZE - 1].up / min_up) >= 1.005)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-
-				}
-				else if(down == check && KLINE_DATA[KLINE_DATA_SIZE - 1].closePrice < BOLL_DATA[BOLL_DATA_SIZE - 1].dn)
-				{
-					double max_down = 0;
-					for(int i = BOLL_DATA_SIZE - 1; i >= BOLL_DATA_SIZE - m_nZhangKouCheckCycle; --i)
-					{
-						if(BOLL_DATA[i].dn > max_down)
-							max_down = BOLL_DATA[i].dn;
-					}
-					if((BOLL_DATA[BOLL_DATA_SIZE - 1].dn / max_down) <= 0.095)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-					__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-					return;
-				}
-			}
-		}
-	}
-	if(REAL_BOLL_DATA_SIZE >= m_nShouKouCheckCycle)//判断收口
-	{
-		int maxBar = 0;
-		double maxValue = 0.0;
-		for(int i = BOLL_DATA_SIZE - 1; i >= BOLL_DATA_SIZE - m_nShouKouCheckCycle; --i)
-		{
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset > maxValue)
-			{
-				maxValue = offset;
-				maxBar = i - 1;
-			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
-		if(maxValue / offset > 3)
-		{
-			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE - 1].highPrice + KLINE_DATA[KLINE_DATA_SIZE - 1].lowPrice) / 2;
-			if(offset / avgPrice < 0.02)
-			{
-				__SetBollState(eBollTrend_ShouKou);
-				return;
-			}
-		}
-	}
-}
-
-void COKExMartingaleDlg::__CheckTrend_ZhangKou()
-{
-	//寻找收口的同时用N个周期判断张口的成立
-	if(BOLL_DATA_SIZE <= m_nZhangKouConfirmBar + m_nZhangKouDoubleConfirmCycle + 1)
-	{
-		if(m_bZhangKouUp)
-		{
-			if(BOLL_DATA[BOLL_DATA_SIZE - 1].up < BOLL_DATA[BOLL_DATA_SIZE - 2].up)
-			{
-				CActionLog("boll", "张口不成立");
-				__SetBollState(m_eLastBollState);
-			}
-
-		}
-		else
-		{
-			if(BOLL_DATA[BOLL_DATA_SIZE - 1].dn > BOLL_DATA[BOLL_DATA_SIZE - 2].dn)
-			{
-				CActionLog("boll", "张口不成立");
-				__SetBollState(m_eLastBollState);
-			}
-		}
-	}
-	else
-	{
-		//寻找收口,从确定张口的柱子开始
-		int maxBar = 0;
-		double maxValue = 0.0;
-		for(int i = m_nZhangKouConfirmBar; i < BOLL_DATA_SIZE; ++i)
-		{
-			if(m_bZhangKouUp)
-			{
-				if(BOLL_DATA[BOLL_DATA_SIZE - 1].up < BOLL_DATA[i].up && (BOLL_DATA_SIZE - 1 - i) > 1)
-				{
-					__SetBollState(eBollTrend_ShouKou);
-					return;
-				}
-			}
-			else
-			{
-
-				if(BOLL_DATA[BOLL_DATA_SIZE - 1].dn > BOLL_DATA[i].dn && (BOLL_DATA_SIZE - 1 - i) > 1)
-				{
-					__SetBollState(eBollTrend_ShouKou);
-					return;
-				}
-			}
-			double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-			if(offset > maxValue)
-			{
-				maxValue = offset;
-				maxBar = i - 1;
-			}
-		}
-		double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
-		if((offset / m_nZhangKouMinValue) < 1.5)
-		{
-			__SetBollState(eBollTrend_ShouKou);
-			return;
-		}
-		if((maxValue / offset) > 2.5)
-		{
-			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE - 1].highPrice + KLINE_DATA[KLINE_DATA_SIZE - 1].lowPrice) / 2;
-			if(offset / avgPrice < 0.02)
-			{
-				__SetBollState(eBollTrend_ShouKou);
-				return;
-			}
-		}
-	}
-	//超过25个周期直接进入收口通道状态
-	if(KLINE_DATA_SIZE - 1 - m_nZhangKouConfirmBar >= 25)
-	{
-		__SetBollState(eBollTrend_ShouKouChannel, 1);
-		return;
-	}
-}
-
-void COKExMartingaleDlg::__CheckTrend_ShouKou()
-{
-	//用N个周期来确认收口完成
-	if(BOLL_DATA_SIZE >= m_nShouKouConfirmBar + m_nShoukouDoubleConfirmCycle)
-	{
-		double last = 0.0;
-		bool bRet = true;
-		for(int i = 0; i<m_nShoukouDoubleConfirmCycle; ++i)
-		{
-			double offset = BOLL_DATA[BOLL_DATA_SIZE - 1 - i].up - BOLL_DATA[BOLL_DATA_SIZE - 1 - i].dn;
-
-			double avgPrice = (KLINE_DATA[KLINE_DATA_SIZE - 1 - i].highPrice + KLINE_DATA[KLINE_DATA_SIZE - 1 - i].lowPrice) / 2;
-			if(offset / avgPrice >= 0.02)
-			{
-				bRet = false;
-				break;
-			}
-			if(last > 0)
-			{
-				if(offset >= last)
-				{
-					if(offset / last > 1.1)
-					{
-						bRet = false;
-						break;
-					}
-				}
-				else
-				{
-					if(last / offset > 1.1)
-					{
-						bRet = false;
-						break;
-					}
-				}
-			}
-			else
-				last = offset;
-		}
-		if(bRet)
-		{
-			__SetBollState(eBollTrend_ShouKouChannel, 0);
-			return;
-		}
-	}
-	//寻找张口,从确定收口的柱子开始
-	int minBar = 0;
-	double minValue = 100000.0;
-	for(int i = m_nShouKouConfirmBar; i < BOLL_DATA_SIZE; ++i)
-	{
-		double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-		if(offset < minValue)
-		{
-			minValue = offset;
-			minBar = i;
-		}
-	}
-	double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
-	if(offset / minValue > 2.5)
-	{
-		__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-		return;
-	}
-	else if(offset / minValue > 1.5)
-	{
-		int check = m_nZhangKouTrendCheckCycle / 2 + 1;
-		if(KLINE_DATA_SIZE >= check)
-		{
-			int up = 0;
-			int down = 0;
-			for(int i = KLINE_DATA_SIZE - 1; i >= KLINE_DATA_SIZE - check; --i)
-			{
-				if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-					up++;
-				else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
-					up++;
-				else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-					down++;
-				else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
-					down++;
-			}
-			if(up == check && KLINE_DATA[KLINE_DATA_SIZE - 1].closePrice > BOLL_DATA[BOLL_DATA_SIZE - 1].up)
-			{
-				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-				return;
-			}
-			else if(down == check && KLINE_DATA[KLINE_DATA_SIZE - 1].closePrice < BOLL_DATA[BOLL_DATA_SIZE - 1].dn)
-			{
-				__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-				return;
-			}
-		}
-	}
-	//超过25个周期直接进入收口通道状态
-	if(KLINE_DATA_SIZE - 1 - m_nShouKouConfirmBar >= 25)
-	{
-		__SetBollState(eBollTrend_ShouKouChannel, 1);
-		return;
-	}
-}
-
-
-void COKExMartingaleDlg::__CheckTrend_ShouKouChannel()
-{
-	//寻找张口,从确定收口通道的柱子开始
-	if(m_eLastBollState == eBollTrend_ShouKou || m_eLastBollState == eBollTrend_ZhangKou)
-	{
-		int checkBarNum = 0;
-		if(m_eLastBollState == eBollTrend_ShouKou)
-		{
-			checkBarNum = m_nShouKouConfirmBar;
-			if(BOLL_DATA_SIZE-1-m_nShouKouConfirmBar > m_nBollCycle)
-				checkBarNum = m_nBollCycle;
-			else
-				checkBarNum = BOLL_DATA_SIZE-1-m_nShouKouConfirmBar;
-		}
-		else
-			checkBarNum = m_nBollCycle;
-		if(checkBarNum > 0)
-		{
-			int minBar = 0;
-			double minValue = 100000.0;
-			int cnt = 0;
-			for(int i = BOLL_DATA_SIZE - 1; i >= 0; --i)
-			{
-				double offset = BOLL_DATA[i].up - BOLL_DATA[i].dn;
-				if(offset < minValue)
-				{
-					minValue = offset;
-					minBar = i;
-				}
-				cnt++;
-				if(cnt == checkBarNum)
-					break;
-			}
-			double offset = BOLL_DATA[BOLL_DATA_SIZE - 1].up - BOLL_DATA[BOLL_DATA_SIZE - 1].dn;
-			if(offset / minValue > 2.5)
-			{
-				__SetBollState(eBollTrend_ZhangKou, 0, minValue);
-				return;
-			}
-			else if(offset / minValue > 1.5)
-			{
-				int check = m_nZhangKouTrendCheckCycle / 2 + 1;
-				if(KLINE_DATA_SIZE >= check)
-				{
-					int up = 0;
-					int down = 0;
-					for(int i = KLINE_DATA_SIZE - 1; i >= KLINE_DATA_SIZE - check; --i)
-					{
-						if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-							up++;
-						else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].mb && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
-							up++;
-						else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-							down++;
-						else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].mb && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
-							down++;
-					}
-					if(up == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice > BOLL_DATA[BOLL_DATA_SIZE-1].up)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-					else if(down == check)// && KLINE_DATA[KLINE_DATA_SIZE-1].closePrice < BOLL_DATA[BOLL_DATA_SIZE-1].dn)
-					{
-						__SetBollState(eBollTrend_ZhangKou, 1, minValue);
-						return;
-					}
-				}
-			}
-		}
-	}
-}
-
-void COKExMartingaleDlg::__SetBollState(eBollTrend state, int nParam, double dParam)
-{
-	m_eLastBollState = m_eBollState;
-	m_eBollState = state;
-	switch(m_eBollState)
-	{
-	case eBollTrend_ZhangKou:
-		{
-			m_nZhangKouConfirmBar = KLINE_DATA_SIZE - 1;
-			m_nZhangKouTradeCheckBar = m_nZhangKouConfirmBar;
-			m_nZhangKouMinValue = dParam;
-			CString szInfo;
-			szInfo.Format("张口产生<<<< 确认时间[%s] %s", CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE - 1].time).c_str(), (nParam == 0 ? "开口角判断" : "柱体穿插判断"));
-			if(KLINE_DATA_SIZE >= m_nZhangKouTrendCheckCycle)
-			{
-				int up = 0;
-				int down = 0;
-				for(int i = KLINE_DATA_SIZE - 1; i >= KLINE_DATA_SIZE - m_nZhangKouTrendCheckCycle; --i)
-				{
-					if(KLINE_DATA[i].lowPrice >= BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].lowPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].up)
-						up++;
-					else if(KLINE_DATA[i].highPrice <= BOLL_DATA[i].dn)
-						down++;
-					else if(KLINE_DATA[i].highPrice < BOLL_DATA[i].up && KLINE_DATA[i].highPrice > BOLL_DATA[i].dn && KLINE_DATA[i].lowPrice < BOLL_DATA[i].dn)
-						down++;
-				}
-				CString _szInfo = "";
-				if(up > down)
-				{
-					m_bZhangKouUp = true;
-					_szInfo.Format(" 趋势[涨 %d:%d]", up, down);
-				}
-				else
-				{
-					m_bZhangKouUp = false;
-					_szInfo.Format(" 趋势[跌 %d:%d]", up, down);
-				}
-				if(up == 0 && down == 0)
-				{
-
-					int a = 3;
-				}
-				szInfo.Append(_szInfo);
-			}
-			CActionLog("boll", szInfo.GetBuffer());
-		}
-		break;
-	case eBollTrend_ShouKou:
-		{
-			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE - 1].time);
-			CActionLog("boll", "收口产生>>>> 确认时间[%s]", strConfirmTime.c_str());
-			m_nShouKouConfirmBar = KLINE_DATA_SIZE - 1;
-		}
-		break;
-	case eBollTrend_ShouKouChannel:
-		{
-			std::string strConfirmTime = CFuncCommon::FormatTimeStr(KLINE_DATA[KLINE_DATA_SIZE - 1].time);
-			CActionLog("boll", "收口通道===== 确认时间[%s] %s", strConfirmTime.c_str(), (nParam == 0 ? "趋势判断" : "超时判断"));
-			m_nShouKouChannelConfirmBar = KLINE_DATA_SIZE - 1;
-		}
-		break;
-	default:
-		break;
-	}
-
 }
 
 void COKExMartingaleDlg::UpdateAccountInfo(SSpotAccountInfo& info)
@@ -1924,19 +1440,19 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 	else if (strTemp == "永续合约")
 		m_combFuturesType.SetCurSel(1);
 
-	strTemp = m_config.get("spot", "martingaleStepCnt", "");
+	strTemp = m_config.get("futures", "martingaleStepCnt", "");
 	m_editMartingaleStepCnt.SetWindowText(strTemp.c_str());
 
-	strTemp = m_config.get("spot", "martingaleMovePersent", "");
+	strTemp = m_config.get("futures", "martingaleMovePersent", "");
 	m_editMartingaleMovePersent.SetWindowText(strTemp.c_str());
 
-	strTemp = m_config.get("spot", "fixedMoneyCnt", "");
+	strTemp = m_config.get("futures", "fixedMoneyCnt", "");
 	m_editFixedMoneyCnt.SetWindowText(strTemp.c_str());
 	
-	strTemp = m_config.get("spot", "stopProfitFactor", "");
+	strTemp = m_config.get("futures", "stopProfitFactor", "");
 	m_editStopProfitFactor.SetWindowText(strTemp.c_str());
 	
-	strTemp = m_config.get("spot", "stopProfitType", "");
+	strTemp = m_config.get("futures", "stopProfitType", "");
 	if(strTemp == "")
 		m_btnStopProfitMove.SetCheck(1);
 	else if(strTemp == "move")
@@ -1944,17 +1460,38 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 	else if(strTemp == "fix")
 		m_btnStopProfitFix.SetCheck(1);
 
-	strTemp = m_config.get("spot", "beginMoney", "");
+	strTemp = m_config.get("futures", "beginMoney", "");
 	m_editCost.SetWindowText(strTemp.c_str());
 }
 
 bool COKExMartingaleDlg::__SaveConfigCtrl()
 {
-	CString strInstrumentID;
-	m_combInstrumentID.GetWindowText(strInstrumentID);
-	if(strInstrumentID == "")
+	CString strFuturesType;
+	m_combFuturesType.GetWindowText(strFuturesType);
+	if (strFuturesType == "")
 	{
-		MessageBox("未选择交易对");
+		MessageBox("未选择合约类型");
+		return false;
+	}
+	CString strCoinType;
+	m_combCoinType.GetWindowText(strCoinType);
+	if (strCoinType == "")
+	{
+		MessageBox("未选择合约货币");
+		return false;
+	}
+	CString strFuturesCycle;
+	m_editFuturesCycle.GetWindowText(strFuturesCycle);
+	if (strFuturesCycle == "")
+	{
+		MessageBox("未填写合约交割期");
+		return false;
+	}
+	CString strLeverage;
+	m_combLeverage.GetWindowText(strLeverage);
+	if (strLeverage == "")
+	{
+		MessageBox("未选择杠杆");
 		return false;
 	}
 	CString strMartingaleStepCnt;
@@ -1988,11 +1525,15 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 	CString szCost = "";
 	m_editCost.GetWindowText(szCost);
 	
-	
-	m_strInstrumentID = strInstrumentID.GetBuffer();
-	int pos = m_strInstrumentID.find_first_of("-");
-	m_strCoinType = m_strInstrumentID.substr(0, pos);
-	m_strMoneyType = m_strInstrumentID.substr(pos+1);
+	m_strCoinType = strCoinType.GetBuffer();
+	m_strFuturesCycle = strFuturesCycle.GetBuffer();
+	m_strLeverage = strLeverage.GetBuffer();
+	m_nLeverage = stoi(m_strLeverage);
+	if (strFuturesType == "永续合约")
+		m_bSwapFutures = true;
+	else
+		m_bSwapFutures = false;
+
 	m_martingaleStepCnt = atoi(strMartingaleStepCnt.GetBuffer());
 	m_martingaleMovePersent = stod(strMartingaleMovePersent.GetBuffer());
 	if(strFixedMoneyCnt == "0")
@@ -2009,17 +1550,19 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 
 		
 
-
-	m_config.set_value("spot", "instrument", m_strInstrumentID.c_str());
-	m_config.set_value("spot", "martingaleStepCnt", strMartingaleStepCnt.GetBuffer());
-	m_config.set_value("spot", "martingaleMovePersent", strMartingaleMovePersent.GetBuffer());
-	m_config.set_value("spot", "fixedMoneyCnt", strFixedMoneyCnt.GetBuffer());
-	m_config.set_value("spot", "stopProfitFactor", strStopProfitFactor.GetBuffer());
+	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
+	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
+	m_config.set_value("futures", "leverage", m_strLeverage.c_str());
+	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
+	m_config.set_value("futures", "martingaleStepCnt", strMartingaleStepCnt.GetBuffer());
+	m_config.set_value("futures", "martingaleMovePersent", strMartingaleMovePersent.GetBuffer());
+	m_config.set_value("futures", "fixedMoneyCnt", strFixedMoneyCnt.GetBuffer());
+	m_config.set_value("futures", "stopProfitFactor", strStopProfitFactor.GetBuffer());
 	if(m_bStopProfitMove)
-		m_config.set_value("spot", "stopProfitType", "move");
+		m_config.set_value("futures", "stopProfitType", "move");
 	else
-		m_config.set_value("spot", "stopProfitType", "fix");
-	m_config.set_value("spot", "beginMoney", szCost.GetBuffer());
+		m_config.set_value("futures", "stopProfitType", "fix");
+	m_config.set_value("futures", "beginMoney", szCost.GetBuffer());
 	m_config.save("./config.ini");
 	return true;
 }
@@ -2148,7 +1691,7 @@ void COKExMartingaleDlg::OnBnClickedRadioStopProfitFix()
 bool COKExMartingaleDlg::_CheckMoney(std::string& strCurrency)
 {
 	SHttpResponse resInfo;
-	OKEX_HTTP->API_SpotAccountInfoByCurrency(false, strCurrency, &resInfo);
+	OKEX_HTTP->API_FuturesAccountInfoByCurrency(false, m_bSwapFutures, strCurrency, &resInfo);
 	if(resInfo.retObj.isObject() && resInfo.retObj["currency"].isString())
 	{
 		SSpotAccountInfo info;

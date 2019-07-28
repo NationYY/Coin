@@ -14,7 +14,7 @@ COkexHttpAPI::~COkexHttpAPI()
 }
 
 
-void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSwap, std::string& currency)
+void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std::string& currency, SHttpResponse* pResInfo = NULL)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesAccountInfoByCurrency;
@@ -26,7 +26,10 @@ void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSwap, std::string& cur
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	info.customData = ++m_futuresAccountInfoByCurrencyIndex;
-	RequestAsync(info);
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
 }
 
 void COkexHttpAPI::API_FuturesTrade(bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID)

@@ -7,14 +7,6 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 #define DOUBLE_PRECISION 0.00000001
-enum eBollTrend
-{
-	eBollTrend_Normal,			//空转
-	eBollTrend_ShouKou,			//收口
-	eBollTrend_ShouKouChannel,	//收口通道
-	eBollTrend_ZhangKou,		//张口
-};
-
 enum eTradeState
 {
 	eTradeState_WaitOpen,
@@ -51,21 +43,6 @@ struct STickerData
 	STickerData() :bValid(false), time(0), baseVolume24h("0"), quoteVolume24h("0"),
 	 sell(0), buy(0), high(0), low(0), last(0)
 	{
-	}
-};
-
-struct SBollInfo
-{
-	__int64 time;
-	char szTime[20];
-	double mb;
-	double up;
-	double dn;
-	SBollInfo(){
-		memset(this, 0, sizeof(SBollInfo));
-	}
-	void Reset(){
-		memset(this, 0, sizeof(SBollInfo));
 	}
 };
 
@@ -164,17 +141,9 @@ public:
 private:
 	void _Update15Sec();
 	void _LogicThread();
-	void OnBollUpdate();
-	void CheckBollTrend();
-	void __CheckTrend_Normal();
-	void __CheckTrend_ZhangKou();
-	void __CheckTrend_ShouKou();
-	void __CheckTrend_ShouKouChannel();
-	void __SetBollState(eBollTrend state, int nParam = 0, double dParam = 0.0);
 	void __CheckTrade();
 	void _UpdateProfitShow();
 	void _UpdateTradeShow();
-	bool _CheckMoney(std::string& strCurrency);
 	void _SetTradeState(eTradeState state);
 public:
 	afx_msg void OnBnClickedButtonStart();
@@ -186,9 +155,6 @@ private:
 	std::string m_passphrase;
 private:
 	std::vector<SKlineData> m_vecKlineData;
-	std::vector<SBollInfo> m_vecBollData;
-	eBollTrend m_eBollState;
-	eBollTrend m_eLastBollState;
 	int m_nZhangKouConfirmBar;
 	double m_nZhangKouMinValue;
 	int m_nShouKouConfirmBar;
@@ -213,23 +179,19 @@ public:
 	bool m_bRun;
 	time_t m_tListenPong;
 public:
-	int m_nBollCycle;				//布林线周期
 	int m_nPriceDecimal;			//价格小数点精度
-	int m_nVolumeDecimal;			//交易量小数点精度
-	int m_nZhangKouCheckCycle;		//布林张口确认周期
-	int m_nZhangKouTrendCheckCycle;	//布林张口趋势确认周期 必须是奇数
-	int m_nShouKouCheckCycle;		//布林收口确认周期
-	int m_nZhangKouDoubleConfirmCycle;	//布林张口二次确认周期
-	int m_nShoukouDoubleConfirmCycle;	//布林收口二次确认周期
-	std::string m_strKlineCycle;		//布林线周期
+	std::string m_strKlineCycle;		//K线周期
 	std::string m_strCoinType;			//货币类型
-	int m_nKlineCycle;					//布林线周期对应秒数
-	std::string m_strMoneyType;//对手货币类型
+	int m_nKlineCycle;					//K线周期对应秒数
 	int m_martingaleStepCnt;			//马丁格尔交易次数
 	double m_martingaleMovePersent;		//马丁格尔交易跌幅
 	double m_fixedMoneyCnt;	//参与交易的对手币数量
-	std::string m_strInstrumentID;		//币对名称
 	double m_stopProfitFactor;			//头单止盈系数
+	std::string m_strFuturesCycle;		//合约周期
+	std::string m_strFuturesTradeSize;	//下单张数
+	std::string m_strLeverage;			//合约倍数
+	int m_nLeverage;					//合约倍数
+	bool m_bSwapFutures;				//是否永续合约
 	bool m_bStopProfitMove;
 	CComboBox m_combCoinType;
 	CEdit m_editMartingaleStepCnt;
