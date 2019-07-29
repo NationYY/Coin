@@ -29,19 +29,29 @@ struct SKlineData
 	}
 };
 
+struct SFuturesDepth
+{
+	std::string price;
+	std::string size;
+	int brokenSize;
+	int tradeNum;
+	SFuturesDepth(): size(""), brokenSize(0), tradeNum(0), price("")
+	{
+	}
+};
+
 struct STickerData
 {
 	bool bValid;
 	__int64 time;				//时间
-	std::string baseVolume24h;	//24小时成交量，按交易货币统计
-	std::string quoteVolume24h; //24小时成交量，按计价货币统计
+	int volume;			//成交量(张)
 	double sell;				//卖一价格
 	double buy;					//买一价格
 	double high;				//24小时最高价格
 	double low;					//24小时最低价格
 	double last;				//最新成交价格
-	STickerData() :bValid(false), time(0), baseVolume24h("0"), quoteVolume24h("0"),
-	 sell(0), buy(0), high(0), low(0), last(0)
+	STickerData() :bValid(false), time(0), 
+	 sell(0), buy(0), high(0), low(0), last(0), volume(0)
 	{
 	}
 };
@@ -79,16 +89,18 @@ struct SFuturesTradeInfo
 	std::string strClientOrderID;
 	time_t timeStamp;	//委托时间
 	std::string filledQTY;		//成交数量
+	std::string closeSize;
 	std::string orderID;//订单ID;
 	double price;		//订单价格
 	double priceAvg;	//成交均价
-	std::string status;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交)
+	std::string state;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交)
 	eFuturesTradeType tradeType;
-	time_t waitClientOrderIDTime;
+	bool bBeginStopProfit;
+	//time_t waitClientOrderIDTime;
 	std::string size;
-	time_t tLastUpdate;
-	bool bModifyQTY;
-	time_t tLastALLFillTime;
+	//time_t tLastUpdate;
+	//bool bModifyQTY;
+	//time_t tLastALLFillTime;
 	int stopProfit;
 	double minPrice;
 	double maxPrice;
@@ -104,7 +116,7 @@ struct SFuturesTradeInfo
 		orderID = "";
 		price = 0.0;
 		priceAvg = 0.0;
-		status = "";
+		state = "";
 		tradeType = eFuturesTradeType_OpenBull;
 		waitClientOrderIDTime = 0;
 		size = "0";
@@ -114,6 +126,8 @@ struct SFuturesTradeInfo
 		stopProfit = 0;
 		minPrice = 0.0;
 		maxPrice = 0.0;
+		bBeginStopProfit = false;
+		closeSize = "0";
 	}
 	SFuturesTradeInfo& operator= (const SFuturesTradeInfo &t){
 		if(this != &t){
@@ -123,7 +137,7 @@ struct SFuturesTradeInfo
 			this->orderID = t.orderID;
 			this->price = t.price;
 			this->priceAvg = t.priceAvg;
-			this->status = t.status;
+			this->state = t.state;
 			this->tradeType = t.tradeType;
 			this->waitClientOrderIDTime = t.waitClientOrderIDTime;
 			this->size = t.size;
@@ -133,6 +147,8 @@ struct SFuturesTradeInfo
 			this->stopProfit = t.stopProfit;
 			this->minPrice = t.minPrice;
 			this->maxPrice = t.maxPrice;
+			this->bBeginStopProfit = t.bBeginStopProfit;
+			this->closeSize = t.closeSize;
 		}
 		return *this;
 	}
@@ -180,7 +196,11 @@ public:
 	void UpdateTradeInfo(SFuturesTradeInfo& info);
 	void __InitConfigCtrl();
 	bool __SaveConfigCtrl();
+	void ClearDepth();
+	void UpdateDepthInfo(bool bBuy, SFuturesDepth& info);
+	bool CheckDepthInfo(int checkNum, std::string& checkSrc);
 private:
+	void _Update3Sec();
 	void _Update15Sec();
 	void _LogicThread();
 	void __CheckTrade();
@@ -215,8 +235,11 @@ private:
 	boost::thread m_logicThread;
 	bool m_bExit;
 	time_t m_tLastUpdate15Sec;
+	time_t m_tLastUpdate3Sec;
 	int m_nStopProfitTimes;
 	int m_nFinishTimes;
+	time_t m_tWaitNewSubDepth;
+	bool m_bOpenBull;
 public:
 	bool m_bRun;
 	time_t m_tListenPong;
@@ -225,9 +248,9 @@ public:
 	std::string m_strKlineCycle;		//K线周期
 	std::string m_strCoinType;			//货币类型
 	int m_nKlineCycle;					//K线周期对应秒数
+	int m_nFirstTradeSize;				//首次下单张数
 	int m_martingaleStepCnt;			//马丁格尔交易次数
 	double m_martingaleMovePersent;		//马丁格尔交易跌幅
-	double m_fixedMoneyCnt;	//参与交易的对手币数量
 	double m_stopProfitFactor;			//头单止盈系数
 	std::string m_strFuturesCycle;		//合约周期
 	std::string m_strFuturesTradeSize;	//下单张数
@@ -238,7 +261,6 @@ public:
 	CComboBox m_combCoinType;
 	CEdit m_editMartingaleStepCnt;
 	CEdit m_editMartingaleMovePersent;
-	CEdit m_editFixedMoneyCnt;
 	CEdit m_editStopProfitFactor;
 	CEdit m_editCoin;
 	afx_msg void OnBnClickedButtonStopWhenFinish();
@@ -260,4 +282,7 @@ public:
 	CEdit m_editFuturesCycle;
 	CComboBox m_combLeverage;
 	CComboBox m_combFuturesType;
+	CEdit m_editFirstTradeSize;
+	std::map<std::string, SFuturesDepth> m_mapDepthSell;
+	std::map<std::string, SFuturesDepth> m_mapDepthBuy;
 };

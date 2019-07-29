@@ -16,7 +16,7 @@ public:
 
 	void API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std::string& currency, SHttpResponse* pResInfo = NULL);
 	void API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo = NULL);
-	void API_FuturesTrade(bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID);
+	void API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
 	void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& strLeverage, SHttpResponse* pResInfo = NULL);
 	void API_FuturesServerTime();
 	void API_FuturesCancelOrder(bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID);

@@ -27,11 +27,47 @@ void local_websocket_callbak_fail(const char* szExchangeName)
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
 	LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
-	/*switch(apiType)
+	switch(apiType)
 	{
+	case eHttpAPIType_FuturesAccountInfoByCurrency:
+		{
+			bool bRet = false;
+			if(retObj.isObject())
+			{
+				SFuturesAccountInfo data;
+				if(g_pDlg->m_bSwapFutures)
+				{
+					if(retObj["info"].isObject() && retObj["info"]["equity"].isString())
+					{
+						bRet = true;
+						if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+						{
+							data.equity = retObj["info"]["equity"].asString();
+							data.availBalance = retObj["info"]["total_avail_balance"].asString();
+						}
+					}
+				}
+				else
+				{
+					if(retObj["equity"].isString())
+					{
+						bRet = true;
+						if(customData == OKEX_HTTP->m_futuresAccountInfoByCurrencyIndex)
+						{
+							data.equity = retObj["equity"].asString();
+							data.availBalance = retObj["total_avail_balance"].asString();
+						}
+					}
+				}
+				g_pDlg->UpdateAccountInfo(data);
+			}
+			if(!bRet)
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+		}
+		break;
 	default:
 		break;
-	}*/
+	}
 }
 
 time_t lastKlineTime = 0;
@@ -41,10 +77,82 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 {
 	switch(apiType)
 	{
-	case eWebsocketAPIType_SpotKline:
+	case eWebsocketAPIType_FuturesEntrustDepth:
 		{
-			char* szEnd = NULL;
+			if(retObj.isObject() && retObj["data"].isArray() && retObj["action"].isString())
+			{
+				//LOCAL_ERROR("depth %s", strRet.c_str());
+				if(retObj["action"].asString() == "partial")
+				{
+					g_pDlg->ClearDepth();
+					g_pDlg->m_bWaitDepthBegin = false;
+				}
+				else
+				{
+					if(g_pDlg->m_bWaitDepthBegin)
+						break;
+				}
+
+				Json::Value& data = retObj["data"][0];
+				if(data["bids"].isArray())
+				{
+					for(int i = 0; i < (int)data["bids"].size(); ++i)
+					{
+						SFuturesDepth depthInfo;
+						if(g_pDlg->m_bSwapFutures)
+							depthInfo.price = data["bids"][i][0].asString();
+						else
+						{
+							depthInfo.price = CFuncCommon::Double2String(data["bids"][i][0].asDouble() + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+						}
+
+
+						depthInfo.size = data["bids"][i][1].asString();
+						depthInfo.brokenSize = data["bids"][i][2].asInt();
+						depthInfo.tradeNum = data["bids"][i][3].asInt();
+						g_pDlg->UpdateDepthInfo(true, depthInfo);
+					}
+				}
+				if(data["asks"].isArray())
+				{
+					for(int i = 0; i < (int)data["asks"].size(); ++i)
+					{
+						SFuturesDepth depthInfo;
+						if(g_pDlg->m_bSwapFutures)
+							depthInfo.price = data["asks"][i][0].asString();
+						else
+						{
+							depthInfo.price = CFuncCommon::Double2String(data["asks"][i][0].asDouble() + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
+						}
+						depthInfo.size = data["asks"][i][1].asString();
+						depthInfo.brokenSize = data["asks"][i][2].asInt();
+						depthInfo.tradeNum = data["asks"][i][3].asInt();
+						g_pDlg->UpdateDepthInfo(false, depthInfo);
+					}
+				}
+				std::string src = "";
+				if(!g_pDlg->CheckDepthInfo(data["checksum"].asInt(), src))
+				{
+					LOCAL_ERROR("check %s", src.c_str());
+					LOCAL_ERROR("depth %s", strRet.c_str());
+				}
+				else
+				{
+					if(retObj["action"].asString() == "partial")
+						LOCAL_ERROR("第一次crc校验成功");
+				}
+				//LOCAL_ERROR("num=%d", num);
+			}
+		}
+		break;
+	case eWebsocketAPIType_FuturesKline:
+		{
 			time_t curTime = CFuncCommon::ISO8601ToTime(retObj["data"][0]["candle"][0].asString());
+			if(g_pDlg->m_bFirstKLine)
+			{
+				g_pDlg->m_bFirstKLine = false;
+				g_pDlg->ComplementedKLine(curTime, 30);
+			}
 			CActionLog("all_kline", "%s", strRet.c_str());
 			if(curTime >= lastKlineTime)
 			{
@@ -53,11 +161,12 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					CActionLog("market", "%s", lastKlineRetStr.c_str());
 					SKlineData data;
 					data.time = CFuncCommon::ISO8601ToTime(lastKlineJson["data"][0]["candle"][0].asString());
-					data.openPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][1].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.highPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][2].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.lowPrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][3].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.closePrice = CFuncCommon::Round(stod(lastKlineJson["data"][0]["candle"][4].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-					data.volume = lastKlineJson["data"][0]["candle"][5].asString();
+					data.openPrice = stod(lastKlineJson["data"][0]["candle"][1].asString());
+					data.highPrice = stod(lastKlineJson["data"][0]["candle"][2].asString());
+					data.lowPrice = stod(lastKlineJson["data"][0]["candle"][3].asString());
+					data.closePrice = stod(lastKlineJson["data"][0]["candle"][4].asString());
+					data.volume = stoi(lastKlineJson["data"][0]["candle"][5].asString());
+					data.volumeByCurrency = stod(lastKlineJson["data"][0]["candle"][6].asString());
 					g_pDlg->AddKlineData(data);
 				}
 				lastKlineTime = curTime;
@@ -66,20 +175,24 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			}
 		}
 		break;
-	case eWebsocketAPIType_SpotTicker:
+	case eWebsocketAPIType_FuturesTicker:
 		{
-			char* szEnd = NULL;
 			CActionLog("market", "%s", strRet.c_str());
-			STickerData data;
-			data.baseVolume24h = retObj["data"][0]["base_volume_24h"].asString();
-			data.quoteVolume24h = retObj["data"][0]["quote_volume_24h"].asString();
-			data.sell = CFuncCommon::Round(stod(retObj["data"][0]["best_ask"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.buy = CFuncCommon::Round(stod(retObj["data"][0]["best_bid"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.high = CFuncCommon::Round(stod(retObj["data"][0]["high_24h"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.low = CFuncCommon::Round(stod(retObj["data"][0]["low_24h"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.last = CFuncCommon::Round(stod(retObj["data"][0]["last"].asString()) + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-			data.time = CFuncCommon::ISO8601ToTime(retObj["data"][0]["timestamp"].asString());
-			g_pDlg->OnRevTickerInfo(data);
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+				for(int i = 0; i < (int)retObj["data"].size(); ++i)
+				{
+					STickerData data;
+					data.volume = stoi(retObj["data"][i]["volume_24h"].asString());
+					data.sell = stod(retObj["data"][i]["best_ask"].asString());
+					data.buy = stod(retObj["data"][i]["best_bid"].asString());
+					data.high = stod(retObj["data"][i]["high_24h"].asString());
+					data.low = stod(retObj["data"][i]["low_24h"].asString());
+					data.last = stod(retObj["data"][i]["last"].asString());
+					data.time = CFuncCommon::ISO8601ToTime(retObj["data"][i]["timestamp"].asString());
+					g_pDlg->OnRevTickerInfo(data);
+				}
+			}
 		}
 	case eWebsocketAPIType_Pong:
 		{
@@ -91,40 +204,33 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			g_pDlg->OnLoginSuccess();
 		}
 		break;
-	case eWebsocketAPIType_SpotOrderInfo:
+	case eWebsocketAPIType_FuturesOrderInfo:
 		{
 			if(retObj.isObject() && retObj["data"].isArray())
 			{
 				for(int i = 0; i<(int)retObj["data"].size(); ++i)
 				{
-					SSPotTradeInfo info;
+					SFuturesTradeInfo info;
+					info.strClientOrderID = retObj["data"][i]["client_oid"].asString();
+					info.timeStamp = CFuncCommon::ISO8601ToTime(retObj["data"][i]["timestamp"].asString());
+					info.filledQTY = retObj["data"][i]["filled_qty"].asString();
 					info.orderID = retObj["data"][i]["order_id"].asString();
-					info.price = retObj["data"][i]["price"].asString();
+					info.price = stod(retObj["data"][i]["price"].asString());
+					info.priceAvg = stod(retObj["data"][i]["price_avg"].asString());
+					info.state = retObj["data"][i]["status"].asString();
 					info.size = retObj["data"][i]["size"].asString();
-					info.side = retObj["data"][i]["side"].asString();
-					info.strTimeStamp = retObj["data"][i]["timestamp"].asString();
-					info.timeStamp = CFuncCommon::ISO8601ToTime(info.strTimeStamp);
-					info.filledSize = retObj["data"][i]["filled_size"].asString();
-					info.filledNotional = retObj["data"][i]["filled_notional"].asString();
-					info.status = retObj["data"][i]["status"].asString();
+					std::string tradeType = retObj["data"][i]["type"].asString();
+					if(tradeType == "1")
+						info.tradeType = eFuturesTradeType_OpenBull;
+					else if(tradeType == "2")
+						info.tradeType = eFuturesTradeType_OpenBear;
+					else if(tradeType == "3")
+						info.tradeType = eFuturesTradeType_CloseBull;
+					else if(tradeType == "4")
+						info.tradeType = eFuturesTradeType_CloseBear;
 					g_pDlg->UpdateTradeInfo(info);
-					CActionLog("trade", "ws更新订单信息 order=%s, size=%s, filled_size=%s, price=%s, status=%s, side=%s", info.orderID.c_str(), info.size.c_str(), info.filledSize.c_str(), info.price.c_str(), info.status.c_str(), info.side.c_str());
+					CActionLog("trade", "ws更新订单信息 order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), retObj["data"][0]["price_avg"].asString().c_str(), info.status.c_str(), tradeType.c_str());
 				}
-			}
-			else
-				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());
-		}
-		break;
-	case eWebsocketAPIType_SpotAccountInfo:
-		{
-			if(retObj.isObject() && retObj["data"].isArray())
-			{
-				SSpotAccountInfo info;
-				info.balance = stod(retObj["data"][0]["balance"].asString());
-				info.hold = stod(retObj["data"][0]["hold"].asString());
-				info.available = stod(retObj["data"][0]["available"].asString());
-				info.currency = retObj["data"][0]["currency"].asString();
-				g_pDlg->UpdateAccountInfo(info);
 			}
 			else
 				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());

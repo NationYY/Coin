@@ -32,7 +32,7 @@ void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std:
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_FuturesTrade(bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID)
+void COkexHttpAPI::API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesTrade;
@@ -75,7 +75,10 @@ void COkexHttpAPI::API_FuturesTrade(bool bSwap, eFuturesTradeType tradeType, std
 	info.mapParams["size"] = SHttpParam(eHttpParamType_String, size);
 	if(!bSwap)
 		info.mapParams["leverage"] = SHttpParam(eHttpParamType_String, leverage);
-	RequestAsync(info);
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
 }
 
 void COkexHttpAPI::API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& strLeverage, SHttpResponse* pResInfo)
