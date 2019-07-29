@@ -1,6 +1,12 @@
 #pragma once
 #include "mfc_window/okex_martingale_dlg.h"
+#include "exchange/okex/okex_websocket_api.h"
+#include "exchange/okex/okex_http_api.h"
 extern COKExMartingaleDlg* g_pDlg;
+extern CExchange* pExchange;
+#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetWebSocket())
+#define OKEX_HTTP ((COkexHttpAPI*)pExchange->GetHttp())
+
 void local_websocket_callbak_open(const char* szExchangeName)
 {
 	LOCAL_INFO("连接成功");
@@ -26,7 +32,6 @@ void local_websocket_callbak_fail(const char* szExchangeName)
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
-	LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 	switch(apiType)
 	{
 	case eHttpAPIType_FuturesAccountInfoByCurrency:
@@ -99,17 +104,10 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					for(int i = 0; i < (int)data["bids"].size(); ++i)
 					{
 						SFuturesDepth depthInfo;
-						if(g_pDlg->m_bSwapFutures)
-							depthInfo.price = data["bids"][i][0].asString();
-						else
-						{
-							depthInfo.price = CFuncCommon::Double2String(data["bids"][i][0].asDouble() + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-						}
-
-
+						depthInfo.price = data["bids"][i][0].asString();
 						depthInfo.size = data["bids"][i][1].asString();
-						depthInfo.brokenSize = data["bids"][i][2].asInt();
-						depthInfo.tradeNum = data["bids"][i][3].asInt();
+						depthInfo.brokenSize = data["bids"][i][2].asString();
+						depthInfo.tradeNum = data["bids"][i][3].asString();
 						g_pDlg->UpdateDepthInfo(true, depthInfo);
 					}
 				}
@@ -118,15 +116,10 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					for(int i = 0; i < (int)data["asks"].size(); ++i)
 					{
 						SFuturesDepth depthInfo;
-						if(g_pDlg->m_bSwapFutures)
-							depthInfo.price = data["asks"][i][0].asString();
-						else
-						{
-							depthInfo.price = CFuncCommon::Double2String(data["asks"][i][0].asDouble() + DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-						}
+						depthInfo.price = data["asks"][i][0].asString();
 						depthInfo.size = data["asks"][i][1].asString();
-						depthInfo.brokenSize = data["asks"][i][2].asInt();
-						depthInfo.tradeNum = data["asks"][i][3].asInt();
+						depthInfo.brokenSize = data["asks"][i][2].asString();
+						depthInfo.tradeNum = data["asks"][i][3].asString();
 						g_pDlg->UpdateDepthInfo(false, depthInfo);
 					}
 				}
@@ -229,7 +222,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					else if(tradeType == "4")
 						info.tradeType = eFuturesTradeType_CloseBear;
 					g_pDlg->UpdateTradeInfo(info);
-					CActionLog("trade", "ws更新订单信息 order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s, tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), retObj["data"][0]["price_avg"].asString().c_str(), info.status.c_str(), tradeType.c_str());
+					CActionLog("trade", "ws更新订单信息 order=%s, filledQTY=%s, price=%s, priceAvg=%s, state=%s, tradeType=%s", info.orderID.c_str(), info.filledQTY.c_str(), retObj["data"][0]["price"].asString().c_str(), retObj["data"][0]["price_avg"].asString().c_str(), info.state.c_str(), tradeType.c_str());
 				}
 			}
 			else

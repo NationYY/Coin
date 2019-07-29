@@ -19,7 +19,7 @@ public:
 	void API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
 	void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& strLeverage, SHttpResponse* pResInfo = NULL);
 	void API_FuturesServerTime();
-	void API_FuturesCancelOrder(bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID);
+	void API_FuturesCancelOrder(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo = NULL);
 	void API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse* pResInfo = NULL);
 	void API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, SHttpResponse* pResInfo = NULL);
 

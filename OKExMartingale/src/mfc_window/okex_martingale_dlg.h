@@ -21,11 +21,10 @@ struct SKlineData
 	double highPrice;	//最高价
 	double lowPrice;	//最低价
 	double closePrice;	//收盘价
-	std::string volume;	//成交量
-	SKlineData() :openPrice(0), highPrice(0), lowPrice(0), closePrice(0),
-	 volume("0"), time(0)
-	{
-		memset(szTime, 0, 20);
+	int volume;			//成交量(张)
+	double volumeByCurrency;//成交量(币)
+	SKlineData(){
+		memset(this, 0, sizeof(SKlineData));
 	}
 };
 
@@ -33,9 +32,9 @@ struct SFuturesDepth
 {
 	std::string price;
 	std::string size;
-	int brokenSize;
-	int tradeNum;
-	SFuturesDepth(): size(""), brokenSize(0), tradeNum(0), price("")
+	std::string brokenSize;
+	std::string tradeNum;
+	SFuturesDepth(): size(""), brokenSize(""), tradeNum(""), price("")
 	{
 	}
 };
@@ -96,11 +95,7 @@ struct SFuturesTradeInfo
 	std::string state;	//订单状态(-1.撤单成功；0:等待成交 1:部分成交 2:全部成交)
 	eFuturesTradeType tradeType;
 	bool bBeginStopProfit;
-	//time_t waitClientOrderIDTime;
 	std::string size;
-	//time_t tLastUpdate;
-	//bool bModifyQTY;
-	//time_t tLastALLFillTime;
 	int stopProfit;
 	double minPrice;
 	double maxPrice;
@@ -118,11 +113,7 @@ struct SFuturesTradeInfo
 		priceAvg = 0.0;
 		state = "";
 		tradeType = eFuturesTradeType_OpenBull;
-		waitClientOrderIDTime = 0;
 		size = "0";
-		tLastUpdate = 0;
-		bModifyQTY = false;
-		tLastALLFillTime = 0;
 		stopProfit = 0;
 		minPrice = 0.0;
 		maxPrice = 0.0;
@@ -139,11 +130,7 @@ struct SFuturesTradeInfo
 			this->priceAvg = t.priceAvg;
 			this->state = t.state;
 			this->tradeType = t.tradeType;
-			this->waitClientOrderIDTime = t.waitClientOrderIDTime;
 			this->size = t.size;
-			this->tLastUpdate = t.tLastUpdate;
-			this->bModifyQTY = t.bModifyQTY;
-			this->tLastALLFillTime = t.tLastALLFillTime;
 			this->stopProfit = t.stopProfit;
 			this->minPrice = t.minPrice;
 			this->maxPrice = t.maxPrice;
@@ -207,6 +194,7 @@ private:
 	void _UpdateProfitShow();
 	void _UpdateTradeShow();
 	void _SetTradeState(eTradeState state);
+	bool _CheckMoney(std::string& strCurrency);
 public:
 	afx_msg void OnBnClickedButtonStart();
 	CListBox m_ctrlListLog;
@@ -217,12 +205,6 @@ private:
 	std::string m_passphrase;
 private:
 	std::vector<SKlineData> m_vecKlineData;
-	int m_nZhangKouConfirmBar;
-	double m_nZhangKouMinValue;
-	int m_nShouKouConfirmBar;
-	int m_nShouKouChannelConfirmBar;
-	bool m_bZhangKouUp;
-	int m_nZhangKouTradeCheckBar;
 	STickerData m_curTickData;
 	SFuturesAccountInfo m_accountInfo;
 	SFuturesPositionInfo m_positionInfo;
@@ -253,7 +235,6 @@ public:
 	double m_martingaleMovePersent;		//马丁格尔交易跌幅
 	double m_stopProfitFactor;			//头单止盈系数
 	std::string m_strFuturesCycle;		//合约周期
-	std::string m_strFuturesTradeSize;	//下单张数
 	std::string m_strLeverage;			//合约倍数
 	int m_nLeverage;					//合约倍数
 	bool m_bSwapFutures;				//是否永续合约
@@ -266,7 +247,6 @@ public:
 	afx_msg void OnBnClickedButtonStopWhenFinish();
 	CEdit m_editProfit;
 	CStatic m_staticCoin;
-	CStatic m_staticMoney;
 	CEdit m_editCost;
 	afx_msg void OnBnClickedButtonUpdateCost();
 	CListCtrl m_listCtrlOpen;
@@ -285,4 +265,7 @@ public:
 	CEdit m_editFirstTradeSize;
 	std::map<std::string, SFuturesDepth> m_mapDepthSell;
 	std::map<std::string, SFuturesDepth> m_mapDepthBuy;
+	bool m_bWaitDepthBegin;
+	bool m_bFirstKLine;
+	CComboBox m_combKLineCycle;
 };
