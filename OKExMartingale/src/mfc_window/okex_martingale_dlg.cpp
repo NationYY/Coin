@@ -127,6 +127,8 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_bSwapFutures = false;
 	m_bSaveData = false;
 	m_bLoginSuccess = false;
+	m_nTrendType = 0;
+	m_bNeedSubscribe = true;
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
@@ -153,6 +155,10 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO3, m_combFuturesType);
 	DDX_Control(pDX, IDC_EDIT10, m_editFirstTradeSize);
 	DDX_Control(pDX, IDC_COMBO4, m_combKLineCycle);
+	DDX_Control(pDX, IDC_RADIO3, m_btnTrendBull);
+	DDX_Control(pDX, IDC_RADIO4, m_btnTrendBear);
+	DDX_Control(pDX, IDC_RADIO5, m_btnTrendAuto);
+	DDX_Control(pDX, IDC_STATIC_DINGDAN, m_staticDingDan);
 }
 
 BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialog)
@@ -166,6 +172,9 @@ BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialog)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_RADIO1, &COKExMartingaleDlg::OnBnClickedStopProfitMove)
 	ON_BN_CLICKED(IDC_RADIO2, &COKExMartingaleDlg::OnBnClickedRadioStopProfitFix)
+	ON_BN_CLICKED(IDC_RADIO3, &COKExMartingaleDlg::OnBnClickedTrendBull)
+	ON_BN_CLICKED(IDC_RADIO4, &COKExMartingaleDlg::OnBnClickedTrendBear)
+	ON_BN_CLICKED(IDC_RADIO5, &COKExMartingaleDlg::OnBnClickedTrendAuto)
 END_MESSAGE_MAP()
 
 
@@ -386,10 +395,15 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	_LoadData();
 	if(OKEX_WEB_SOCKET)
 	{
-		OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
-		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
-		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
-		OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_bSwapFutures, m_strKlineCycle, m_strCoinType, m_strFuturesCycle);
+		if(m_bNeedSubscribe)
+		{
+			OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+			OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+			OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_bSwapFutures, m_strKlineCycle, m_strCoinType, m_strFuturesCycle);
+			m_bNeedSubscribe = false;
+		}
+		if(!m_bLoginSuccess)
+			OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
 	}
 	CString strTitle;
 	strTitle.Format("%s-%s", (m_bSwapFutures ? "永续合约" : "交割合约"), m_strCoinType.c_str());
@@ -625,11 +639,26 @@ void COKExMartingaleDlg::__CheckTrade()
 	switch(m_eTradeState)
 	{
 	case eTradeState_WaitOpen:
-		{
+	{
 			if(m_bStopWhenFinish)
+			{
+				m_bRun = false;
 				break;
+			}
 			if(m_accountInfo.availBalance == "0")
 				break;
+			if(m_nTrendType == 0)
+				m_bOpenBull = true;
+			else if(m_nTrendType == 1)
+				m_bOpenBull = false;
+			else if(m_nTrendType == 2)
+				m_bOpenBull = true;
+
+			if(m_bOpenBull)
+				m_staticDingDan.SetWindowText("做多");
+			else
+				m_staticDingDan.SetWindowText("做空");
+
 			m_curOpenFinishIndex = -1;
 			//开始下单
 			m_vectorTradePairs.clear();
@@ -1384,6 +1413,16 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 	else if(strTemp == "fix")
 		m_btnStopProfitFix.SetCheck(1);
 
+	strTemp = m_config.get("futures", "trend", "");
+	if(strTemp == "")
+		m_btnTrendAuto.SetCheck(1);
+	else if(strTemp == "bull")
+		m_btnTrendBull.SetCheck(1);
+	else if(strTemp == "bear")
+		m_btnTrendBear.SetCheck(1);
+	else if(strTemp == "auto")
+		m_btnTrendAuto.SetCheck(1);
+
 	strTemp = m_config.get("futures", "beginMoney", "");
 	m_editCost.SetWindowText(strTemp.c_str());
 
@@ -1503,6 +1542,15 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 		m_bStopProfitMove = true;
 	else
 		m_bStopProfitMove = false;
+
+	m_nTrendType = 0;
+	if(m_btnTrendAuto.GetCheck())
+		m_nTrendType = 2;
+	else if(m_btnTrendBull.GetCheck())
+		m_nTrendType = 0;
+	else if(m_btnTrendBear.GetCheck())
+		m_nTrendType = 1;
+
 	m_nFirstTradeSize = atoi(strFirstTradeSize.GetBuffer());
 	if(strKLineCycle == "1分钟")
 	{
@@ -1573,6 +1621,13 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 	m_config.set_value("futures", "stopProfitFactor", strStopProfitFactor.GetBuffer());
 	m_config.set_value("futures", "firstTradeSize", strFirstTradeSize.GetBuffer());
 	m_config.set_value("futures", "cycle", strKLineCycle.GetBuffer());
+	if(m_nTrendType == 0)
+		m_config.set_value("futures", "trend", "bull");
+	else if(m_nTrendType == 1)
+		m_config.set_value("futures", "trend", "bear");
+	else if(m_nTrendType == 2)
+		m_config.set_value("futures", "trend", "auto");
+
 	if(m_bStopProfitMove)
 		m_config.set_value("futures", "stopProfitType", "move");
 	else
@@ -1585,6 +1640,37 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 void COKExMartingaleDlg::OnBnClickedButtonStopWhenFinish()
 {
 	m_bStopWhenFinish = true;
+	bool bCancelAll = true;
+	for(int i = 0; i<(int)m_vectorTradePairs.size(); ++i)
+	{
+		if(m_vectorTradePairs[i].open.orderID != "" && m_vectorTradePairs[i].open.state != state_open)
+			bCancelAll = false;
+	}
+	if(bCancelAll)
+	{
+		for(int i = 0; i<(int)m_vectorTradePairs.size(); ++i)
+		{
+			if(m_vectorTradePairs[i].open.orderID != "")
+			{
+				std::string strClientOrderID = "0";
+				BEGIN_API_CHECK;
+				SHttpResponse resInfo;
+				OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
+				Json::Value& retObj = resInfo.retObj;
+				if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
+				{
+					_QueryOrderInfo(m_vectorTradePairs[i].open.orderID, "功能暂停 删除订单成功", state_cancelled);
+					API_OK;
+				}
+				else
+					_checkStr = resInfo.strRet;
+				API_CHECK;
+				END_API_CHECK;
+			}
+		}
+		m_vectorTradePairs.clear();
+		m_bSaveData = true;
+	}
 }
 
 
@@ -1835,7 +1921,7 @@ void COKExMartingaleDlg::_SaveData()
 	std::ofstream stream(strFilePath);
 	if(!stream.is_open())
 		return;
-	stream << m_curOpenFinishIndex << "	" << m_eTradeState << std::endl;
+	stream << m_curOpenFinishIndex << "	" << m_eTradeState << "	" << (m_bOpenBull?"0":"1") << std::endl;
 	for(int i=0; i<(int)m_vectorTradePairs.size(); ++i)
 	{
 		if(m_vectorTradePairs[i].open.orderID != "")
@@ -1875,8 +1961,14 @@ void COKExMartingaleDlg::_LoadData()
 		if(index == 0)
 		{
 			int state;
-			lineStream >> m_curOpenFinishIndex >> state;
+			int openDir;
+			lineStream >> m_curOpenFinishIndex >> state >> openDir;
 			m_eTradeState = (eTradeState)state;
+			m_bOpenBull = (openDir==0);
+			if(m_bOpenBull)
+				m_staticDingDan.SetWindowText("做多");
+			else
+				m_staticDingDan.SetWindowText("做空");
 		}
 		else
 		{
@@ -1907,4 +1999,24 @@ void COKExMartingaleDlg::_LoadData()
 		index++;
 	}
 	stream.close();
+}
+
+void COKExMartingaleDlg::OnBnClickedTrendBull()
+{
+	m_btnTrendBear.SetCheck(0);
+	m_btnTrendAuto.SetCheck(0);
+}
+
+
+void COKExMartingaleDlg::OnBnClickedTrendBear()
+{
+	m_btnTrendBull.SetCheck(0);
+	m_btnTrendAuto.SetCheck(0);
+}
+
+
+void COKExMartingaleDlg::OnBnClickedTrendAuto()
+{
+	m_btnTrendBull.SetCheck(0);
+	m_btnTrendBear.SetCheck(0);
 }

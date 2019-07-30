@@ -243,6 +243,7 @@ public:
 	std::string m_strLeverage;			//合约倍数
 	int m_nLeverage;					//合约倍数
 	bool m_bSwapFutures;				//是否永续合约
+	int m_nTrendType;					//0做多 1做空 2自动
 	bool m_bStopProfitMove;
 	CComboBox m_combCoinType;
 	CEdit m_editMartingaleStepCnt;
@@ -273,4 +274,12 @@ public:
 	bool m_bWaitDepthBegin;
 	bool m_bFirstKLine;
 	CComboBox m_combKLineCycle;
+	CButton m_btnTrendBull;
+	CButton m_btnTrendBear;
+	CButton m_btnTrendAuto;
+	afx_msg void OnBnClickedTrendBull();
+	afx_msg void OnBnClickedTrendBear();
+	afx_msg void OnBnClickedTrendAuto();
+	bool m_bNeedSubscribe;
+	CStatic m_staticDingDan;
 };
