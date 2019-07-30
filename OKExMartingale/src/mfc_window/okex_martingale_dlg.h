@@ -195,6 +195,7 @@ private:
 	void _UpdateTradeShow();
 	void _SetTradeState(eTradeState state);
 	bool _CheckMoney(std::string& strCurrency);
+	void _SaveData();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	CListBox m_ctrlListLog;

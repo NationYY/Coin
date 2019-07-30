@@ -844,10 +844,6 @@ void COKExMartingaleDlg::__CheckTrade()
 						}
 					}
 					//ÖØÐÂ¹ÒÂôµ¥
-					//double scale = m_curOpenFinishIndex/double(m_martingaleStepCnt-1);
-					//if(scale > 0.5)
-					//	scale = 0.5;
-					//finishPrice *= (1+m_martingaleMovePersent+(m_martingaleMovePersent*scale));
 					finishPrice = m_vectorTradePairs[m_curOpenFinishIndex-1].open.priceAvg;
 					std::string strPrice = CFuncCommon::Double2String(finishPrice+DOUBLE_PRECISION, m_nPriceDecimal);
 					for(int i = 0; i <= m_curOpenFinishIndex; ++i)
@@ -1547,12 +1543,12 @@ void COKExMartingaleDlg::_UpdateTradeShow()
 					{
 						if(will_sell >= openPrice)
 						{
-							szFormat.Format("%.4f%%", ((will_sell-openPrice)/openPrice)*20);
+							szFormat.Format("%.4f%%", ((will_sell-openPrice)/openPrice)*m_nLeverage*100);
 							m_listCtrlOpen.SetItemText(i, 4, szFormat);
 						}
 						else
 						{
-							szFormat.Format("%.4f%%", ((openPrice-will_sell)/openPrice)*20);
+							szFormat.Format("%.4f%%", ((openPrice-will_sell)/openPrice)*m_nLeverage*100);
 							m_listCtrlOpen.SetItemText(i, 4, szFormat);
 						}
 					}
@@ -1560,12 +1556,12 @@ void COKExMartingaleDlg::_UpdateTradeShow()
 					{
 						if(will_sell <= openPrice)
 						{
-							szFormat.Format("%.4f%%", ((openPrice-will_sell)/openPrice)*20);
+							szFormat.Format("%.4f%%", ((openPrice-will_sell)/openPrice)*m_nLeverage*100);
 							m_listCtrlOpen.SetItemText(i, 4, szFormat);
 						}
 						else
 						{
-							szFormat.Format("%.4f%%", ((will_sell-openPrice)/openPrice)*20);
+							szFormat.Format("%.4f%%", ((will_sell-openPrice)/openPrice)*m_nLeverage*100);
 							m_listCtrlOpen.SetItemText(i, 4, szFormat);
 						}
 					}
@@ -2086,4 +2082,13 @@ bool COKExMartingaleDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 		return false;
 	}
 	return true;
+}
+
+void COKExMartingaleDlg::_SaveData()
+{
+	std::string strFilePath = "./save.txt";
+	std::ofstream stream(strFilePath);
+	if(!stream.is_open())
+		return;
+
 }
