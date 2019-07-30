@@ -196,6 +196,8 @@ private:
 	void _SetTradeState(eTradeState state);
 	bool _CheckMoney(std::string& strCurrency);
 	void _SaveData();
+	void _LoadData();
+	void _QueryOrderInfo(std::string& orderID, const char* szLogTitle, const char* state_check=NULL);
 public:
 	afx_msg void OnBnClickedButtonStart();
 	CListBox m_ctrlListLog;
@@ -223,8 +225,10 @@ private:
 	int m_nFinishTimes;
 	time_t m_tWaitNewSubDepth;
 	bool m_bOpenBull;
+	bool m_bSaveData;
 public:
 	bool m_bRun;
+	bool m_bLoginSuccess;
 	time_t m_tListenPong;
 public:
 	int m_nPriceDecimal;			//价格小数点精度

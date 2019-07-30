@@ -22,12 +22,14 @@ void local_websocket_callbak_close(const char* szExchangeName)
 {
 	LOCAL_ERROR("断开连接");
 	g_pDlg->m_tListenPong = 0;
+	g_pDlg->m_bLoginSuccess = false;
 }
 
 void local_websocket_callbak_fail(const char* szExchangeName)
 {
 	LOCAL_ERROR("连接失败");
 	g_pDlg->m_tListenPong = 0;
+	g_pDlg->m_bLoginSuccess = false;
 }
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
