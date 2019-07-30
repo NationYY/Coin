@@ -159,6 +159,7 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_RADIO4, m_btnTrendBear);
 	DDX_Control(pDX, IDC_RADIO5, m_btnTrendAuto);
 	DDX_Control(pDX, IDC_STATIC_DINGDAN, m_staticDingDan);
+	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlPostionInfo);
 }
 
 BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialog)
@@ -175,6 +176,7 @@ BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialog)
 	ON_BN_CLICKED(IDC_RADIO3, &COKExMartingaleDlg::OnBnClickedTrendBull)
 	ON_BN_CLICKED(IDC_RADIO4, &COKExMartingaleDlg::OnBnClickedTrendBear)
 	ON_BN_CLICKED(IDC_RADIO5, &COKExMartingaleDlg::OnBnClickedTrendAuto)
+	ON_BN_CLICKED(IDC_BUTTON2, &COKExMartingaleDlg::OnBnClickedButtonUpdateTrend)
 END_MESSAGE_MAP()
 
 
@@ -250,6 +252,18 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combKLineCycle.InsertString(9, "12小时");
 	m_combKLineCycle.InsertString(10, "1日");
 	m_combKLineCycle.InsertString(11, "1周");
+
+	m_listCtrlPostionInfo.InsertColumn(0, "多仓", LVCFMT_CENTER, 55);
+	m_listCtrlPostionInfo.InsertColumn(1, "多可平", LVCFMT_CENTER, 54);
+	m_listCtrlPostionInfo.InsertColumn(2, "多均价", LVCFMT_CENTER, 80);
+	m_listCtrlPostionInfo.InsertColumn(3, "多保证金", LVCFMT_CENTER, 80);
+	m_listCtrlPostionInfo.InsertColumn(4, "空仓", LVCFMT_CENTER, 55);
+	m_listCtrlPostionInfo.InsertColumn(5, "空可平", LVCFMT_CENTER, 54);
+	m_listCtrlPostionInfo.InsertColumn(6, "空均价", LVCFMT_CENTER, 80);
+	m_listCtrlPostionInfo.InsertColumn(7, "空保证金", LVCFMT_CENTER, 80);
+	m_listCtrlPostionInfo.InsertColumn(8, "爆仓价", LVCFMT_CENTER, 80);
+	m_listCtrlPostionInfo.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
 	if(!m_config.open("./config.ini"))
 		return FALSE;
 	m_apiKey = m_config.get("futures", "apiKey", "");
@@ -606,6 +620,66 @@ void COKExMartingaleDlg::OnLoginSuccess()
 		}
 	}
 	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+	SHttpResponse resInfo;
+	OKEX_HTTP->API_FuturesPositionInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, &resInfo);
+	if(resInfo.retObj["holding"].isArray())
+	{
+		SFuturesPositionInfo positionInfo;
+		if(m_bSwapFutures)
+		{
+			for(int i=0; i<(int)resInfo.retObj["holding"].size(); ++i)
+			{
+				if(resInfo.retObj["holding"][i]["side"].asString() == "short")
+				{
+					positionInfo.bearCount = resInfo.retObj["holding"][i]["position"].asString();
+					if(positionInfo.bearCount != "0")
+					{
+						positionInfo.bearFreeCount = resInfo.retObj["holding"][i]["avail_position"].asString();
+						double priceAvg = stod(resInfo.retObj["holding"][i]["avg_cost"].asString());
+						positionInfo.bearPriceAvg = CFuncCommon::Double2String(priceAvg, m_nPriceDecimal);
+						positionInfo.bearMargin = resInfo.retObj["holding"][i]["margin"].asString();
+						positionInfo.broken = resInfo.retObj["holding"][i]["liquidation_price"].asString();
+					}
+					
+				}
+				else if(resInfo.retObj["holding"][i]["side"].asString() == "long")
+				{
+					positionInfo.bullCount = resInfo.retObj["holding"][i]["position"].asString();
+					if(positionInfo.bullCount != "0")
+					{
+						positionInfo.bullFreeCount = resInfo.retObj["holding"][i]["avail_position"].asString();
+						double priceAvg = stod(resInfo.retObj["holding"][i]["avg_cost"].asString());
+						positionInfo.bullPriceAvg = CFuncCommon::Double2String(priceAvg, m_nPriceDecimal);
+						positionInfo.bullMargin = resInfo.retObj["holding"][i]["margin"].asString();
+						positionInfo.broken = resInfo.retObj["holding"][i]["liquidation_price"].asString();
+					}
+				}
+			}
+		}
+		else
+		{
+			positionInfo.bullCount = resInfo.retObj["holding"][0]["long_qty"].asString();
+			if(positionInfo.bullCount != "0")
+			{
+				positionInfo.bullFreeCount = resInfo.retObj["holding"][0]["long_avail_qty"].asString();
+				double priceAvg = stod(resInfo.retObj["holding"][0]["long_avg_cost"].asString());
+				positionInfo.bullPriceAvg = CFuncCommon::Double2String(priceAvg, m_nPriceDecimal);
+				positionInfo.bullMargin = resInfo.retObj["holding"][0]["long_margin"].asString();
+			}
+			
+			positionInfo.bearCount = resInfo.retObj["holding"][0]["short_qty"].asString();
+			if(positionInfo.bearCount != "0")
+			{
+				positionInfo.bearFreeCount = resInfo.retObj["holding"][0]["short_avail_qty"].asString();
+				double priceAvg = stod(resInfo.retObj["holding"][0]["short_avg_cost"].asString());
+				positionInfo.bearPriceAvg = CFuncCommon::Double2String(priceAvg, m_nPriceDecimal);
+				positionInfo.bearMargin = resInfo.retObj["holding"][0]["short_margin"].asString();
+			}
+			positionInfo.broken = resInfo.retObj["holding"][0]["liquidation_price"].asString();
+		}
+		UpdatePositionInfo(positionInfo);
+		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+	}
 	m_bLoginSuccess = true;
 }
 
@@ -624,6 +698,27 @@ void COKExMartingaleDlg::UpdatePositionInfo(SFuturesPositionInfo& info)
 {
 	m_positionInfo = info;
 	m_positionInfo.bValid = true;
+	_UpdatePositionShow();
+}
+
+void COKExMartingaleDlg::_UpdatePositionShow()
+{
+	if(m_positionInfo.bValid)
+	{
+		if(m_listCtrlPostionInfo.GetItemCount() == 0)
+		{
+			m_listCtrlPostionInfo.InsertItem(0, "");
+		}
+		m_listCtrlPostionInfo.SetItemText(0, 0, m_positionInfo.bullCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 1, m_positionInfo.bullFreeCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 2, m_positionInfo.bullPriceAvg.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 3, m_positionInfo.bullMargin.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 4, m_positionInfo.bearCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 5, m_positionInfo.bearFreeCount.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 6, m_positionInfo.bearPriceAvg.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 7, m_positionInfo.bearMargin.c_str());
+		m_listCtrlPostionInfo.SetItemText(0, 8, m_positionInfo.broken.c_str());
+	}
 }
 
 void COKExMartingaleDlg::__CheckTrade()
@@ -1315,7 +1410,7 @@ void COKExMartingaleDlg::_UpdateTradeShow()
 						}
 						else
 						{
-							szFormat.Format("%.4f%%", ((openPrice-will_sell)/openPrice)*m_nLeverage*100);
+							szFormat.Format("-%.4f%%", ((openPrice-will_sell)/openPrice)*m_nLeverage*100);
 							m_listCtrlOpen.SetItemText(i, 4, szFormat);
 						}
 					}
@@ -1328,7 +1423,7 @@ void COKExMartingaleDlg::_UpdateTradeShow()
 						}
 						else
 						{
-							szFormat.Format("%.4f%%", ((will_sell-openPrice)/openPrice)*m_nLeverage*100);
+							szFormat.Format("-%.4f%%", ((will_sell-openPrice)/openPrice)*m_nLeverage*100);
 							m_listCtrlOpen.SetItemText(i, 4, szFormat);
 						}
 					}
@@ -2019,4 +2114,23 @@ void COKExMartingaleDlg::OnBnClickedTrendAuto()
 {
 	m_btnTrendBull.SetCheck(0);
 	m_btnTrendBear.SetCheck(0);
+}
+
+
+void COKExMartingaleDlg::OnBnClickedButtonUpdateTrend()
+{
+	m_nTrendType = 0;
+	if(m_btnTrendAuto.GetCheck())
+		m_nTrendType = 2;
+	else if(m_btnTrendBull.GetCheck())
+		m_nTrendType = 0;
+	else if(m_btnTrendBear.GetCheck())
+		m_nTrendType = 1;
+	if(m_nTrendType == 0)
+		m_config.set_value("futures", "trend", "bull");
+	else if(m_nTrendType == 1)
+		m_config.set_value("futures", "trend", "bear");
+	else if(m_nTrendType == 2)
+		m_config.set_value("futures", "trend", "auto");
+	m_config.save("./config.ini");
 }

@@ -71,12 +71,15 @@ struct SFuturesPositionInfo
 	std::string bullCount;		//多单数量
 	std::string bullFreeCount;	//多单可平数量
 	std::string bullPriceAvg;	//多单均价
+	std::string bullMargin;		//多单保证金
 	std::string bearCount;		//空单数量
 	std::string bearFreeCount;	//空单可平数量
 	std::string bearPriceAvg;	//空单均价
+	std::string bearMargin;		//空单保证金
 	std::string broken;			//爆仓价
 	bool bValid;
-	SFuturesPositionInfo() : bullCount("0"), bullFreeCount("0"), bullPriceAvg("0"), bearCount("0"), bearFreeCount("0"), bearPriceAvg("0"), broken("0"), bValid(false)
+	SFuturesPositionInfo() : bullCount("0"), bullFreeCount("0"), bullPriceAvg("0"), bearCount("0"), bearFreeCount("0"), bearPriceAvg("0"), broken("0"), bValid(false),
+		bullMargin("0"), bearMargin("0")
 	{
 
 	}
@@ -193,6 +196,7 @@ private:
 	void __CheckTrade();
 	void _UpdateProfitShow();
 	void _UpdateTradeShow();
+	void _UpdatePositionShow();
 	void _SetTradeState(eTradeState state);
 	bool _CheckMoney(std::string& strCurrency);
 	void _SaveData();
@@ -282,4 +286,6 @@ public:
 	afx_msg void OnBnClickedTrendAuto();
 	bool m_bNeedSubscribe;
 	CStatic m_staticDingDan;
+	CListCtrl m_listCtrlPostionInfo;
+	afx_msg void OnBnClickedButtonUpdateTrend();
 };

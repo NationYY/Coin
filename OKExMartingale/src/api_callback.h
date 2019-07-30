@@ -233,6 +233,66 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 				LOCAL_ERROR("ws type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
+	case eWebsocketAPIType_FuturesPositionInfo:
+		{
+			if(retObj.isObject() && retObj["data"].isArray())
+			{
+				SFuturesPositionInfo info;
+				if(retObj["table"].asString() == "swap/position")
+				{
+					for(int i = 0; i < (int)retObj["data"][0]["holding"].size(); ++i)
+					{
+						if(retObj["data"][0]["holding"][i]["side"].asString() == "short")
+						{
+							info.bearCount = retObj["data"][0]["holding"][i]["position"].asString();
+							if(info.bearCount != "0")
+							{
+								info.bearFreeCount = retObj["data"][0]["holding"][i]["avail_position"].asString();
+								double priceAvg = stod(retObj["data"][0]["holding"][i]["avg_cost"].asString());
+								info.bearPriceAvg = CFuncCommon::Double2String(priceAvg, g_pDlg->m_nPriceDecimal);
+								info.bearMargin = retObj["data"][0]["holding"][i]["margin"].asString();
+								info.broken = retObj["data"][0]["holding"][i]["liquidation_price"].asString();
+							}
+						}
+						else if(retObj["data"][0]["holding"][i]["side"].asString() == "long")
+						{
+							info.bullCount = retObj["data"][0]["holding"][i]["position"].asString();
+							if(info.bullCount != "0")
+							{
+								info.bullFreeCount = retObj["data"][0]["holding"][i]["avail_position"].asString();
+								double priceAvg = stod(retObj["data"][0]["holding"][i]["avg_cost"].asString());
+								info.bullPriceAvg = CFuncCommon::Double2String(priceAvg, g_pDlg->m_nPriceDecimal);
+								info.bullMargin = retObj["data"][0]["holding"][i]["margin"].asString();
+								info.broken = retObj["data"][0]["holding"][i]["liquidation_price"].asString();
+							}
+						}
+					}
+				}
+				else
+				{
+					info.bullCount = retObj["data"][0]["long_qty"].asString();
+					if(info.bullCount != "0")
+					{
+						info.bullFreeCount = retObj["data"][0]["long_avail_qty"].asString();
+						double priceAvg = stod(retObj["data"][0]["long_avg_cost"].asString());
+						info.bullPriceAvg = CFuncCommon::Double2String(priceAvg, g_pDlg->m_nPriceDecimal);
+						info.bullMargin = retObj["data"][0]["long_margin"].asString();
+					}
+					info.bearCount = retObj["data"][0]["short_qty"].asString();
+					if(info.bearCount != "0")
+					{
+						info.bearFreeCount = retObj["data"][0]["short_avail_qty"].asString();
+						double priceAvg = stod(retObj["data"][0]["short_avg_cost"].asString());
+						info.bullPriceAvg = CFuncCommon::Double2String(priceAvg, g_pDlg->m_nPriceDecimal);
+						info.bearPriceAvg = retObj["data"][0]["short_avg_cost"].asString();
+						info.bearMargin = retObj["data"][0]["short_margin"].asString();
+					}
+					info.broken = retObj["data"][0]["liquidation_price"].asString();
+				}
+				g_pDlg->UpdatePositionInfo(info);
+			}
+		}
+		break;
 	default:
 		break;
 	}
