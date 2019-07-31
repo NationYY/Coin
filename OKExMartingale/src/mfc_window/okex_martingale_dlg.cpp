@@ -461,6 +461,33 @@ void COKExMartingaleDlg::AddKlineData(SKlineData& data)
 	localtime_s(&_tm, &data.time);
 	_snprintf(data.szTime, 20, "%d-%02d-%02d %02d:%02d:%02d", _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
 	KLINE_DATA.push_back(data);
+	_MakeMA();
+}
+
+void COKExMartingaleDlg::_MakeMA()
+{
+	int nIndex = 0;
+	double numPrice = 0.0;
+	for(int i=KLINE_DATA_SIZE-1; i>=0; i--)
+	{
+		numPrice += KLINE_DATA[i].closePrice;
+		nIndex++;
+		if(nIndex == 5)
+			KLINE_DATA[KLINE_DATA_SIZE-1].ma5 = numPrice/5;
+		else if(nIndex == 7)
+			KLINE_DATA[KLINE_DATA_SIZE-1].ma7 = numPrice/7;
+		else if(nIndex == 15)
+			KLINE_DATA[KLINE_DATA_SIZE-1].ma15 = numPrice/15;
+		else if(nIndex == 30)
+			KLINE_DATA[KLINE_DATA_SIZE-1].ma30 = numPrice/30;
+		else if(nIndex == 60)
+			KLINE_DATA[KLINE_DATA_SIZE-1].ma60 = numPrice/60;
+		else if(nIndex == 90)
+		{
+			KLINE_DATA[KLINE_DATA_SIZE-1].ma90 = numPrice/90;
+			break;
+		}
+	}
 }
 
 void COKExMartingaleDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)

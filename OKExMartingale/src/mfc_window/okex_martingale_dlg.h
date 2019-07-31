@@ -23,6 +23,12 @@ struct SKlineData
 	double closePrice;	//收盘价
 	int volume;			//成交量(张)
 	double volumeByCurrency;//成交量(币)
+	double ma5;
+	double ma7;
+	double ma15;
+	double ma30;
+	double ma60;
+	double ma90;
 	SKlineData(){
 		memset(this, 0, sizeof(SKlineData));
 	}
@@ -202,6 +208,7 @@ private:
 	void _SaveData();
 	void _LoadData();
 	void _QueryOrderInfo(std::string& orderID, const char* szLogTitle, const char* state_check=NULL);
+	void _MakeMA();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	CListBox m_ctrlListLog;
