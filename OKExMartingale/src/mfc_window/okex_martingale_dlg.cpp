@@ -33,12 +33,12 @@
 #define BEGIN_API_CHECK {\
 							int _checkIndex = 0;\
 							std::string _checkStr = "";\
-							for(; _checkIndex<3; ++_checkIndex)\
+							for(; _checkIndex<5; ++_checkIndex)\
 							{
 #define API_OK	break;
 
 #define API_CHECK		}\
-						if(_checkIndex == 3)\
+						if(_checkIndex == 5)\
 							__asm int 3;
 #define END_API_CHECK }
 						
@@ -1012,6 +1012,7 @@ void COKExMartingaleDlg::__CheckTrade()
 							LOCAL_INFO("成功交易一个批次");
 							m_nFinishTimes++;
 							m_staticFinishTimes.SetWindowText(CFuncCommon::ToString(m_nFinishTimes));
+							m_bSaveData = true;
 						}
 						else
 						{
@@ -1040,6 +1041,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									CActionLog("trade", "[成功交易] 单批次");
 									LOCAL_INFO("成功交易一个批次");
 									m_nFinishTimes++;
+									m_bSaveData = true;
 									m_staticFinishTimes.SetWindowText(CFuncCommon::ToString(m_nFinishTimes));
 								}
 								else if(pairsInfo.open.state == state_cancelled || pairsInfo.open.state == state_part_filled)
@@ -1102,6 +1104,7 @@ void COKExMartingaleDlg::__CheckTrade()
 											LOCAL_INFO("成功交易一个批次");
 											m_nFinishTimes++;
 											m_staticFinishTimes.SetWindowText(CFuncCommon::ToString(m_nFinishTimes));
+											m_bSaveData = true;
 										}
 										else
 										{
@@ -1113,6 +1116,7 @@ void COKExMartingaleDlg::__CheckTrade()
 												LOCAL_INFO("成功交易一个批次");
 												m_nFinishTimes++;
 												m_staticFinishTimes.SetWindowText(CFuncCommon::ToString(m_nFinishTimes));
+												m_bSaveData = true;
 											}
 										}
 									}
@@ -1286,6 +1290,7 @@ void COKExMartingaleDlg::__CheckTrade()
 							if(bAllEmpty)
 							{
 								m_nStopProfitTimes++;
+								m_bSaveData = true;
 								m_staticStopProfitTimes.SetWindowText(CFuncCommon::ToString(m_nStopProfitTimes));
 								CActionLog("finish_trade", "[止盈成功] 单批次");
 								CActionLog("trade", "[止盈成功] 单批次");
@@ -2043,7 +2048,7 @@ void COKExMartingaleDlg::_SaveData()
 	std::ofstream stream(strFilePath);
 	if(!stream.is_open())
 		return;
-	stream << m_curOpenFinishIndex << "	" << m_eTradeState << "	" << (m_bOpenBull?"0":"1") << std::endl;
+	stream << m_curOpenFinishIndex << "	" << m_eTradeState << "	" << (m_bOpenBull ? "0" : "1") << m_nStopProfitTimes << "	" << m_nFinishTimes << std::endl;
 	for(int i=0; i<(int)m_vectorTradePairs.size(); ++i)
 	{
 		if(m_vectorTradePairs[i].open.orderID != "")
@@ -2084,13 +2089,15 @@ void COKExMartingaleDlg::_LoadData()
 		{
 			int state;
 			int openDir;
-			lineStream >> m_curOpenFinishIndex >> state >> openDir;
+			lineStream >> m_curOpenFinishIndex >> state >> openDir >> m_nStopProfitTimes >> m_nFinishTimes;
 			m_eTradeState = (eTradeState)state;
 			m_bOpenBull = (openDir==0);
 			if(m_bOpenBull)
 				m_staticDingDan.SetWindowText("做多");
 			else
 				m_staticDingDan.SetWindowText("做空");
+			m_staticFinishTimes.SetWindowText(CFuncCommon::ToString(m_nFinishTimes));
+			m_staticStopProfitTimes.SetWindowText(CFuncCommon::ToString(m_nStopProfitTimes));
 		}
 		else
 		{
