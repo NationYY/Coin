@@ -129,6 +129,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_bLoginSuccess = false;
 	m_nTrendType = 0;
 	m_bNeedSubscribe = true;
+	m_nLastCheckKline = -1;
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
@@ -1360,6 +1361,9 @@ void COKExMartingaleDlg::_CheckTrendDir()
 
 bool COKExMartingaleDlg::_CheckTradeChance()
 {
+	if(m_nLastCheckKline == KLINE_DATA_SIZE)
+		return false;
+	m_nLastCheckKline = KLINE_DATA_SIZE;
 	if(m_bOpenBull)
 	{
 		//价格8个周期中有5个在MA5以上就不下单了
@@ -1370,7 +1374,10 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 				ma5Num++;
 		}
 		if(ma5Num > 5)
+		{
+			LOCAL_INFO("上升期,暂停下单");
 			return false;
+		}
 	}
 	else
 	{
@@ -1382,7 +1389,10 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 				ma5Num++;
 		}
 		if(ma5Num > 5)
+		{
+			LOCAL_INFO("下跌期,暂停下单");
 			return false;
+		}
 	}
 	return true;
 }

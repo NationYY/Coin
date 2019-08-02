@@ -297,4 +297,5 @@ public:
 	CStatic m_staticDingDan;
 	CListCtrl m_listCtrlPostionInfo;
 	afx_msg void OnBnClickedButtonUpdateTrend();
+	int m_nLastCheckKline;
 };
