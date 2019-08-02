@@ -2018,8 +2018,11 @@ bool COKExMartingaleDlg::_CheckMoney(std::string& strCurrency)
 void COKExMartingaleDlg::_SetTradeState(eTradeState state)
 {
 	m_eTradeState = state;
-	if(state == eTradeState_WaitOpen)
+	if (state == eTradeState_WaitOpen)
+	{
+		m_nLastCheckKline = -1;
 		m_bSaveData = true;
+	}
 }
 
 
