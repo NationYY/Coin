@@ -209,6 +209,8 @@ private:
 	void _LoadData();
 	void _QueryOrderInfo(std::string& orderID, const char* szLogTitle, const char* state_check=NULL);
 	void _MakeMA();
+	void _CheckTrendDir();
+	bool _CheckTradeChance();
 public:
 	afx_msg void OnBnClickedButtonStart();
 	CListBox m_ctrlListLog;

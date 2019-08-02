@@ -769,13 +769,9 @@ void COKExMartingaleDlg::__CheckTrade()
 			}
 			if(m_accountInfo.availBalance == "0")
 				break;
-			if(m_nTrendType == 0)
-				m_bOpenBull = true;
-			else if(m_nTrendType == 1)
-				m_bOpenBull = false;
-			else if(m_nTrendType == 2)
-				m_bOpenBull = true;
-
+			_CheckTrendDir();
+			if(!_CheckTradeChance())
+				break;;
 			if(m_bOpenBull)
 				m_staticDingDan.SetWindowText("做多");
 			else
@@ -1350,6 +1346,45 @@ void COKExMartingaleDlg::__CheckTrade()
 		break;
 	}
 
+}
+
+void COKExMartingaleDlg::_CheckTrendDir()
+{
+	if(m_nTrendType == 0)
+		m_bOpenBull = true;
+	else if(m_nTrendType == 1)
+		m_bOpenBull = false;
+	else if(m_nTrendType == 2)
+		m_bOpenBull = true;
+}
+
+bool COKExMartingaleDlg::_CheckTradeChance()
+{
+	if(m_bOpenBull)
+	{
+		//价格8个周期中有5个在MA5以上就不下单了
+		int ma5Num = 0;
+		for(int i=KLINE_DATA_SIZE-1; i>KLINE_DATA_SIZE-1-8; --i)
+		{
+			if(KLINE_DATA[i].closePrice > KLINE_DATA[i].ma5 )
+				ma5Num++;
+		}
+		if(ma5Num > 5)
+			return false;
+	}
+	else
+	{
+		//价格8个周期中有5个在MA5以下就不下单了
+		int ma5Num = 0;
+		for(int i=KLINE_DATA_SIZE-1; i>KLINE_DATA_SIZE-1-8; --i)
+		{
+			if(KLINE_DATA[i].closePrice < KLINE_DATA[i].ma5)
+				ma5Num++;
+		}
+		if(ma5Num > 5)
+			return false;
+	}
+	return true;
 }
 
 void COKExMartingaleDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
@@ -2048,7 +2083,7 @@ void COKExMartingaleDlg::_SaveData()
 	std::ofstream stream(strFilePath);
 	if(!stream.is_open())
 		return;
-	stream << m_curOpenFinishIndex << "	" << m_eTradeState << "	" << (m_bOpenBull ? "0" : "1") << m_nStopProfitTimes << "	" << m_nFinishTimes << std::endl;
+	stream << m_curOpenFinishIndex << "	" << m_eTradeState << "	" << (m_bOpenBull ? "0" : "1") <<  "	" << m_nStopProfitTimes << "	" << m_nFinishTimes << std::endl;
 	for(int i=0; i<(int)m_vectorTradePairs.size(); ++i)
 	{
 		if(m_vectorTradePairs[i].open.orderID != "")
