@@ -870,7 +870,7 @@ void COKExMartingaleDlg::__CheckTrade()
 							if(m_vectorTradePairs[i].close.state == state_filled || m_vectorTradePairs[i].close.state == state_part_filled)
 							{
 								int closeFinish = atoi(m_vectorTradePairs[i].close.filledQTY.c_str());
-								if(!CFuncCommon::CheckEqual(closeFinish, 0.0))
+								if(closeFinish != 0)
 								{
 									int openFinish = atoi(m_vectorTradePairs[i].open.filledQTY.c_str());
 									openFinish -= closeFinish;
@@ -884,11 +884,14 @@ void COKExMartingaleDlg::__CheckTrade()
 									}
 									m_vectorTradePairs[i].open.filledQTY = CFuncCommon::ToString(openFinish);
 								}
+							}
+							if(m_vectorTradePairs[i].close.state != state_filled &&　m_vectorTradePairs[i].close.state != state_cancelled)
+							{
 								BEGIN_API_CHECK;
 								SHttpResponse resInfo;
 								OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].close.orderID, &resInfo);
 								Json::Value& retObj = resInfo.retObj;
-								if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
+								if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 								{
 									_QueryOrderInfo(m_vectorTradePairs[i].close.orderID, "新批次成交 老订单撤销成功", state_cancelled);
 									API_OK;
