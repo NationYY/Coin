@@ -885,7 +885,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									m_vectorTradePairs[i].open.filledQTY = CFuncCommon::ToString(openFinish);
 								}
 							}
-							if(m_vectorTradePairs[i].close.state != state_filled &&¡¡m_vectorTradePairs[i].close.state != state_cancelled)
+							if(m_vectorTradePairs[i].close.state != state_filled && m_vectorTradePairs[i].close.state != state_cancelled)
 							{
 								BEGIN_API_CHECK;
 								SHttpResponse resInfo;
