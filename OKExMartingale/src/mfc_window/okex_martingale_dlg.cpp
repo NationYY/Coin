@@ -956,13 +956,13 @@ void COKExMartingaleDlg::__CheckTrade()
 					{
 						if(m_bOpenBull)
 						{
-							if(m_curTickData.last/m_vectorTradePairs[0].open.price > 1.025)
+							if(m_curTickData.last/m_vectorTradePairs[0].open.price > 1.025 && tNow - m_tOpenTime > DEFAULT_TRADE_TIMER_OVER*60)
 								bTimerOver = true;
 						}
 						else
 						{
 
-							if(m_curTickData.last/m_vectorTradePairs[0].open.price < 0.975)
+							if(m_curTickData.last/m_vectorTradePairs[0].open.price < 0.975 && tNow - m_tOpenTime > DEFAULT_TRADE_TIMER_OVER*60)
 								bTimerOver = true;
 						}
 					}
