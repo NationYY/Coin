@@ -22,7 +22,7 @@
 #define state_open "0"
 #define state_part_filled "1"
 #define state_filled "2"
-
+#define DEFAULT_TRADE_TIMER_OVER 10
 #define KLINE_DATA m_vecKlineData
 #define KLINE_DATA_SIZE ((int)m_vecKlineData.size())
 #define OKEX_CHANGE ((COkexExchange*)pExchange)
@@ -130,6 +130,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_nTrendType = 0;
 	m_bNeedSubscribe = true;
 	m_nLastCheckKline = -1;
+	m_nTradeTimeOver = DEFAULT_TRADE_TIMER_OVER;
 }
 
 void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
@@ -161,6 +162,7 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_RADIO5, m_btnTrendAuto);
 	DDX_Control(pDX, IDC_STATIC_DINGDAN, m_staticDingDan);
 	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlPostionInfo);
+	DDX_Control(pDX, IDC_EDIT4, m_editTradeTimerOver);
 }
 
 BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialog)
@@ -947,7 +949,24 @@ void COKExMartingaleDlg::__CheckTrade()
 				if(m_vectorTradePairs[0].open.state == state_open || m_vectorTradePairs[0].open.state == state_part_filled)
 				{
 					time_t tNow = time(NULL);
-					if(tNow - m_tOpenTime > 10*60)
+					bool bTimerOver = false;
+					if(tNow - m_tOpenTime > m_nTradeTimeOver*60)
+						bTimerOver = true;
+					else
+					{
+						if(m_bOpenBull)
+						{
+							if(m_curTickData.last/m_vectorTradePairs[0].open.price > 1.025)
+								bTimerOver = true;
+						}
+						else
+						{
+
+							if(m_curTickData.last/m_vectorTradePairs[0].open.price < 0.975)
+								bTimerOver = true;
+						}
+					}
+					if(bTimerOver)
 					{
 						bool bCancelAll = false;
 						if(m_vectorTradePairs[0].open.state == state_open)
@@ -1633,6 +1652,9 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 		m_combKLineCycle.SetCurSel(10);
 	else if(strTemp == "1周")
 		m_combKLineCycle.SetCurSel(11);
+
+	strTemp = m_config.get("futures", "tradeTimerOver", "");
+	m_editTradeTimerOver.SetWindowText(strTemp.c_str());
 }
 
 bool COKExMartingaleDlg::__SaveConfigCtrl()
@@ -1702,6 +1724,15 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 		MessageBox("未填写初始下单张数");
 		return false;
 	}
+
+	CString strTradeTimerOver;
+	m_editTradeTimerOver.GetWindowText(strTradeTimerOver);
+	if(strTradeTimerOver == "")
+	{
+		MessageBox("未填写挂单超时时间");
+		return false;
+	}
+
 	CString szCost = "";
 	m_editCost.GetWindowText(szCost);
 	
@@ -1794,6 +1825,7 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 		m_strKlineCycle = "candle604800s";
 		m_nKlineCycle = 604800;
 	}
+	m_nTradeTimeOver = atoi(strTradeTimerOver.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
 	m_config.set_value("futures", "leverage", m_strLeverage.c_str());
@@ -1803,6 +1835,7 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 	m_config.set_value("futures", "stopProfitFactor", strStopProfitFactor.GetBuffer());
 	m_config.set_value("futures", "firstTradeSize", strFirstTradeSize.GetBuffer());
 	m_config.set_value("futures", "cycle", strKLineCycle.GetBuffer());
+	m_config.set_value("futures", "tradeTimerOver", strTradeTimerOver.GetBuffer());
 	if(m_nTrendType == 0)
 		m_config.set_value("futures", "trend", "bull");
 	else if(m_nTrendType == 1)
