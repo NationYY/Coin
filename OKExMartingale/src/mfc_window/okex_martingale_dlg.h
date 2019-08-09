@@ -257,6 +257,7 @@ public:
 	int m_nLeverage;					//合约倍数
 	bool m_bSwapFutures;				//是否永续合约
 	int m_nTrendType;					//0做多 1做空 2自动
+	int m_nTradeTimeOver;				//首单挂单超时时间
 	bool m_bStopProfitMove;
 	CComboBox m_combCoinType;
 	CEdit m_editMartingaleStepCnt;
@@ -298,4 +299,5 @@ public:
 	CListCtrl m_listCtrlPostionInfo;
 	afx_msg void OnBnClickedButtonUpdateTrend();
 	int m_nLastCheckKline;
+	CEdit m_editTradeTimerOver;
 };
