@@ -1374,32 +1374,83 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 	if(m_bOpenBull)
 	{
 		//价格8个周期中有5个在MA5以上就不下单了
+		CString szBuffer = "下单条件检测";
 		int ma5Num = 0;
+		double minPrice = 10000000.0;
+		double maxPrice = 0.0;
+		int allCheckCnt = 0;
 		for(int i=KLINE_DATA_SIZE-1; i>KLINE_DATA_SIZE-1-8; --i)
 		{
-			if(KLINE_DATA[i].closePrice > KLINE_DATA[i].ma5 )
+			CString _szBuffer;
+			_szBuffer.Format("\n[time=%s][close=%.2f][ma5=%.2f]", KLINE_DATA[i].szTime, CFuncCommon::Round(KLINE_DATA[i].closePrice, m_nPriceDecimal), CFuncCommon::Round(KLINE_DATA[i].ma5, m_nPriceDecimal));
+			szBuffer.Append(_szBuffer);
+			if(KLINE_DATA[i].closePrice > KLINE_DATA[i].ma5)
 				ma5Num++;
+			if(i>KLINE_DATA_SIZE-1-4)
+			{
+				if(KLINE_DATA[i].closePrice > maxPrice)
+					maxPrice = KLINE_DATA[i].closePrice;
+				if(KLINE_DATA[i].closePrice > minPrice)
+					minPrice = KLINE_DATA[i].closePrice;
+			}
+			allCheckCnt++;
 		}
-		if(ma5Num > 5)
+		LOCAL_INFO(szBuffer.GetBuffer());
+		if(allCheckCnt == 8)
 		{
-			LOCAL_INFO("上升期,暂停下单");
-			return false;
+			if(ma5Num > 5)
+			{
+				LOCAL_INFO("上升期,暂停下单");
+				return false;
+			}
+			if(maxPrice/minPrice > 1.025)
+			{
+				LOCAL_INFO("快速上升期,暂停下单");
+				return false;
+			}
 		}
+		else
+			LOCAL_INFO("检测周期不满足");
 	}
 	else
 	{
 		//价格8个周期中有5个在MA5以下就不下单了
+		CString szBuffer = "下单条件检测";
 		int ma5Num = 0;
+		double minPrice = 10000000.0;
+		double maxPrice = 0.0;
+		int allCheckCnt = 0;
 		for(int i=KLINE_DATA_SIZE-1; i>KLINE_DATA_SIZE-1-8; --i)
 		{
+			CString _szBuffer;
+			_szBuffer.Format("\n[time=%s][close=%.2f][ma5=%.2f]", KLINE_DATA[i].szTime, CFuncCommon::Round(KLINE_DATA[i].closePrice, m_nPriceDecimal), CFuncCommon::Round(KLINE_DATA[i].ma5, m_nPriceDecimal));
+			szBuffer.Append(_szBuffer);
 			if(KLINE_DATA[i].closePrice < KLINE_DATA[i].ma5)
 				ma5Num++;
+			if(i>KLINE_DATA_SIZE-1-4)
+			{
+				if(KLINE_DATA[i].closePrice > maxPrice)
+					maxPrice = KLINE_DATA[i].closePrice;
+				if(KLINE_DATA[i].closePrice > minPrice)
+					minPrice = KLINE_DATA[i].closePrice;
+			}
+			allCheckCnt++;
 		}
-		if(ma5Num > 5)
+		if(allCheckCnt == 8)
 		{
-			LOCAL_INFO("下跌期,暂停下单");
-			return false;
+			if(ma5Num > 5)
+			{
+				LOCAL_INFO("下跌期,暂停下单");
+				return false;
+			}
+			if(maxPrice/minPrice > 1.025)
+			{
+				LOCAL_INFO("快速下跌期,暂停下单");
+				return false;
+			}
 		}
+		else
+			LOCAL_INFO("检测周期不满足");
 	}
 	return true;
 }
