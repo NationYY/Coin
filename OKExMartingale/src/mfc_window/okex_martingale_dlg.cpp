@@ -1398,8 +1398,8 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 		//价格8个周期中有5个在MA5以上就不下单了
 		CString szBuffer = "下单条件检测";
 		int ma5Num = 0;
-		double minPrice = 10000000.0;
-		double maxPrice = 0.0;
+		double minPrice = m_curTickData.last;
+		double maxPrice = m_curTickData.last;
 		int allCheckCnt = 0;
 		for(int i=KLINE_DATA_SIZE-1; i>KLINE_DATA_SIZE-1-8; --i)
 		{
@@ -1439,8 +1439,8 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 		//价格8个周期中有5个在MA5以下就不下单了
 		CString szBuffer = "下单条件检测";
 		int ma5Num = 0;
-		double minPrice = 10000000.0;
-		double maxPrice = 0.0;
+		double minPrice = m_curTickData.last;
+		double maxPrice = m_curTickData.last;
 		int allCheckCnt = 0;
 		for(int i=KLINE_DATA_SIZE-1; i>KLINE_DATA_SIZE-1-8; --i)
 		{
