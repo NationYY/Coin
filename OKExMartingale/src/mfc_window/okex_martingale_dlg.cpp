@@ -229,13 +229,14 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
 
-	m_listCtrlOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 90);
+	m_listCtrlOpen.InsertColumn(0, "价格", LVCFMT_CENTER, 80);
 	m_listCtrlOpen.InsertColumn(1, "成交量", LVCFMT_CENTER, 100);
-	m_listCtrlOpen.InsertColumn(2, "售出量", LVCFMT_CENTER, 60);
+	m_listCtrlOpen.InsertColumn(2, "售出量", LVCFMT_CENTER, 50);
 	m_listCtrlOpen.InsertColumn(3, "状态", LVCFMT_CENTER, 75);
-	m_listCtrlOpen.InsertColumn(4, "参考利润", LVCFMT_CENTER, 100);
-	m_listCtrlOpen.InsertColumn(5, "最低价", LVCFMT_CENTER, 90);
-	m_listCtrlOpen.InsertColumn(6, "最高价", LVCFMT_CENTER, 90);
+	m_listCtrlOpen.InsertColumn(4, "参考利润", LVCFMT_CENTER, 80);
+	m_listCtrlOpen.InsertColumn(5, "最低价", LVCFMT_CENTER, 80);
+	m_listCtrlOpen.InsertColumn(6, "最高价", LVCFMT_CENTER, 80);
+	m_listCtrlOpen.InsertColumn(7, "止盈", LVCFMT_CENTER, 70);
 	m_listCtrlOpen.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	m_listCtrlClose.InsertColumn(0, "价格", LVCFMT_CENTER, 70);
@@ -1590,6 +1591,21 @@ void COKExMartingaleDlg::_UpdateTradeShow()
 			m_listCtrlOpen.SetItemText(i, 5, szFormat);
 			szFormat.Format("%s", CFuncCommon::Double2String(m_vectorTradePairs[i].open.maxPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str());
 			m_listCtrlOpen.SetItemText(i, 6, szFormat);
+
+			if(m_vectorTradePairs[i].open.stopProfit)
+			{
+				std::string strPrice;
+				if(m_bOpenBull)
+					strPrice = CFuncCommon::Double2String((m_vectorTradePairs[i].open.price*(1 + m_vectorTradePairs[i].open.stopProfit*m_stopProfitFactor + m_stopProfitFactor / 2)) + DOUBLE_PRECISION, m_nPriceDecimal);
+				else
+					strPrice = CFuncCommon::Double2String((m_vectorTradePairs[i].open.price*(1 - m_vectorTradePairs[i].open.stopProfit*m_stopProfitFactor - m_stopProfitFactor / 2)) + DOUBLE_PRECISION, m_nPriceDecimal);
+				m_listCtrlOpen.SetItemText(i, 7, strPrice.c_str());
+			}
+			else
+				m_listCtrlOpen.SetItemText(i, 7, "0");
+
+			szFormat.Format("%d", m_vectorTradePairs[i].open.stopProfit);
+			m_listCtrlOpen.SetItemText(i, 7, szFormat);
 		}
 		if(m_vectorTradePairs[i].close.orderID != "")
 		{
