@@ -1412,7 +1412,7 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 			{
 				if(KLINE_DATA[i].closePrice > maxPrice)
 					maxPrice = KLINE_DATA[i].closePrice;
-				if(KLINE_DATA[i].closePrice > minPrice)
+				if(KLINE_DATA[i].closePrice < minPrice)
 					minPrice = KLINE_DATA[i].closePrice;
 			}
 			allCheckCnt++;
@@ -1453,7 +1453,7 @@ bool COKExMartingaleDlg::_CheckTradeChance()
 			{
 				if(KLINE_DATA[i].closePrice > maxPrice)
 					maxPrice = KLINE_DATA[i].closePrice;
-				if(KLINE_DATA[i].closePrice > minPrice)
+				if(KLINE_DATA[i].closePrice < minPrice)
 					minPrice = KLINE_DATA[i].closePrice;
 			}
 			allCheckCnt++;
