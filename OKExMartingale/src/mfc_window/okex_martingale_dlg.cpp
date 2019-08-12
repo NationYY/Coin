@@ -1486,7 +1486,7 @@ void COKExMartingaleDlg::UpdateTradeInfo(SFuturesTradeInfo& info)
 		if(m_vectorTradePairs[i].open.orderID == info.orderID && 
 		   m_vectorTradePairs[i].open.state != state_filled)
 		{
-			if((m_vectorTradePairs[i].open.state==state_open || m_vectorTradePairs[i].open.state=="") && info.state!=state_open && m_curTickData.bValid && !CFuncCommon::CheckEqual(m_vectorTradePairs[i].open.minPrice, 0.0) && !CFuncCommon::CheckEqual(m_vectorTradePairs[i].open.maxPrice, 0.0))
+			if((m_vectorTradePairs[i].open.state==state_open || m_vectorTradePairs[i].open.state=="") && info.state!=state_open && m_curTickData.bValid && CFuncCommon::CheckEqual(m_vectorTradePairs[i].open.minPrice, 0.0) && CFuncCommon::CheckEqual(m_vectorTradePairs[i].open.maxPrice, 0.0))
 			{
 				m_vectorTradePairs[i].open.minPrice = m_curTickData.last;
 				m_vectorTradePairs[i].open.maxPrice = m_curTickData.last;
