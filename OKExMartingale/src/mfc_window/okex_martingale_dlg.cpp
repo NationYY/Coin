@@ -427,7 +427,8 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	strTitle.Format("%s-%s", (m_bSwapFutures ? "永续合约" : "交割合约"), m_strCoinType.c_str());
 	CWnd *m_pMainWnd;
 	m_pMainWnd = AfxGetMainWnd();
-	m_pMainWnd->SetWindowText(strTitle);
+	if(m_pMainWnd)
+		m_pMainWnd->SetWindowText(strTitle);
 	m_bRun = true;
 }
 
