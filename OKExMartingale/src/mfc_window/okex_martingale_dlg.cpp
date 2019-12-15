@@ -100,6 +100,7 @@ COKExMartingaleDlg::COKExMartingaleDlg(CWnd* pParent /*=NULL*/)
 	m_bRun = false;
 	m_tListenPong = 0;
 	m_strCoinType = "BTC";
+	m_strStandardCurrency = "USD";
 	m_eTradeState = eTradeState_WaitOpen;
 	m_martingaleStepCnt = 5;
 	m_martingaleMovePersent = 0.02;
@@ -163,6 +164,7 @@ void COKExMartingaleDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_DINGDAN, m_staticDingDan);
 	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlPostionInfo);
 	DDX_Control(pDX, IDC_EDIT4, m_editTradeTimerOver);
+	DDX_Control(pDX, IDC_COMBO5, m_combStandardCurrency);
 }
 
 BEGIN_MESSAGE_MAP(COKExMartingaleDlg, CDialog)
@@ -222,6 +224,9 @@ BOOL COKExMartingaleDlg::OnInitDialog()
 	m_combCoinType.InsertString(6, "EOS");
 	m_combCoinType.InsertString(7, "BCH");
 	m_combCoinType.InsertString(8, "TRX");
+
+	m_combStandardCurrency.InsertString(0, "USD");
+	m_combStandardCurrency.InsertString(1, "USDT");
 
 	m_combLeverage.InsertString(0, "10");
 	m_combLeverage.InsertString(1, "20");
@@ -338,9 +343,9 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	bool bFound = false;
 	std::string instrumentID;
 	if (m_bSwapFutures)
-		instrumentID = m_strCoinType + "-USD-SWAP";
+		instrumentID = m_strCoinType + "-" + m_strStandardCurrency + "-SWAP";
 	else
-		instrumentID = m_strCoinType + "-USD-" + m_strFuturesCycle;
+		instrumentID = m_strCoinType + "-" + m_strStandardCurrency + "-" + m_strFuturesCycle;
 	for(int i=0; i<3; ++i)
 	{
 		SHttpResponse resInfo;
@@ -381,10 +386,10 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	{
 		SHttpResponse resInfo;
 		std::string strLeverage = CFuncCommon::ToString(m_nLeverage);
-		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, strLeverage, &resInfo);
+		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, strLeverage, &resInfo);
 		if (m_bSwapFutures)
 		{
-			std::string strInstrumentID = m_strCoinType + "-USD-SWAP";
+			std::string strInstrumentID = m_strCoinType + "-" + m_strStandardCurrency + "-SWAP";
 			if (!resInfo.retObj.isObject() || ((resInfo.retObj["instrument_id"].asString() != strInstrumentID) && (resInfo.retObj["code"].asInt() != 35017)))
 			{
 				MessageBox("设置杠杆失败");
@@ -415,9 +420,9 @@ void COKExMartingaleDlg::OnBnClickedButtonStart()
 	{
 		if(m_bNeedSubscribe)
 		{
-			OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
-			OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
-			OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_bSwapFutures, m_strKlineCycle, m_strCoinType, m_strFuturesCycle);
+			OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
+			OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
+			OKEX_WEB_SOCKET->API_FuturesKlineData(true, m_bSwapFutures, m_strKlineCycle, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
 			m_bNeedSubscribe = false;
 		}
 		if(!m_bLoginSuccess)
@@ -503,7 +508,7 @@ void COKExMartingaleDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
 	std::string strTo = CFuncCommon::LocaltimeToISO8601(endTick);
 	std::string strKlineCycle = CFuncCommon::ToString(m_nKlineCycle);
 	SHttpResponse resInfo;
-	OKEX_HTTP->API_GetFuturesSomeKline(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, strKlineCycle, strFrom, strTo, &resInfo);
+	OKEX_HTTP->API_GetFuturesSomeKline(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, strKlineCycle, strFrom, strTo, &resInfo);
 	Json::Value& retObj = resInfo.retObj;
 	if(retObj.isArray())
 	{
@@ -533,19 +538,7 @@ void COKExMartingaleDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
 			CString strlocalLog;
 			if(m_bSwapFutures)
 			{
-				strlocalLog.Format("{\"table\":\"swap/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-USD-SWAP\"}]}",
-					m_strKlineCycle.c_str(), CFuncCommon::LocaltimeToISO8601(data.time).c_str(),
-					CFuncCommon::Double2String(data.openPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
-					CFuncCommon::Double2String(data.highPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
-					CFuncCommon::Double2String(data.lowPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
-					CFuncCommon::Double2String(data.closePrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
-					data.volume,
-					CFuncCommon::Double2String(data.volumeByCurrency + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
-					m_strCoinType.c_str());
-			}
-			else
-			{
-				strlocalLog.Format("{\"table\":\"futures/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-USD-%s\"}]}",
+				strlocalLog.Format("{\"table\":\"swap/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-%s-SWAP\"}]}",
 					m_strKlineCycle.c_str(), CFuncCommon::LocaltimeToISO8601(data.time).c_str(),
 					CFuncCommon::Double2String(data.openPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
 					CFuncCommon::Double2String(data.highPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
@@ -554,6 +547,20 @@ void COKExMartingaleDlg::ComplementedKLine(time_t tNowKlineTick, int kLineCnt)
 					data.volume,
 					CFuncCommon::Double2String(data.volumeByCurrency + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
 					m_strCoinType.c_str(),
+					m_strStandardCurrency.c_str());
+			}
+			else
+			{
+				strlocalLog.Format("{\"table\":\"futures/%s\",\"data\":[{\"candle\":[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\"],\"instrument_id\":\"%s-%s-%s\"}]}",
+					m_strKlineCycle.c_str(), CFuncCommon::LocaltimeToISO8601(data.time).c_str(),
+					CFuncCommon::Double2String(data.openPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.highPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.lowPrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					CFuncCommon::Double2String(data.closePrice + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					data.volume,
+					CFuncCommon::Double2String(data.volumeByCurrency + DOUBLE_PRECISION, m_nPriceDecimal).c_str(),
+					m_strCoinType.c_str(),
+					m_strStandardCurrency.c_str(),
 					m_strFuturesCycle.c_str());
 			}
 			CActionLog("all_kline", "%s", strlocalLog.GetBuffer());
@@ -601,7 +608,7 @@ void COKExMartingaleDlg::_QueryOrderInfo(std::string& orderID, const char* szLog
 {
 	BEGIN_API_CHECK;
 	SHttpResponse _resInfo;
-	OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, orderID, &_resInfo);
+	OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, orderID, &_resInfo);
 	Json::Value& _retObj = _resInfo.retObj;
 	if(_retObj.isObject() && _retObj["order_id"].isString() && (state_check==NULL || (_retObj["state"].isString() && _retObj["state"].asString() == state_check)))
 	{
@@ -651,9 +658,9 @@ void COKExMartingaleDlg::OnLoginSuccess()
 				_QueryOrderInfo(m_vectorTradePairs[i].close.orderID, "订单初始化更新");
 		}
 	}
-	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
 	SHttpResponse resInfo;
-	OKEX_HTTP->API_FuturesPositionInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, &resInfo);
+	OKEX_HTTP->API_FuturesPositionInfo(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, &resInfo);
 	if(resInfo.retObj["holding"].isArray())
 	{
 		SFuturesPositionInfo positionInfo;
@@ -710,7 +717,7 @@ void COKExMartingaleDlg::OnLoginSuccess()
 			positionInfo.broken = resInfo.retObj["holding"][0]["liquidation_price"].asString();
 		}
 		UpdatePositionInfo(positionInfo);
-		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
 	}
 	m_bLoginSuccess = true;
 }
@@ -721,6 +728,8 @@ void COKExMartingaleDlg::UpdateAccountInfo(SFuturesAccountInfo& info)
 	m_accountInfo.bValid = true;
 	m_editCoin.SetWindowText(m_accountInfo.equity.c_str());
 	std::string strCoin = m_strCoinType;
+	if(m_strStandardCurrency == "USDT")
+		strCoin = m_strStandardCurrency;
 	strCoin += ":";
 	m_staticCoin.SetWindowText(strCoin.c_str());
 	_UpdateProfitShow();
@@ -818,7 +827,7 @@ void COKExMartingaleDlg::__CheckTrade()
 				BEGIN_API_CHECK;
 				SHttpResponse resInfo;
 				std::string clientOrderID = CFuncCommon::GenUUID();
-				OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, strPrice, strSize, m_strLeverage, clientOrderID, &resInfo);
+				OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, tradeType, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, strPrice, strSize, m_strLeverage, clientOrderID, &resInfo);
 				Json::Value& retObj = resInfo.retObj;
 				if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 				{
@@ -893,7 +902,7 @@ void COKExMartingaleDlg::__CheckTrade()
 							{
 								BEGIN_API_CHECK;
 								SHttpResponse resInfo;
-								OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].close.orderID, &resInfo);
+								OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, m_vectorTradePairs[i].close.orderID, &resInfo);
 								Json::Value& retObj = resInfo.retObj;
 								if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 								{
@@ -923,7 +932,7 @@ void COKExMartingaleDlg::__CheckTrade()
 								tradeType = eFuturesTradeType_CloseBull;
 							else
 								tradeType = eFuturesTradeType_CloseBear;
-							OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, strPrice, m_vectorTradePairs[i].open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
+							OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, tradeType, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, strPrice, m_vectorTradePairs[i].open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
 							Json::Value& retObj = resInfo.retObj;
 							if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 							{
@@ -980,7 +989,7 @@ void COKExMartingaleDlg::__CheckTrade()
 								std::string strClientOrderID = "0";
 								BEGIN_API_CHECK;
 								SHttpResponse resInfo;
-								OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
+								OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
 								Json::Value& retObj = resInfo.retObj;
 								if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 								{
@@ -1052,7 +1061,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									{
 										BEGIN_API_CHECK;
 										SHttpResponse resInfo;
-										OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[cancelIndex].open.orderID, &resInfo);
+										OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, m_vectorTradePairs[cancelIndex].open.orderID, &resInfo);
 										Json::Value& retObj = resInfo.retObj;
 										if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 										{
@@ -1079,7 +1088,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									{
 										BEGIN_API_CHECK;
 										SHttpResponse resInfo;
-										OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, pairsInfo.open.orderID, &resInfo);
+										OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, pairsInfo.open.orderID, &resInfo);
 										Json::Value& retObj = resInfo.retObj;
 										if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 										{
@@ -1106,7 +1115,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										BEGIN_API_CHECK;
 										SHttpResponse resInfo;
 										std::string clientOrderID = CFuncCommon::GenUUID();
-										OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, type, m_strCoinType, m_strFuturesCycle, strPrice, pairsInfo.open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
+										OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, type, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, strPrice, pairsInfo.open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
 										Json::Value& retObj = resInfo.retObj;
 										if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 										{
@@ -1241,7 +1250,7 @@ void COKExMartingaleDlg::__CheckTrade()
 														BEGIN_API_CHECK;
 														SHttpResponse resInfo;
 														std::string clientOrderID = CFuncCommon::GenUUID();
-														OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, type, m_strCoinType, m_strFuturesCycle, strPrice, m_vectorTradePairs[i].open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
+														OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, type, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, strPrice, m_vectorTradePairs[i].open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
 														Json::Value& retObj = resInfo.retObj;
 														if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 														{
@@ -1280,7 +1289,7 @@ void COKExMartingaleDlg::__CheckTrade()
 									BEGIN_API_CHECK;
 									SHttpResponse resInfo;
 									std::string clientOrderID = CFuncCommon::GenUUID();
-									OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strFuturesCycle, strPrice, pairsInfo.open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
+									OKEX_HTTP->API_FuturesTrade(false, m_bSwapFutures, eFuturesTradeType_OpenBear, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, strPrice, pairsInfo.open.filledQTY, m_strLeverage, clientOrderID, &resInfo);
 									Json::Value& retObj = resInfo.retObj;
 									if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 									{
@@ -1332,7 +1341,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										{
 											BEGIN_API_CHECK;
 											SHttpResponse resInfo;
-											OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
+											OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
 											Json::Value& retObj = resInfo.retObj;
 											if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 											{
@@ -1351,7 +1360,7 @@ void COKExMartingaleDlg::__CheckTrade()
 										{
 											BEGIN_API_CHECK;
 											SHttpResponse resInfo;
-											OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].close.orderID, &resInfo);
+											OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, m_vectorTradePairs[i].close.orderID, &resInfo);
 											Json::Value& retObj = resInfo.retObj;
 											if (retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 											{
@@ -1649,6 +1658,13 @@ void COKExMartingaleDlg::__InitConfigCtrl()
 		m_combCoinType.SetCurSel(7);
 	else if (strTemp == "TRX")
 		m_combCoinType.SetCurSel(8);
+
+	strTemp = m_config.get("futures", "standardCurrency", "");
+	if (strTemp == "USD")
+		m_combStandardCurrency.SetCurSel(0);
+	else if(strTemp == "USDT")
+		m_combStandardCurrency.SetCurSel(1);
+
 	strTemp = m_config.get("futures", "futuresCycle", "");
 	m_editFuturesCycle.SetWindowText(strTemp.c_str());
 	strTemp = m_config.get("futures", "leverage", "");
@@ -1741,6 +1757,15 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 		MessageBox("未选择合约货币");
 		return false;
 	}
+
+	CString strStandardCurrency;
+	m_combStandardCurrency.GetWindowText(strStandardCurrency);
+	if(strStandardCurrency == "")
+	{
+		MessageBox("未选择本位货币");
+		return false;
+	}
+
 	CString strFuturesCycle;
 	m_editFuturesCycle.GetWindowText(strFuturesCycle);
 	if (strFuturesCycle == "")
@@ -1805,6 +1830,7 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 	m_editCost.GetWindowText(szCost);
 	
 	m_strCoinType = strCoinType.GetBuffer();
+	m_strStandardCurrency = strStandardCurrency.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strLeverage = strLeverage.GetBuffer();
 	m_nLeverage = stoi(m_strLeverage);
@@ -1895,6 +1921,7 @@ bool COKExMartingaleDlg::__SaveConfigCtrl()
 	}
 	m_nTradeTimeOver = atoi(strTradeTimerOver.GetBuffer());
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
+	m_config.set_value("futures", "standardCurrency", m_strStandardCurrency.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
 	m_config.set_value("futures", "leverage", m_strLeverage.c_str());
 	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
@@ -1938,7 +1965,7 @@ void COKExMartingaleDlg::OnBnClickedButtonStopWhenFinish()
 				std::string strClientOrderID = "0";
 				BEGIN_API_CHECK;
 				SHttpResponse resInfo;
-				OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
+				OKEX_HTTP->API_FuturesCancelOrder(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle, m_vectorTradePairs[i].open.orderID, &resInfo);
 				Json::Value& retObj = resInfo.retObj;
 				if(retObj.isObject() && retObj["result"].isBool() && retObj["result"].asBool())
 				{
@@ -2001,7 +2028,7 @@ void COKExMartingaleDlg::_LogicThread()
 		}
 		if(m_tWaitNewSubDepth && tNow - m_tWaitNewSubDepth >= 5)
 		{
-			OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+			OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
 			m_tWaitNewSubDepth = 0;
 		}
 		__CheckTrade();
@@ -2036,7 +2063,7 @@ void COKExMartingaleDlg::_Update3Sec()
 		return;
 	m_tLastUpdate3Sec = tNow;
 	if(m_bRun)
-		OKEX_HTTP->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType);
+		OKEX_HTTP->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType, m_strStandardCurrency);
 }
 
 
@@ -2100,7 +2127,7 @@ void COKExMartingaleDlg::OnBnClickedRadioStopProfitFix()
 bool COKExMartingaleDlg::_CheckMoney(std::string& strCurrency)
 {
 	SHttpResponse resInfo;
-	OKEX_HTTP->API_FuturesAccountInfoByCurrency(false, m_bSwapFutures, strCurrency, &resInfo);
+	OKEX_HTTP->API_FuturesAccountInfoByCurrency(false, m_bSwapFutures, strCurrency, m_strStandardCurrency, &resInfo);
 	if(resInfo.retObj.isObject())
 	{
 		SFuturesAccountInfo info;
@@ -2194,7 +2221,7 @@ bool COKExMartingaleDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	if(checkNum != crc)
 	{
 		LOCAL_ERROR("crc校验失败 checknum=%d local=%d", checkNum, crc);
-		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(false, m_bSwapFutures, m_strCoinType, m_strStandardCurrency, m_strFuturesCycle);
 		m_tWaitNewSubDepth = time(NULL);
 		return false;
 	}

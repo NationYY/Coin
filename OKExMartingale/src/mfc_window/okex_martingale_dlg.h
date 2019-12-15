@@ -247,6 +247,7 @@ public:
 	int m_nPriceDecimal;			//价格小数点精度
 	std::string m_strKlineCycle;		//K线周期
 	std::string m_strCoinType;			//货币类型
+	std::string m_strStandardCurrency;	//本位币类型
 	int m_nKlineCycle;					//K线周期对应秒数
 	int m_nFirstTradeSize;				//首次下单张数
 	int m_martingaleStepCnt;			//马丁格尔交易次数
@@ -300,4 +301,5 @@ public:
 	afx_msg void OnBnClickedButtonUpdateTrend();
 	int m_nLastCheckKline;
 	CEdit m_editTradeTimerOver;
+	CComboBox m_combStandardCurrency;
 };

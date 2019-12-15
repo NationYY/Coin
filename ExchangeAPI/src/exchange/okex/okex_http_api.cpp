@@ -14,15 +14,15 @@ COkexHttpAPI::~COkexHttpAPI()
 }
 
 
-void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std::string& currency, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std::string& currency, std::string& standardCurrency, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesAccountInfoByCurrency;
 	info.reqType = eHttpReqType_Get;
 	if(bSwap)
-		info.strMethod = "api/swap/v3/" + currency + "-USD-SWAP/accounts";
+		info.strMethod = "api/swap/v3/" + currency + "-"+standardCurrency+"-SWAP/accounts";
 	else
-		info.strMethod = "api/futures/v3/accounts/" + currency;
+		info.strMethod = "api/futures/v3/accounts/" + currency + "-" + standardCurrency;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	info.customData = ++m_futuresAccountInfoByCurrencyIndex;
@@ -32,7 +32,7 @@ void COkexHttpAPI::API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std:
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesTrade;
@@ -47,9 +47,9 @@ void COkexHttpAPI::API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tr
 	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
 	char szBuffer[128];
 	if(bSwap)
-		_snprintf(szBuffer, 128, "%s-USD-SWAP", strCoinType.c_str());
+		_snprintf(szBuffer, 128, "%s-%s-SWAP", strCoinType.c_str(), standardCurrency.c_str());
 	else
-		_snprintf(szBuffer, 128, "%s-USD-%s", strCoinType.c_str(), strFuturesCycle.c_str());
+		_snprintf(szBuffer, 128, "%s-%s-%s", strCoinType.c_str(), standardCurrency.c_str(), strFuturesCycle.c_str());
 	info.mapParams["instrument_id"] = SHttpParam(eHttpParamType_String, szBuffer);
 	switch(tradeType)
 	{
@@ -81,20 +81,20 @@ void COkexHttpAPI::API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tr
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& strLeverage, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strLeverage, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SetFuturesLeverage;
 	info.reqType = eHttpReqType_Post;
 	if(bSwap)
 	{
-		info.strMethod = "api/swap/v3/accounts/" + strCoinType + "-USD-SWAP/leverage";
+		info.strMethod = "api/swap/v3/accounts/" + strCoinType + "-" + standardCurrency + "-SWAP/leverage";
 		info.mapParams["leverage"] = SHttpParam(eHttpParamType_String, strLeverage);
 		info.mapParams["side"] = SHttpParam(eHttpParamType_String, "3");
 	}
 	else
 	{
-		info.strMethod = "api/futures/v3/accounts/" + strCoinType + "/leverage";
+		info.strMethod = "api/futures/v3/accounts/" + strCoinType + "-" + standardCurrency + "/leverage";
 		info.mapParams["leverage"] = SHttpParam(eHttpParamType_String, strLeverage);
 	}
 	info.confirmationType = eHttpConfirmationType_OKEx;
@@ -116,15 +116,15 @@ void COkexHttpAPI::API_FuturesServerTime()
 	RequestAsync(info);
 }
 
-void COkexHttpAPI::API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesTradeInfo;
 	info.reqType = eHttpReqType_Get;
 	if(bSwap)
-		info.strMethod = "api/swap/v3/orders/" + strCoinType + "-USD-SWAP/" + orderID;
+		info.strMethod = "api/swap/v3/orders/" + strCoinType + "-" + standardCurrency + "-SWAP/" + orderID;
 	else
-		info.strMethod = "api/futures/v3/orders/" + strCoinType + "-USD-" + strFuturesCycle + "/" + orderID;
+		info.strMethod = "api/futures/v3/orders/" + strCoinType + "-" + standardCurrency + "-" + strFuturesCycle + "/" + orderID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	if(bSync)
@@ -133,15 +133,15 @@ void COkexHttpAPI::API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& str
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesPositionInfo;
 	info.reqType = eHttpReqType_Get;
 	if(bSwap)
-		info.strMethod = "api/swap/v3/" + strCoinType + "-USD-SWAP/position";
+		info.strMethod = "api/swap/v3/" + strCoinType + "-" + standardCurrency + "-SWAP/position";
 	else
-		info.strMethod = "api/futures/v3/" + strCoinType + "-USD-" + strFuturesCycle + "/position";
+		info.strMethod = "api/futures/v3/" + strCoinType + "-" + standardCurrency + "-" + strFuturesCycle + "/position";
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	if(bSync)
@@ -150,15 +150,15 @@ void COkexHttpAPI::API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& 
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_FuturesCancelOrder(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_FuturesCancelOrder(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_FuturesCancelOrder;
 	info.reqType = eHttpReqType_Post;
 	if(bSwap)
-		info.strMethod = "api/swap/v3/cancel_order/" + strCoinType + "-USD-SWAP/" + orderID;
+		info.strMethod = "api/swap/v3/cancel_order/" + strCoinType + "-" + standardCurrency + "-SWAP/" + orderID;
 	else
-		info.strMethod = "api/futures/v3/cancel_order/" + strCoinType + "-USD-" + strFuturesCycle + "/" + orderID;
+		info.strMethod = "api/futures/v3/cancel_order/" + strCoinType + "-" + standardCurrency + "-" + strFuturesCycle + "/" + orderID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	if(bSync)
@@ -253,15 +253,15 @@ void COkexHttpAPI::API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse*
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_GetFuturesSomeKline(bool bSync, bool bSwap, std::string& strCoinType, std::string& strFuturesCycle, std::string& strKlineCycle, std::string& strFrom, std::string& strTo, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_GetFuturesSomeKline(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& strKlineCycle, std::string& strFrom, std::string& strTo, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_GetFuturesSomeKline;
 	info.reqType = eHttpReqType_Get;
 	if(bSwap)
-		info.strMethod = "api/swap/v3/instruments/" + strCoinType + "-USD-SWAP/candles";
+		info.strMethod = "api/swap/v3/instruments/" + strCoinType + "-" + standardCurrency + "-SWAP/candles";
 	else
-		info.strMethod = "api/futures/v3/instruments/" + strCoinType + "-USD-" + strFuturesCycle + "/candles";
+		info.strMethod = "api/futures/v3/instruments/" + strCoinType + "-" + standardCurrency + "-" + strFuturesCycle + "/candles";
 	info.mapParams["start"] = SHttpParam(eHttpParamType_String, strFrom);
 	info.mapParams["end"] = SHttpParam(eHttpParamType_String, strTo);
 	info.mapParams["granularity"] = SHttpParam(eHttpParamType_String, strKlineCycle);
