@@ -2172,6 +2172,7 @@ void COKExMartingaleDlg::ClearDepth()
 
 void COKExMartingaleDlg::UpdateDepthInfo(bool bBuy, SFuturesDepth& info)
 {
+	info.dprice = stod(info.price);
 	if(bBuy)
 	{
 		if(info.size == "0")
@@ -2188,13 +2189,33 @@ void COKExMartingaleDlg::UpdateDepthInfo(bool bBuy, SFuturesDepth& info)
 	}
 }
 
+bool B2S(SFuturesDepth i, SFuturesDepth j) { return (i.dprice>=j.dprice); }
+bool S2B(SFuturesDepth i, SFuturesDepth j) { return (i.dprice<j.dprice); }
 
 bool COKExMartingaleDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 {
-	std::map<std::string, SFuturesDepth>::reverse_iterator itBB = m_mapDepthBuy.rbegin();
-	std::map<std::string, SFuturesDepth>::reverse_iterator itBE = m_mapDepthBuy.rend();
-	std::map<std::string, SFuturesDepth>::iterator itSB = m_mapDepthSell.begin();
-	std::map<std::string, SFuturesDepth>::iterator itSE = m_mapDepthSell.end();
+	std::vector<SFuturesDepth> vecBuy;
+	std::map<std::string, SFuturesDepth>::iterator _itB = m_mapDepthBuy.begin();
+	std::map<std::string, SFuturesDepth>::iterator _itE = m_mapDepthBuy.end();
+	while(_itB != _itE)
+	{
+		vecBuy.push_back(_itB->second);
+		_itB++;
+	}
+	std::sort(vecBuy.begin(), vecBuy.end(), B2S);
+	std::vector<SFuturesDepth> vecSell;
+	_itB = m_mapDepthSell.begin();
+	_itE = m_mapDepthSell.end();
+	while(_itB != _itE)
+	{
+		vecSell.push_back(_itB->second);
+		_itB++;
+	}
+	std::sort(vecSell.begin(), vecSell.end(), S2B);
+	std::vector<SFuturesDepth>::iterator itBB = vecBuy.begin();
+	std::vector<SFuturesDepth>::iterator itBE = vecBuy.end();
+	std::vector<SFuturesDepth>::iterator itSB = vecSell.begin();
+	std::vector<SFuturesDepth>::iterator itSE = vecSell.end();
 	int nIndex = 0;
 	checkSrc = "";
 	while(nIndex < 25)
@@ -2204,7 +2225,7 @@ bool COKExMartingaleDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 		{
 			if(nIndex != 0)
 				checkSrc.append(":");
-			checkSrc.append(itBB->second.price).append(":").append(itBB->second.size);
+			checkSrc.append(itBB->price).append(":").append(itBB->size);
 			have = true;
 			++itBB;
 		}
@@ -2212,7 +2233,7 @@ bool COKExMartingaleDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 		{
 			if(nIndex != 0 || have)
 				checkSrc.append(":");
-			checkSrc.append(itSB->second.price).append(":").append(itSB->second.size);
+			checkSrc.append(itSB->price).append(":").append(itSB->size);
 			++itSB;
 		}
 		++nIndex;

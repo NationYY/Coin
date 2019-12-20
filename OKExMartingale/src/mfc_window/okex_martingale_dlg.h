@@ -36,11 +36,12 @@ struct SKlineData
 
 struct SFuturesDepth
 {
+	double dprice;
 	std::string price;
 	std::string size;
 	std::string brokenSize;
 	std::string tradeNum;
-	SFuturesDepth(): size(""), brokenSize(""), tradeNum(""), price("")
+	SFuturesDepth(): size(""), brokenSize(""), tradeNum(""), price(""), dprice(0.0)
 	{
 	}
 };
