@@ -2285,6 +2285,7 @@ void COKExMartingaleDlg::_LoadData()
 	char lineBuffer[4096]={0};
 	if(stream.fail())
 		return;
+	m_vectorTradePairs.clear();
 	int index = 0;
 	while(!stream.eof())
 	{
