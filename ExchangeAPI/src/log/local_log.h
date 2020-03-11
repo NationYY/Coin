@@ -27,6 +27,7 @@ enum LOG_TYPE
 typedef int (*LOCAL_LOG_CALL_BACK_FUNC)(LOG_TYPE, const char* ); 
 class CLocalLogger
 {
+
 	DECLARE_SINGLETONPT(CLocalLogger)
 	static std::string s_LogTypeTitle[LOG_MAX_TYPE];
 public:

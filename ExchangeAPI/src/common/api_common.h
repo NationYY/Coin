@@ -42,6 +42,7 @@ enum eWebsocketAPIType
 	eWebsocketAPIType_SpotAccountInfo,	//现货个人账户信息
 	eWebsocketAPIType_FuturesEntrustDepth,//期货深度
 	eWebsocketAPIType_FuturesPositionInfo,//合约个人持仓信息
+	eWebsocketAPIType_SpotTrade,		//现货交易数据
 	eWebsocketAPIType_Max,
 };
 

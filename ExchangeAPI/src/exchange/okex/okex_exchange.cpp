@@ -90,6 +90,17 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesPositionInfo, szExchangeName, retObj, strRet);
 	}
+	else if(retObj.isObject() && retObj["table"].isString() && (retObj["table"].asString() == "swap/depth" || retObj["table"].asString() == "futures/depth"))
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_FuturesEntrustDepth, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "spot/trade")
+	{
+		if(m_webSocketCallbakMessage)
+			m_webSocketCallbakMessage(eWebsocketAPIType_SpotTrade, szExchangeName, retObj, strRet);
+	}
+	
 	else
 		LOCAL_ERROR(strRet.c_str());
 }

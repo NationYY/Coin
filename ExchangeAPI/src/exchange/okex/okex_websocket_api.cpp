@@ -7,10 +7,12 @@
 COkexWebsocketAPI::COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures)
 {
 	SetKey(strAPIKey, strSecretKey, strPassphrase, bFutures);
-	if(bFutures)
-		SetURI("wss://real.okex.com:10442/ws/v3");
-	else
-		SetURI("wss://real.okex.com:10441/websocket");
+	SetURI("wss://real.okex.com:8443/ws/v3");
+	
+	//if(bFutures)
+	//	SetURI("wss://real.okex.com:10442/ws/v3");
+	//else
+	//	SetURI("wss://real.okex.com:10441/websocket");
 }
 
 
@@ -116,6 +118,13 @@ void COkexWebsocketAPI::API_SpotKlineData(bool bAdd, std::string& strKlineType, 
 	m_spotKlineCheck.append(strKlineType);
 	char szBuffer[512] = {0};
 	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/%s:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strKlineType.c_str(), strCoinType.c_str(), strMoneyType.c_str());
+	Request(szBuffer);
+}
+
+void COkexWebsocketAPI::API_SpotTradeData(bool bAdd, std::string& strCoinType, std::string& strMoneyType)
+{
+	char szBuffer[512] = { 0 };
+	_snprintf(szBuffer, 512, "{\"op\":\"%s\",\"args\":[\"spot/trade:%s-%s\"]}", (bAdd ? "subscribe" : "unsubscribe"), strCoinType.c_str(), strMoneyType.c_str());
 	Request(szBuffer);
 }
 

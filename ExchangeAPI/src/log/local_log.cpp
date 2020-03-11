@@ -4,6 +4,7 @@
 #include <stdarg.h> 
 #include <stdio.h>
 #include<Windows.h>
+#include <clib/lib/log/log.h>
 std::string CLocalLogger::s_LogTypeTitle[LOG_MAX_TYPE] = {
 	"ERROR", "WARNING", "INFO", "FUNCTION"
 };
@@ -169,6 +170,7 @@ void CLocalLogger::BatchWriteLog()
 		for (size_t i = 0; i < m_vecBack.size(); ++i)
 		{
 			LoadFile();
+			std::cout<<m_vecBack[i];
 			m_outputFile << m_vecBack[i] << std::flush;
 		}
 		m_vecBack.clear();
@@ -209,7 +211,7 @@ void CLocalLogger::LogError(const char * format, ...)
 	va_start(args, format);
 	n = vsnprintf(context, sizeof(context), format, args);
 	va_end(args);
-
+	//DEBUG_ERROR(context);
 	PushLogText(LOG_ERROR, context);
 }
 
@@ -221,7 +223,7 @@ void CLocalLogger::LogWarning(const char * format, ...)
 	va_start(args, format);
 	n = vsnprintf(context, sizeof(context), format, args);
 	va_end(args);
-
+	//DEBUG_WARNING(context);
 	PushLogText(LOG_WARNING, context);
 }
 
@@ -233,7 +235,7 @@ void CLocalLogger::LogInfo(const char * format, ...)
 	va_start(args, format);
 	n = vsnprintf(context, sizeof(context), format, args);
 	va_end(args);
-
+	//DEBUG_LOG(context);
 	PushLogText(LOG_INFO, context);
 }
 

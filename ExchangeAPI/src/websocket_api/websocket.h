@@ -72,8 +72,8 @@ public:
 	m_bConnect(false)
 	{
 		
-        m_endpoint.set_access_channels(websocketpp::log::alevel::all);
-        m_endpoint.set_error_channels(websocketpp::log::elevel::all);
+        m_endpoint.set_access_channels(websocketpp::log::alevel::none);
+        m_endpoint.set_error_channels(websocketpp::log::elevel::none);
 
         // Initialize ASIO
         m_endpoint.init_asio();
