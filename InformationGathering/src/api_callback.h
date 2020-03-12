@@ -3,14 +3,13 @@
 #include "exchange/okex/okex_http_api.h"
 extern COkexExchange* pExchange;
 extern void Pong();
+extern void Listen();
 #define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pExchange->GetHttp())
 void local_websocket_callbak_open(const char* szExchangeName)
 {
 	LOCAL_INFO("连接成功");
-	std::string strCoinType = "BTC";
-	std::string strMoneyType = "USDT";
-	OKEX_WEB_SOCKET->API_SpotTradeData(true, strCoinType, strMoneyType);
+	Listen();
 }
 
 void local_websocket_callbak_close(const char* szExchangeName)

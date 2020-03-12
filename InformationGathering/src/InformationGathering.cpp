@@ -23,6 +23,7 @@ boost::thread logicThread;
 void LogicThread();
 void Update15Sec();
 void Pong();
+void Listen();
 time_t tLastUpdate15Sec = 0;
 time_t tListenPong = 0;
 int _tmain(int argc, _TCHAR* argv[])
@@ -159,4 +160,25 @@ void Update15Sec()
 void Pong()
 {
 	tListenPong = 0;
+}
+
+void Listen()
+{
+	std::string strCnt = init_config.get("spot", "instrument_cnt", "");
+	LOCAL_INFO("¼àÌý±Ò¶ÔÊý:%s", strCnt.c_str());
+	if(strCnt != "")
+	{
+		int cnt = atoi(strCnt.c_str());
+		for(int i = 0; i < cnt; ++i)
+		{
+
+			char szKey[128] = { 0 };
+			_snprintf_c(szKey, 128, "instrument_coin%d", i + 1);
+			std::string strCoinType = init_config.get("spot", szKey, "");
+			_snprintf_c(szKey, 128, "instrument_money%d", i + 1);
+			std::string strMoneyType = init_config.get("spot", szKey, "");
+			if(strCoinType != "" && strMoneyType != "")
+				OKEX_WEB_SOCKET->API_SpotTradeData(true, strCoinType, strMoneyType);
+		}
+	}
 }
