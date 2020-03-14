@@ -25,7 +25,7 @@ public:
 
 
 	void API_GetFuturesSomeKline(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& strKlineCycle, std::string& strFrom, std::string& strTo, SHttpResponse* pResInfo = NULL);
-
+	void API_GetSpotSomeKline(bool bSync, std::string& instrumentid, std::string& strKlineCycle, std::string& strFrom, std::string& strTo, SHttpResponse* pResInfo = NULL);
 	void API_SpotTrade(bool bSync, std::string& instrumentID, std::string& tradeType, std::string& price, std::string& size, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
 	void API_SpotOrderInfo(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo = NULL);
 	void API_SpotAccountInfoByCurrency(bool bSync, std::string& strMoneyType, SHttpResponse* pResInfo = NULL);

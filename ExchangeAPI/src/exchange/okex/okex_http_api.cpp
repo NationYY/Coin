@@ -274,6 +274,23 @@ void COkexHttpAPI::API_GetFuturesSomeKline(bool bSync, bool bSwap, std::string& 
 	
 }
 
+void COkexHttpAPI::API_GetSpotSomeKline(bool bSync, std::string& instrumentid, std::string& strKlineCycle, std::string& strFrom, std::string& strTo, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_GetSpotSomeKline;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/spot/v3/instruments/" + instrumentid + "/candles";
+	info.mapParams["start"] = SHttpParam(eHttpParamType_String, strFrom);
+	info.mapParams["end"] = SHttpParam(eHttpParamType_String, strTo);
+	info.mapParams["granularity"] = SHttpParam(eHttpParamType_String, strKlineCycle);
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+}
+
 void COkexHttpAPI::API_SpotInstruments(bool bSync, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;

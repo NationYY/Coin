@@ -26,6 +26,8 @@ void Pong();
 void Listen();
 time_t tLastUpdate15Sec = 0;
 time_t tListenPong = 0;
+std::map<std::string, time_t> mapLastKlineTime;
+std::map<std::string, __int64> mapLastKlineRecordTime;
 int _tmain(int argc, _TCHAR* argv[])
 {
 	SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ApplicationCrashHandler);
@@ -178,7 +180,13 @@ void Listen()
 			_snprintf_c(szKey, 128, "instrument_money%d", i + 1);
 			std::string strMoneyType = init_config.get("spot", szKey, "");
 			if(strCoinType != "" && strMoneyType != "")
+			{
 				OKEX_WEB_SOCKET->API_SpotTradeData(true, strCoinType, strMoneyType);
+				std::string strKlineType = "candle60s";
+				OKEX_WEB_SOCKET->API_SpotKlineData(true, strKlineType, strCoinType, strMoneyType);
+				mapLastKlineTime[strCoinType + "-" + strMoneyType] = 0;
+				mapLastKlineRecordTime[strCoinType + "-" + strMoneyType] = 0;
+			}
 		}
 	}
 }

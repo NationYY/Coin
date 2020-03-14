@@ -23,6 +23,7 @@ enum eHttpAPIType
 	eHttpAPIType_SpotCancelOrder,				//现货撤单
 	eHttpAPIType_SpotInstruments,				//获取现货币对信息
 	eHttpAPIType_FuturesPositionInfo,			//单一币种持仓信息
+	eHttpAPIType_GetSpotSomeKline,				//获取现货部分K线
 	eHttpAPIType_Max,
 };
 
