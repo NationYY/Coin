@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 using namespace std;
+extern bool g_bIsActionLogTimeOpen;
 class CActionLog
 {
 public:

@@ -6,14 +6,18 @@
 #include <stdarg.h> 
 #include <stdio.h>
 #include<Windows.h>
+bool g_bIsActionLogTimeOpen = true;
 CActionLog::CActionLog(const char* type, const char* format, ...)
 {
 	time_t tNow = time(NULL);
 	tm nowtm;
 	localtime_s(&nowtm, &tNow);
 	char context[6144] = { 0 };
-	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d ",
+	if(g_bIsActionLogTimeOpen)
+	{
+		_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d	",
 			  (int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec);
+	}
 	char _context[6144] = { 0 };
 	va_list args;
 	int n;
@@ -30,7 +34,7 @@ CFixActionLog::CFixActionLog(const char* type, const char* format, ...)
 	tm nowtm;
 	localtime_s(&nowtm, &tNow);
 	char context[6144] = { 0 };
-	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d ",
+	_snprintf(context, sizeof(context)-1, "%d-%02d-%02d %02d:%02d:%02d	",
 			  (int)(1900 + nowtm.tm_year), (int)(1 + nowtm.tm_mon), nowtm.tm_mday, (int)(nowtm.tm_hour), nowtm.tm_min, nowtm.tm_sec);
 	char _context[6144] = { 0 };
 	va_list args;

@@ -100,8 +100,8 @@ void ComplementedKLine(std::string& instrumentid, time_t tNowKlineTick, int kLin
 void AddKlineData(std::string& instrumentid, std::string& _time, std::string& _open, std::string& _high, std::string& _low, std::string& _close, std::string& _volume)
 {
 	__int64 time = CFuncCommon::ISO8601ToTime(_time);
-	if(mapLastKlineTime[instrumentid] != 0 && time - mapLastKlineTime[instrumentid] != nKlineCycle)
-		ComplementedKLine(instrumentid, time, int(time - mapLastKlineTime[instrumentid] - nKlineCycle)/nKlineCycle);
+	if(mapLastKlineRecordTime[instrumentid] != 0 && time - mapLastKlineRecordTime[instrumentid] != nKlineCycle)
+		ComplementedKLine(instrumentid, time, int(time - mapLastKlineRecordTime[instrumentid] - nKlineCycle)/nKlineCycle);
 	std::string strFile = "okex_1min_kline_"+instrumentid;
 	CActionLog(strFile.c_str(), "%s	%s	%s	%s	%s	%s	%s", _open.c_str(),
 		_high.c_str(),
@@ -110,5 +110,5 @@ void AddKlineData(std::string& instrumentid, std::string& _time, std::string& _o
 		_volume.c_str(),
 		_time.c_str(),
 		CFuncCommon::FormatDateStr(CFuncCommon::ISO8601ToTime(_time)).c_str());
-	mapLastKlineTime[instrumentid] = time;
+	mapLastKlineRecordTime[instrumentid] = time;
 }
