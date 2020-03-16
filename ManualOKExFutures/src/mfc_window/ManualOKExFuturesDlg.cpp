@@ -876,7 +876,19 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 				szTemp.Format("%d’≈", canOpenSize);
 				m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
 			}
-			
+			else if(m_strMoneyType == "USDT")
+			{
+				if(m_strCoinType == "ETC")
+				{
+					double availBalance = stod(m_accountInfo.availBalance);
+					availBalance /= m_curTickData.last;
+					availBalance /= 0.1;
+					availBalance *= m_nLeverage;
+					CString szTemp;
+					szTemp.Format("%d’≈", availBalance);
+					m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
+				}
+			}
 		}
 	}
 }
