@@ -245,17 +245,10 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					for(int i = 0; i < (int)data["bids"].size(); ++i)
 					{
 						SFuturesDepth depthInfo;
-						if(g_pDlg->m_bSwapFutures)
-							depthInfo.price = data["bids"][i][0].asString();
-						else
-						{
-							depthInfo.price = CFuncCommon::Double2String(data["bids"][i][0].asDouble()+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-						}
-
-						
+						depthInfo.price = data["bids"][i][0].asString();
 						depthInfo.size = data["bids"][i][1].asString();
-						depthInfo.brokenSize = data["bids"][i][2].asInt();
-						depthInfo.tradeNum = data["bids"][i][3].asInt();
+						depthInfo.brokenSize = atoi(data["bids"][i][2].asString().c_str());
+						depthInfo.tradeNum = atoi(data["bids"][i][3].asString().c_str());
 						g_pDlg->UpdateDepthInfo(true, depthInfo);
 					}
 				}
@@ -264,15 +257,10 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 					for(int i = 0; i < (int)data["asks"].size(); ++i)
 					{
 						SFuturesDepth depthInfo;
-						if(g_pDlg->m_bSwapFutures)
-							depthInfo.price = data["asks"][i][0].asString();
-						else
-						{
-							depthInfo.price = CFuncCommon::Double2String(data["asks"][i][0].asDouble()+DOUBLE_PRECISION, g_pDlg->m_nPriceDecimal);
-						}
+						depthInfo.price = data["asks"][i][0].asString();
 						depthInfo.size = data["asks"][i][1].asString();
-						depthInfo.brokenSize = data["asks"][i][2].asInt();
-						depthInfo.tradeNum = data["asks"][i][3].asInt();
+						depthInfo.brokenSize = atoi(data["asks"][i][2].asString().c_str());
+						depthInfo.tradeNum = atoi(data["asks"][i][3].asString().c_str());
 						g_pDlg->UpdateDepthInfo(false, depthInfo);
 					}
 				}

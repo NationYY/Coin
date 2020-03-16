@@ -24,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InformationGathering", "Inf
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OKExFutures", "OKExFutures\proj_win\OKExFutures.vcxproj", "{22A8A095-3409-4BC8-AFFE-0266AD4141E0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ManualOKExFutures", "ManualOKExFutures\proj_win\ManualOKExFutures.vcxproj", "{95281144-9E0F-435C-99D9-37D9F4AEE641}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -61,6 +63,12 @@ Global
 		{22A8A095-3409-4BC8-AFFE-0266AD4141E0}.HighDebug|Win32.Build.0 = Debug|Win32
 		{22A8A095-3409-4BC8-AFFE-0266AD4141E0}.Release|Win32.ActiveCfg = Release|Win32
 		{22A8A095-3409-4BC8-AFFE-0266AD4141E0}.Release|Win32.Build.0 = Release|Win32
+		{95281144-9E0F-435C-99D9-37D9F4AEE641}.Debug|Win32.ActiveCfg = Debug|Win32
+		{95281144-9E0F-435C-99D9-37D9F4AEE641}.Debug|Win32.Build.0 = Debug|Win32
+		{95281144-9E0F-435C-99D9-37D9F4AEE641}.HighDebug|Win32.ActiveCfg = Debug|Win32
+		{95281144-9E0F-435C-99D9-37D9F4AEE641}.HighDebug|Win32.Build.0 = Debug|Win32
+		{95281144-9E0F-435C-99D9-37D9F4AEE641}.Release|Win32.ActiveCfg = Release|Win32
+		{95281144-9E0F-435C-99D9-37D9F4AEE641}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,5 +79,6 @@ Global
 		{301C015B-BC31-43A8-9CFA-A432819CBA6A} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
 		{C6888D2A-E9C1-4027-8267-99853469F08F} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
 		{22A8A095-3409-4BC8-AFFE-0266AD4141E0} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
+		{95281144-9E0F-435C-99D9-37D9F4AEE641} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
 	EndGlobalSection
 EndGlobal

@@ -107,6 +107,7 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlPostionInfo);
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT2, m_staticAccountAvailInfo);
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT3, m_staticCanOpenSize);
+	DDX_Control(pDX, IDC_COMBO4, m_combMoneyType);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
@@ -166,8 +167,12 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_combCoinType.InsertString(7, "BCH");
 	m_combCoinType.InsertString(8, "TRX");
 
+	m_combMoneyType.InsertString(0, "USD");
+	m_combMoneyType.InsertString(1, "USDT");
+
 	m_combLeverage.InsertString(0, "10");
-	m_combLeverage.InsertString(1, "20");
+	m_combLeverage.InsertString(1, "15");
+	m_combLeverage.InsertString(2, "20");
 
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
@@ -306,6 +311,11 @@ void CManualOKExFuturesDlg::__InitBaseConfigCtrl()
 		m_combCoinType.SetCurSel(7);
 	else if(strTemp == "TRX")
 		m_combCoinType.SetCurSel(8);
+	strTemp = m_config.get("futures", "moneyType", "");
+	if(strTemp == "USD")
+		m_combMoneyType.SetCurSel(0);
+	else if(strTemp == "USDT")
+		m_combMoneyType.SetCurSel(1);
 	strTemp = m_config.get("futures", "futuresCycle", "");
 	m_editFuturesCycle.SetWindowText(strTemp.c_str());
 	strTemp = m_config.get("futures", "leverage", "");
@@ -359,11 +369,19 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 		MessageBox("未选择杠杆");
 		return false;
 	}
+	CString strMoneyType;
+	m_combMoneyType.GetWindowText(strMoneyType);
+	if(strMoneyType == "")
+	{
+		MessageBox("未选择货币类型");
+		return false;
+	}
 
 	CString szCost = "";
 	m_editCapital.GetWindowText(szCost);
 
 	m_strCoinType = strCoinType.GetBuffer();
+	m_strMoneyType = strMoneyType.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strLeverage = strLeverage.GetBuffer();
 	m_nLeverage = stoi(m_strLeverage);
@@ -375,6 +393,7 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 		m_beginMoney = stod(szCost.GetBuffer());
 
 	m_config.set_value("futures", "coinType", m_strCoinType.c_str());
+	m_config.set_value("futures", "moneyType", m_strMoneyType.c_str());
 	m_config.set_value("futures", "futuresCycle", m_strFuturesCycle.c_str());
 	m_config.set_value("futures", "leverage", m_strLeverage.c_str());
 	m_config.set_value("futures", "futuresType", strFuturesType.GetBuffer());
@@ -425,7 +444,7 @@ void CManualOKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 			if(m_tWaitNewSubDepth && tNow - m_tWaitNewSubDepth >= 5)
 			{
-				OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+				OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle);
 				m_tWaitNewSubDepth = 0;
 			}
 			_CheckAllOrder();
@@ -440,7 +459,7 @@ void CManualOKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 	case eTimerType_Account:
 		{
 			if(m_bRun)
-				 OKEX_HTTP->API_FuturesAccountInfoByCurrency(m_bSwapFutures, m_strCoinType);
+				 OKEX_HTTP->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType, m_strMoneyType);
 		}
 		break;
 	}
@@ -458,9 +477,9 @@ void CManualOKExFuturesDlg::OnBnClickedStart()
 	bool bFound = false;
 	std::string instrumentID;
 	if(m_bSwapFutures)
-		instrumentID = m_strCoinType + "-USD-SWAP";
+		instrumentID = m_strCoinType + "-" + m_strMoneyType + "-SWAP";
 	else
-		instrumentID = m_strCoinType + "-USD-" + m_strFuturesCycle;
+		instrumentID = m_strCoinType + "-" + m_strMoneyType + "-" + m_strFuturesCycle;
 	for(int i = 0; i < 3; ++i)
 	{
 		SHttpResponse resInfo;
@@ -501,10 +520,10 @@ void CManualOKExFuturesDlg::OnBnClickedStart()
 	{
 		SHttpResponse resInfo;
 		std::string strLeverage = CFuncCommon::ToString(m_nLeverage);
-		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, strLeverage, &resInfo);
+		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, strLeverage, &resInfo);
 		if(m_bSwapFutures)
 		{
-			std::string strInstrumentID = m_strCoinType + "-USD-SWAP";
+			std::string strInstrumentID = m_strCoinType + "-" + m_strMoneyType + "-SWAP";
 			if(!resInfo.retObj.isObject() || ((resInfo.retObj["instrument_id"].asString() != strInstrumentID) && (resInfo.retObj["code"].asInt() != 35017)))
 			{
 				MessageBox("设置杠杆失败");
@@ -513,6 +532,10 @@ void CManualOKExFuturesDlg::OnBnClickedStart()
 		}
 		else
 		{
+			if(resInfo.retObj.isObject())
+				MessageBox("not object");
+			if(resInfo.retObj["result"].isString())
+				MessageBox("result is string");
 			if(!resInfo.retObj.isObject() || (resInfo.retObj["result"].asString() != "true"))
 			{
 				MessageBox("设置杠杆失败");
@@ -522,9 +545,9 @@ void CManualOKExFuturesDlg::OnBnClickedStart()
 	}
 	if(OKEX_WEB_SOCKET)
 	{
-		OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesTickerData(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle);
 		OKEX_WEB_SOCKET->API_LoginFutures(m_apiKey, m_secretKey, time(NULL));
-		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle);
 	}
 	CString strTitle;
 	strTitle.Format("%s-%s", (m_bSwapFutures ? "永续合约" : "交割合约"), m_strCoinType.c_str());
@@ -551,7 +574,7 @@ void CManualOKExFuturesDlg::Pong()
 
 void CManualOKExFuturesDlg::OnLoginSuccess()
 {
-	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle);
 	m_vecTradePairInfo.clear();
 	std::string strFilePath = "./save.txt";
 	std::ifstream stream(strFilePath);
@@ -582,7 +605,7 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 			info.open.strClientOrderID = szOpenClientID;
 			info.open.orderID = szOpenOrderID;
 			SHttpResponse resInfo;
-			OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID, &resInfo);
+			OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, info.open.orderID, &resInfo);
 			Json::Value& retObj = resInfo.retObj;
 			if(retObj.isObject() && retObj["order_id"].isString())
 			{
@@ -621,7 +644,7 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 			info.close.strClientOrderID = szCloseClientID;
 			info.close.orderID = szCloseOrderID;
 			SHttpResponse resInfo;
-			OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.close.orderID, &resInfo);
+			OKEX_HTTP->API_FuturesOrderInfo(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, info.close.orderID, &resInfo);
 			Json::Value& retObj = resInfo.retObj;
 			if(retObj.isObject() && retObj["order_id"].isString())
 			{
@@ -651,7 +674,7 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 	stream.close();
 	_UpdateTradeShow();
 	SHttpResponse resInfo;
-	OKEX_HTTP->API_FuturesPositionInfo(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, &resInfo);
+	OKEX_HTTP->API_FuturesPositionInfo(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, &resInfo);
 	if(resInfo.retObj["holding"].isArray())
 	{
 		SFuturesPositionInfo positionInfo;
@@ -671,7 +694,7 @@ void CManualOKExFuturesDlg::OnLoginSuccess()
 			positionInfo.broken = resInfo.retObj["holding"][0]["liquidation_price"].asString();
 		}
 		UpdatePositionInfo(positionInfo);
-		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle);
 
 	}
 }
@@ -783,7 +806,7 @@ void CManualOKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::stri
 			itB->open.orderID = serverOrderID;
 			itB->open.waitClientOrderIDTime = 0;
 			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->open.strClientOrderID.c_str(), itB->open.orderID.c_str());
-			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
+			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, serverOrderID);
 			bUpdate = true;
 			break;
 		}
@@ -792,7 +815,7 @@ void CManualOKExFuturesDlg::OnTradeSuccess(std::string& clientOrderID, std::stri
 			itB->close.orderID = serverOrderID;
 			itB->close.waitClientOrderIDTime = 0;
 			CActionLog("trade", "http下单成功 client_order=%s, order=%s", itB->close.strClientOrderID.c_str(), itB->close.orderID.c_str());
-			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strFuturesCycle, serverOrderID);
+			OKEX_HTTP->API_FuturesOrderInfo(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, serverOrderID);
 			bUpdate = true;
 			break;
 		}
@@ -840,16 +863,20 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 		m_staticAccountAvailInfo.SetWindowText(m_accountInfo.availBalance.c_str());
 		if(m_curTickData.bValid)
 		{
-			int sizePrice = 10;
-			if(m_strCoinType == "BTC")
-				sizePrice = 100;
-			double availBalance = stod(m_accountInfo.availBalance);
-			availBalance *= m_nLeverage;
-			availBalance *= m_curTickData.last;
-			int canOpenSize = int(availBalance/sizePrice);
-			CString szTemp;
-			szTemp.Format("%d张", canOpenSize);
-			m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
+			if(m_strMoneyType == "USD")
+			{
+				int sizePrice = 10;
+				if(m_strCoinType == "BTC")
+					sizePrice = 100;
+				double availBalance = stod(m_accountInfo.availBalance);
+				availBalance *= m_nLeverage;
+				availBalance *= m_curTickData.last;
+				int canOpenSize = int(availBalance / sizePrice);
+				CString szTemp;
+				szTemp.Format("%d张", canOpenSize);
+				m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
+			}
+			
 		}
 	}
 }
@@ -1150,7 +1177,7 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 	else
 		price = openPrice.GetBuffer();
 	std::string strClientOrderID = CFuncCommon::GenUUID();
-	OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, type, m_strCoinType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+	OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, type, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
 	SFuturesTradePairInfo* pInfo;
 	int nIndex = _GetFreeOrderIndex();
 	if(nIndex == -1)
@@ -1240,7 +1267,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 					}
 					else if(info.open.status == "1")
 					{
-						OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID);
+						OKEX_HTTP->API_FuturesCancelOrder(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, info.open.orderID);
 						
 						std::string strClientOrderID = CFuncCommon::GenUUID();
 						eFuturesTradeType tradeType;
@@ -1248,7 +1275,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 							tradeType = eFuturesTradeType_CloseBull;
 						else
 							tradeType = eFuturesTradeType_CloseBear;
-						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, price, size, m_strLeverage, strClientOrderID);
+						OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, size, m_strLeverage, strClientOrderID);
 						info.close.strClientOrderID = strClientOrderID;
 						info.close.waitClientOrderIDTime = time(NULL);
 						info.close.tradeType = tradeType;
@@ -1262,7 +1289,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 							tradeType = eFuturesTradeType_CloseBull;
 						else
 							tradeType = eFuturesTradeType_CloseBear;
-						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, price, size, m_strLeverage, strClientOrderID);
+						OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, size, m_strLeverage, strClientOrderID);
 						info.close.strClientOrderID = strClientOrderID;
 						info.close.waitClientOrderIDTime = time(NULL);
 						info.close.tradeType = tradeType;
@@ -1298,14 +1325,14 @@ void CManualOKExFuturesDlg::OnBnClickedButtonCancel()
 			if(m_listCtrlOrderOpen.GetCheck(i))
 			{
 				if(info.open.status == "0" || info.open.status == "1")
-					OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.open.orderID);
+					OKEX_HTTP->API_FuturesCancelOrder(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, info.open.orderID);
 			}
 			if(m_listCtrlOrderClose.GetCheck(i))
 			{
 				if(info.close.orderID != "")
 				{
 					if(info.close.status == "0" || info.close.status == "1")
-						OKEX_HTTP->API_FuturesCancelOrder(m_bSwapFutures, m_strCoinType, m_strFuturesCycle, info.close.orderID);
+						OKEX_HTTP->API_FuturesCancelOrder(true, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle, info.close.orderID);
 				}
 				else if(info.closePlanPrice != "" && info.closePlanSize != "")
 				{
@@ -1455,7 +1482,7 @@ void CManualOKExFuturesDlg::_CheckAllOrder()
 							tradeType = eFuturesTradeType_CloseBull;
 						else
 							tradeType = eFuturesTradeType_CloseBear;
-						OKEX_HTTP->API_FuturesTrade(m_bSwapFutures, tradeType, m_strCoinType, m_strFuturesCycle, itB->closePlanPrice, itB->closePlanSize, m_strLeverage, strClientOrderID);
+						OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, itB->closePlanPrice, itB->closePlanSize, m_strLeverage, strClientOrderID);
 						itB->close.strClientOrderID = strClientOrderID;
 						itB->close.waitClientOrderIDTime = time(NULL);
 						itB->close.tradeType = tradeType;
@@ -1515,7 +1542,7 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 	if(checkNum != crc)
 	{
 		LOCAL_ERROR("crc校验失败 checknum=%d local=%d", checkNum, crc);
-		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(false, m_bSwapFutures, m_strCoinType, m_strFuturesCycle);
+		OKEX_WEB_SOCKET->API_FuturesEntrustDepth(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strFuturesCycle);
 		m_tWaitNewSubDepth = time(NULL);
 		m_bWaitDepthBegin = true;
 		return false;

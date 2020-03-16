@@ -38,7 +38,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 	case eHttpAPIType_SpotTrade:
 		{
 			//LOCAL_ERROR("eHttpAPIType_SpotTrade ret=%s", strRet.c_str());
-			if(retObj.isObject() && ((retObj["error_code"].isInt() && retObj["error_code"].asInt() == 0) || (retObj["error_code"].isString() && retObj["error_code"].asString() == "")))
+			if(retObj.isObject() && (retObj["result"].isBool() && retObj["result"].asBool()))
 			{
 				if(retObj["client_oid"].isString())
 					g_pDlg->OnTradeSuccess(retObj["client_oid"].asString(), retObj["order_id"].asString());

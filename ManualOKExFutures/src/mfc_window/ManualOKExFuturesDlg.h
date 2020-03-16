@@ -49,6 +49,17 @@ struct SFuturesPositionInfo
 	}
 };
 
+struct SFuturesAccountInfo
+{
+	std::string equity;	//账户权益
+	bool bValid;
+	std::string availBalance;
+	SFuturesAccountInfo() : equity("0"), bValid(false), availBalance("0")
+	{
+
+	}
+};
+
 struct SFuturesTradeInfo
 {
 	std::string strClientOrderID;
@@ -206,7 +217,8 @@ public:
 	time_t m_tWaitNewSubDepth;
 	std::vector<SFuturesTradePairInfo> m_vecTradePairInfo;
 
-	std::string m_strCoinType;			//货币类型
+	std::string m_strCoinType;			//币类型
+	std::string m_strMoneyType;			//货类型
 	std::string m_strFuturesCycle;		//合约周期
 	std::string m_strFuturesTradeSize;	//下单张数
 	std::string m_strLeverage;			//合约倍数
@@ -247,4 +259,5 @@ public:
 	afx_msg void OnBnClickedButtonClearFreeLine();
 	afx_msg void OnBnClickedButtonBearFirst();
 	afx_msg void OnBnClickedButtonBullFirst();
+	CComboBox m_combMoneyType;
 };
