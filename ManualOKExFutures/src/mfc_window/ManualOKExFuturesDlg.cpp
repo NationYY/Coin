@@ -166,6 +166,7 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_combCoinType.InsertString(6, "EOS");
 	m_combCoinType.InsertString(7, "BCH");
 	m_combCoinType.InsertString(8, "TRX");
+	m_combCoinType.InsertString(9, "BSV");
 
 	m_combMoneyType.InsertString(0, "USD");
 	m_combMoneyType.InsertString(1, "USDT");
@@ -311,6 +312,9 @@ void CManualOKExFuturesDlg::__InitBaseConfigCtrl()
 		m_combCoinType.SetCurSel(7);
 	else if(strTemp == "TRX")
 		m_combCoinType.SetCurSel(8);
+	else if(strTemp == "BSV")
+		m_combCoinType.SetCurSel(9);
+
 	strTemp = m_config.get("futures", "moneyType", "");
 	if(strTemp == "USD")
 		m_combMoneyType.SetCurSel(0);

@@ -44,6 +44,15 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 			{
 				for(int i = 0; i < (int)retObj["data"].size(); ++i)
 				{
+					time_t tNow = time(NULL);
+					tm *nowtm = localtime(&tNow);
+					char context[256] = { 0 };
+					_snprintf(context, sizeof(context)-1, "%02d:%02d:%02d %s %s",
+						(int)(nowtm->tm_hour), nowtm->tm_min, nowtm->tm_sec,
+						retObj["data"][i]["trade_id"].asString().c_str(),
+						retObj["data"][i]["timestamp"].asString().c_str());
+					std::cout << context << std::endl;
+
 					std::string strInstrumentID = retObj["data"][i]["instrument_id"].asString();
 					std::string strFile = "okex_trade_"+strInstrumentID;
 					CActionLog(strFile.c_str(), "%s	%s	%s	%s	%s	%s", retObj["data"][i]["trade_id"].asString().c_str(),
@@ -52,6 +61,7 @@ void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szEx
 						retObj["data"][i]["side"].asString().c_str(),
 						retObj["data"][i]["timestamp"].asString().c_str(),
 						CFuncCommon::FormatDateStr(CFuncCommon::ISO8601ToTime(retObj["data"][i]["timestamp"].asString())).c_str());
+					
 				}
 			}
 		}
