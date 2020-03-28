@@ -76,7 +76,6 @@ void COkexExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value&
 	}
 	else if(retObj.isObject() && retObj["table"].isString() && retObj["table"].asString() == "spot/order")
 	{
-		LOCAL_ERROR("°¡%s", strRet.c_str());
 		if(m_webSocketCallbakMessage)
 			m_webSocketCallbakMessage(eWebsocketAPIType_SpotOrderInfo, szExchangeName, retObj, strRet);
 	}
