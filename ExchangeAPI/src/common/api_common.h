@@ -20,6 +20,7 @@ enum eHttpAPIType
 	eHttpAPIType_SpotTrade,						//现货下单
 	eHttpAPIType_SpotTradeInfo,					//查询现货单条订单信息
 	eHttpAPIType_SpotAccountInfoByCurrency,		//单一币种现货账户信息
+	eHttpAPIType_MarginAccountInfoByCurrency,	//单一币种杠杆账户信息
 	eHttpAPIType_SpotCancelOrder,				//现货撤单
 	eHttpAPIType_SpotInstruments,				//获取现货币对信息
 	eHttpAPIType_FuturesPositionInfo,			//单一币种持仓信息

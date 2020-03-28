@@ -72,6 +72,7 @@ CManualOKExSpotDlg::CManualOKExSpotDlg(CWnd* pParent /*=NULL*/)
 	m_bWaitDepthBegin = true;
 	m_tListenPong = 0;
 	m_bRun = false;
+	m_bMargin = false;
 	m_apiKey = "";
 	m_secretKey = "";
 	m_passphrase = "";
@@ -96,6 +97,8 @@ void CManualOKExSpotDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT6, m_editClosePrice);
 	DDX_Control(pDX, IDC_EDIT7, m_editCloseSize);
 	DDX_Control(pDX, IDC_LIST_OPEN2, m_listCtrlAccountInfo);
+	DDX_Control(pDX, IDC_CHECK1, m_checkBoxMargin);
+	DDX_Control(pDX, IDC_EDIT8, m_editFixProfit);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExSpotDlg, CDialog)
@@ -272,6 +275,11 @@ void CManualOKExSpotDlg::__InitBaseConfigCtrl()
 		if(nIndex != -1)
 			m_combCoinType.SetCurSel(nIndex);
 	}
+	strTemp = m_config.get("spot", "margin", "");
+	if(strTemp == "" || strTemp == "0")
+		m_checkBoxMargin.SetCheck(0);
+	else
+		m_checkBoxMargin.SetCheck(1);
 }
 
 void CManualOKExSpotDlg::__InitTradeConfigCtrl()
@@ -298,6 +306,16 @@ bool CManualOKExSpotDlg::__SaveBaseConfigCtrl()
 		m_strSecondCoinType = m_strInstrumentType.substr(pos+1);
 	}
 	m_config.set_value("spot", "instrumentType", m_strInstrumentType.c_str());
+	if(m_checkBoxMargin.GetState() == 0)
+	{
+		m_bMargin = false;
+		m_config.set_value("spot", "margin", "0");
+	}
+	else
+	{
+		m_config.set_value("spot", "margin", "1");
+		m_bMargin = true;
+	}
 	m_config.save("./config.ini");
 	return true;
 }
@@ -356,7 +374,7 @@ void CManualOKExSpotDlg::OnTimer(UINT_PTR nIDEvent)
 				std::list<std::string>::iterator _itE = itB->second.end();
 				while(_itB != _itE)
 				{
-					OKEX_HTTP->API_SpotOrderInfo(true, m_strInstrumentType, *_itB);
+					OKEX_HTTP->API_SpotOrderInfo(true, m_bMargin, m_strInstrumentType, *_itB);
 					++_itB;
 				}
 				itB = m_mapFindTradeinfo.erase(itB);
@@ -374,8 +392,14 @@ void CManualOKExSpotDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			if(m_bRun)
 			{
-				OKEX_HTTP->API_SpotAccountInfoByCurrency(true, m_strFirstCoinType);
-				OKEX_HTTP->API_SpotAccountInfoByCurrency(true, m_strSecondCoinType);
+				if(m_bMargin)
+					OKEX_HTTP->API_MarginAccountInfoByCurrency(true, m_strFirstCoinType, m_strSecondCoinType);
+				else
+				{
+					OKEX_HTTP->API_SpotAccountInfoByCurrency(true, m_strFirstCoinType);
+					OKEX_HTTP->API_SpotAccountInfoByCurrency(true, m_strSecondCoinType);
+				}
+				
 			}	 
 		}
 		break;
@@ -555,7 +579,7 @@ void CManualOKExSpotDlg::OnLoginSuccess()
 			info.open.strClientOrderID = szOpenClientID;
 			info.open.orderID = szOpenOrderID;
 			SHttpResponse resInfo;
-			OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentType, info.open.orderID, &resInfo);
+			OKEX_HTTP->API_SpotOrderInfo(false, m_bMargin, m_strInstrumentType, info.open.orderID, &resInfo);
 			Json::Value& retObj = resInfo.retObj;
 			if(retObj.isObject() && retObj["order_id"].isString())
 			{
@@ -583,7 +607,7 @@ void CManualOKExSpotDlg::OnLoginSuccess()
 			info.close.strClientOrderID = szCloseClientID;
 			info.close.orderID = szCloseOrderID;
 			SHttpResponse resInfo;
-			OKEX_HTTP->API_SpotOrderInfo(false, m_strInstrumentType, info.close.orderID, &resInfo);
+			OKEX_HTTP->API_SpotOrderInfo(false, m_bMargin, m_strInstrumentType, info.close.orderID, &resInfo);
 			Json::Value& retObj = resInfo.retObj;
 			if(retObj.isObject() && retObj["order_id"].isString())
 			{
@@ -1033,7 +1057,7 @@ void CManualOKExSpotDlg::_OpenOrder(std::string& type)
 	else
 		price = tradePrice.GetBuffer();
 	std::string strClientOrderID = CFuncCommon::GenUUID();
-	OKEX_HTTP->API_SpotTrade(true, m_strInstrumentType, type, price, m_strSpotTradeSize, strClientOrderID);
+	OKEX_HTTP->API_SpotTrade(true, m_bMargin, m_strInstrumentType, type, price, m_strSpotTradeSize, strClientOrderID);
 	SSpotTradePairInfo* pInfo;
 	int nIndex = _GetFreeOrderIndex();
 	if(nIndex == -1)
@@ -1098,18 +1122,32 @@ void CManualOKExSpotDlg::OnBnClickedButtonClose()
 					std::string price;
 					CString closePrice;
 					m_editClosePrice.GetWindowText(closePrice);
-					if(closePrice == "")
-						price = "-1";
-					else
-						price = closePrice.GetBuffer();
-
-					std::string size;
 					CString closeSize;
 					m_editCloseSize.GetWindowText(closeSize);
+					CString fixProfit;
+					m_editFixProfit.GetWindowText(fixProfit);
+					if(closePrice == "" && fixProfit != "")
+					{
+						double pro = atof(fixProfit.GetBuffer());
+						pro /= 100;
+						if(info.open.tradeType == "buy")
+							price = CFuncCommon::Double2String(info.open.price*(1+pro)+DOUBLE_PRECISION, m_nPriceDecimal);
+						else
+							price = CFuncCommon::Double2String(info.open.price*(1-pro)+DOUBLE_PRECISION, m_nPriceDecimal);
+					}
+					else
+					{
+						if(closePrice == "")
+							price = "-1";
+						else
+							price = closePrice.GetBuffer();
+					}
+					std::string size;
 					if(closeSize == "")
 						size = info.open.filledSize;
 					else
 						size = closeSize.GetBuffer();
+
 					if(info.open.status == "open")
 					{
 						if(price == "-1")
@@ -1123,7 +1161,7 @@ void CManualOKExSpotDlg::OnBnClickedButtonClose()
 					}
 					else if(info.open.status == "part_filled")
 					{
-						OKEX_HTTP->API_SpotCancelOrder(true, m_strInstrumentType, info.open.orderID);
+						OKEX_HTTP->API_SpotCancelOrder(true, m_bMargin, m_strInstrumentType, info.open.orderID);
 						
 						std::string strClientOrderID = CFuncCommon::GenUUID();
 						std::string tradeType;
@@ -1131,7 +1169,7 @@ void CManualOKExSpotDlg::OnBnClickedButtonClose()
 							tradeType = "sell";
 						else
 							tradeType = "buy";
-						OKEX_HTTP->API_SpotTrade(true, m_strInstrumentType, tradeType, price, size, strClientOrderID);
+						OKEX_HTTP->API_SpotTrade(true, m_bMargin, m_strInstrumentType, tradeType, price, size, strClientOrderID);
 						info.close.strClientOrderID = strClientOrderID;
 						info.close.waitClientOrderIDTime = time(NULL);
 						info.close.tradeType = tradeType;
@@ -1145,7 +1183,7 @@ void CManualOKExSpotDlg::OnBnClickedButtonClose()
 							tradeType = "sell";
 						else
 							tradeType = "buy";
-						OKEX_HTTP->API_SpotTrade(true, m_strInstrumentType, tradeType, price, size, strClientOrderID);
+						OKEX_HTTP->API_SpotTrade(true, m_bMargin, m_strInstrumentType, tradeType, price, size, strClientOrderID);
 						info.close.strClientOrderID = strClientOrderID;
 						info.close.waitClientOrderIDTime = time(NULL);
 						info.close.tradeType = tradeType;
@@ -1181,14 +1219,14 @@ void CManualOKExSpotDlg::OnBnClickedButtonCancel()
 			if(m_listCtrlOrderOpen.GetCheck(i))
 			{
 				if(info.open.status == "open" || info.open.status == "part_filled")
-					OKEX_HTTP->API_SpotCancelOrder(true, m_strInstrumentType, info.open.orderID);
+					OKEX_HTTP->API_SpotCancelOrder(true, m_bMargin, m_strInstrumentType, info.open.orderID);
 			}
 			if(m_listCtrlOrderClose.GetCheck(i))
 			{
 				if(info.close.orderID != "")
 				{
 					if(info.close.status == "open" || info.close.status == "part_filled")
-						OKEX_HTTP->API_SpotCancelOrder(true, m_strInstrumentType, info.close.orderID);
+						OKEX_HTTP->API_SpotCancelOrder(true, m_bMargin, m_strInstrumentType, info.close.orderID);
 				}
 				else if(info.closePlanPrice != "" && info.closePlanSize != "")
 				{
@@ -1338,7 +1376,7 @@ void CManualOKExSpotDlg::_CheckAllOrder()
 							tradeType = "sell";
 						else
 							tradeType = "buy";
-						OKEX_HTTP->API_SpotTrade(true, m_strInstrumentType, tradeType, itB->closePlanPrice, itB->closePlanSize, strClientOrderID);
+						OKEX_HTTP->API_SpotTrade(true, m_bMargin, m_strInstrumentType, tradeType, itB->closePlanPrice, itB->closePlanSize, strClientOrderID);
 						itB->close.strClientOrderID = strClientOrderID;
 						itB->close.waitClientOrderIDTime = time(NULL);
 						itB->close.tradeType = tradeType;

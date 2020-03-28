@@ -231,4 +231,7 @@ public:
 	afx_msg void OnBnClickedButtonClearFreeLine();
 	afx_msg void OnBnClickedButtonBearFirst();
 	afx_msg void OnBnClickedButtonBullFirst();
+	CButton m_checkBoxMargin;
+	bool m_bMargin;
+	CEdit m_editFixProfit;
 };

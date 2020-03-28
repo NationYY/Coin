@@ -35,6 +35,30 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 		}
 		break;
+	case eHttpAPIType_MarginAccountInfoByCurrency:
+		{
+			Json::Value::Members mem = retObj.getMemberNames();
+			bool bRet = false;
+			for(auto iter = mem.begin(); iter != mem.end(); iter++)
+			{
+				std::string keyName = *iter;
+				int nPos = keyName.find("currency:");
+
+				if(retObj[keyName].isObject() && nPos != std::string::npos)
+				{
+					bRet = true;
+					SSpotAccountInfo data;
+					data.currency = keyName.substr(9);
+					data.balance = retObj[keyName]["balance"].asString();
+					data.hold = retObj[keyName]["hold"].asString();
+					data.available = retObj[keyName]["available"].asString();
+					g_pDlg->UpdateAccountInfo(data);
+				}
+			}
+			if(!bRet)
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+		}
+		break;
 	case eHttpAPIType_SpotTrade:
 		{
 			//LOCAL_ERROR("eHttpAPIType_SpotTrade ret=%s", strRet.c_str());

@@ -2,7 +2,7 @@
 #include "okex_http_api.h"
 #ifdef _OPEN_OKEX_
 COkexHttpAPI::COkexHttpAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase):
-m_futuresAccountInfoByCurrencyIndex(0), m_SpotAccountInfoByCurrencyIndex(0)
+m_futuresAccountInfoByCurrencyIndex(0), m_SpotAccountInfoByCurrencyIndex(0), m_marginAccountInfoByCurrency(0)
 {
 	SetKey(strAPIKey, strSecretKey, strPassphrase);
 	SetURL("https://www.okex.com");
@@ -167,12 +167,15 @@ void COkexHttpAPI::API_FuturesCancelOrder(bool bSync, bool bSwap, std::string& s
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, std::string& tradeType, std::string& price, std::string& size, std::string& clientOrderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_SpotTrade(bool bSync, bool bMargin, std::string& instrumentID, std::string& tradeType, std::string& price, std::string& size, std::string& clientOrderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotTrade;
 	info.reqType = eHttpReqType_Post;
-	info.strMethod = "api/spot/v3/orders";
+	if(bMargin)
+		info.strMethod = "api/margin/v3/orders";
+	else
+		info.strMethod = "api/spot/v3/orders";
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, clientOrderID);
@@ -182,7 +185,10 @@ void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, std::str
 		info.mapParams["type"] = SHttpParam(eHttpParamType_String, "limit");
 	info.mapParams["side"] = SHttpParam(eHttpParamType_String, tradeType);
 	info.mapParams["instrument_id"] = SHttpParam(eHttpParamType_String, instrumentID);
-	info.mapParams["margin_trading"] = SHttpParam(eHttpParamType_String, "1");
+	if(bMargin)
+		info.mapParams["margin_trading"] = SHttpParam(eHttpParamType_String, "2");
+	else
+		info.mapParams["margin_trading"] = SHttpParam(eHttpParamType_String, "1");
 	info.mapParams["price"] = SHttpParam(eHttpParamType_String, price);
 	info.mapParams["size"] = SHttpParam(eHttpParamType_String, size);
 	if(bSync)
@@ -191,12 +197,15 @@ void COkexHttpAPI::API_SpotTrade(bool bSync, std::string& instrumentID, std::str
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_SpotOrderInfo(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_SpotOrderInfo(bool bSync, bool bMargin, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotTradeInfo;
 	info.reqType = eHttpReqType_Get;
-	info.strMethod = "api/spot/v3/orders/" + orderID + "?instrument_id=" + instrumentID;
+	if(bMargin)
+		info.strMethod = "api/margin/v3/orders/" + orderID + "?instrument_id=" + instrumentID;
+	else
+		info.strMethod = "api/spot/v3/orders/" + orderID + "?instrument_id=" + instrumentID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	if(bSync)
@@ -220,12 +229,30 @@ void COkexHttpAPI::API_SpotAccountInfoByCurrency(bool bSync, std::string& strMon
 		Request(info, pResInfo);
 }
 
-void COkexHttpAPI::API_SpotCancelOrder(bool bSync, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo)
+void COkexHttpAPI::API_MarginAccountInfoByCurrency(bool bSync, std::string& strCoinType, std::string strMoneyType, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_MarginAccountInfoByCurrency;
+	info.reqType = eHttpReqType_Get;
+	info.strMethod = "api/margin/v3/accounts/" + strCoinType + "-" + strMoneyType;
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	info.customData = ++m_marginAccountInfoByCurrency;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+}
+
+void COkexHttpAPI::API_SpotCancelOrder(bool bSync, bool bMargin, std::string& instrumentID, std::string& orderID, SHttpResponse* pResInfo)
 {
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SpotCancelOrder;
 	info.reqType = eHttpReqType_Post;
-	info.strMethod = "api/spot/v3/cancel_orders/" + orderID;
+	if(bMargin)
+		info.strMethod = "api/margin/v3/cancel_orders/" + orderID;
+	else
+		info.strMethod = "api/spot/v3/cancel_orders/" + orderID;
 	info.confirmationType = eHttpConfirmationType_OKEx;
 	info.bUTF8 = true;
 	info.mapParams["client_oid"] = SHttpParam(eHttpParamType_String, "0");
