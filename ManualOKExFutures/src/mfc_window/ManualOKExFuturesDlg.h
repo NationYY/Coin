@@ -229,6 +229,8 @@ public:
 	double m_beginMoney;
 	std::map<std::string, SFuturesDepth> m_mapDepthSell;
 	std::map<std::string, SFuturesDepth> m_mapDepthBuy;
+	std::vector<SFuturesDepth> m_vecDepthSell;
+	std::vector<SFuturesDepth> m_vecDepthBuy;
 public:
 	CListCtrl m_listCtrlOrderOpen;
 	CListCtrl m_listCtrlOrderClose;

@@ -778,6 +778,18 @@ void CManualOKExFuturesDlg::ClearDepth()
 	m_mapDepthSell.clear();
 	m_mapDepthBuy.clear();
 }
+bool _DepthSortB2S (const SFuturesDepth& a, const SFuturesDepth& b)
+{ 
+	double _a = atof(a.price.c_str());
+	double _b = atof(b.price.c_str());
+	return (_a>_b); 
+}
+bool _DepthSortS2B(const SFuturesDepth& a, const SFuturesDepth& b)
+{
+	double _a = atof(a.price.c_str());
+	double _b = atof(b.price.c_str());
+	return (_a < _b);
+}
 
 void CManualOKExFuturesDlg::UpdateDepthInfo(bool bBuy, SFuturesDepth& info)
 {
@@ -787,6 +799,15 @@ void CManualOKExFuturesDlg::UpdateDepthInfo(bool bBuy, SFuturesDepth& info)
 			m_mapDepthBuy.erase(info.price);
 		else
 			m_mapDepthBuy[info.price] = info;
+		m_vecDepthBuy.clear();
+		std::map<std::string, SFuturesDepth>::iterator itB = m_mapDepthBuy.begin();
+		std::map<std::string, SFuturesDepth>::iterator itE = m_mapDepthBuy.end();
+		while(itB != itE)
+		{
+			m_vecDepthBuy.push_back(itB->second);
+			++itB;
+		}
+		std::sort(m_vecDepthBuy.begin(), m_vecDepthBuy.end(), _DepthSortS2B);
 	}
 	else
 	{
@@ -794,6 +815,15 @@ void CManualOKExFuturesDlg::UpdateDepthInfo(bool bBuy, SFuturesDepth& info)
 			m_mapDepthSell.erase(info.price);
 		else
 			m_mapDepthSell[info.price] = info;
+		m_vecDepthSell.clear();
+		std::map<std::string, SFuturesDepth>::iterator itB = m_mapDepthSell.begin();
+		std::map<std::string, SFuturesDepth>::iterator itE = m_mapDepthSell.end();
+		while(itB != itE)
+		{
+			m_vecDepthSell.push_back(itB->second);
+			++itB;
+		}
+		std::sort(m_vecDepthSell.begin(), m_vecDepthSell.end(), _DepthSortS2B);
 	}
 	_UpdateDepthShow();
 }
@@ -947,7 +977,7 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 				double baozhengjin = (sizePrice/info.open.priceAvg)/m_nLeverage*count;
 				if(info.open.tradeType == eFuturesTradeType_OpenBull)
 				{
-					double calcuPrice = stod(m_mapDepthBuy.rbegin()->second.price);
+					double calcuPrice = stod(m_vecDepthBuy.rbegin()->price);
 					double profitPersent = ((sizePrice/info.open.priceAvg - sizePrice/calcuPrice)*count)/baozhengjin;
 					double profit = profitPersent*baozhengjin;
 					if(calcuPrice >= info.open.priceAvg)
@@ -964,7 +994,7 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 				}
 				else if(info.open.tradeType == eFuturesTradeType_OpenBear)
 				{
-					double calcuPrice = stod(m_mapDepthSell.begin()->second.price);
+					double calcuPrice = stod(m_vecDepthSell[0].price);
 					double profitPersent = ((sizePrice/calcuPrice - sizePrice/info.open.priceAvg)*count)/baozhengjin;
 					double profit = profitPersent*baozhengjin;
 					if(calcuPrice <= info.open.priceAvg)
@@ -1063,22 +1093,22 @@ void CManualOKExFuturesDlg::_UpdateDepthShow()
 {
 	const int showLines = 8;
 	m_listCtrlDepth.DeleteAllItems();
-	int sellLine = min(m_mapDepthSell.size(), showLines);
+	int sellLine = min(m_vecDepthSell.size(), showLines);
 	for(int i = 0; i < sellLine; ++i)
 	{
 		m_listCtrlDepth.InsertItem(i, "");
 	}
-	std::map<std::string, SFuturesDepth>::iterator itB = m_mapDepthSell.begin();
-	std::map<std::string, SFuturesDepth>::iterator itE = m_mapDepthSell.end();
+	std::vector<SFuturesDepth>::iterator itB = m_vecDepthSell.begin();
+	std::vector<SFuturesDepth>::iterator itE = m_vecDepthSell.end();
 	CString szFormat;
 	int count = 0;
 	while(itB != itE)
 	{
 		szFormat.Format("%d", count + 1);
 		m_listCtrlDepth.SetItemText(sellLine - 1 - count, 0, szFormat);
-		szFormat.Format("%s", itB->first.c_str());
+		szFormat.Format("%s", itB->price.c_str());
 		m_listCtrlDepth.SetItemText(sellLine - 1 - count, 1, szFormat);
-		szFormat.Format("%s", itB->second.size.c_str());
+		szFormat.Format("%s", itB->size.c_str());
 		m_listCtrlDepth.SetItemText(sellLine - 1 - count, 2, szFormat);
 		if(++count >= sellLine)
 			break;
@@ -1100,15 +1130,15 @@ void CManualOKExFuturesDlg::_UpdateDepthShow()
 		m_listCtrlDepth.SetItemText(sellLine, 2, "-------------");
 	}
 	
-	int buyLine = min(m_mapDepthBuy.size(), showLines);
+	int buyLine = min(m_vecDepthBuy.size(), showLines);
 	for(int i = 0; i < sellLine; ++i)
 	{
 		m_listCtrlDepth.InsertItem(sellLine + 1 + i, "");
 	}
 	if(buyLine > 0)
 	{
-		std::map<std::string, SFuturesDepth>::iterator itB = m_mapDepthBuy.begin();
-		std::map<std::string, SFuturesDepth>::iterator itE = m_mapDepthBuy.end();
+		std::vector<SFuturesDepth>::iterator itB = m_vecDepthBuy.begin();
+		std::vector<SFuturesDepth>::iterator itE = m_vecDepthBuy.end();
 		CString _szFormat;
 		int count = 0;
 		itE--;
@@ -1116,9 +1146,9 @@ void CManualOKExFuturesDlg::_UpdateDepthShow()
 		{
 			_szFormat.Format("%d", count + 1);
 			m_listCtrlDepth.SetItemText(sellLine + 1 + count, 0, _szFormat);
-			_szFormat.Format("%s", itE->first.c_str());
+			_szFormat.Format("%s", itE->price.c_str());
 			m_listCtrlDepth.SetItemText(sellLine + 1 + count, 1, _szFormat);
-			_szFormat.Format("%s", itE->second.size.c_str());
+			_szFormat.Format("%s", itE->size.c_str());
 			m_listCtrlDepth.SetItemText(sellLine + 1 + count, 2, _szFormat);
 			if(++count >= buyLine)
 				break;
@@ -1128,9 +1158,9 @@ void CManualOKExFuturesDlg::_UpdateDepthShow()
 		{
 			_szFormat.Format("%d", count + 1);
 			m_listCtrlDepth.SetItemText(sellLine + 1 + count, 0, _szFormat);
-			_szFormat.Format("%s", itB->first.c_str());
+			_szFormat.Format("%s", itB->price.c_str());
 			m_listCtrlDepth.SetItemText(sellLine + 1 + count, 1, _szFormat);
-			_szFormat.Format("%s", itB->second.size.c_str());
+			_szFormat.Format("%s", itB->size.c_str());
 			m_listCtrlDepth.SetItemText(sellLine + 1 + count, 2, _szFormat);
 		}
 	}
@@ -1528,10 +1558,10 @@ void CManualOKExFuturesDlg::OnBnClickedButtonUpdateBeginMoney()
 
 bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 {
-	std::map<std::string, SFuturesDepth>::reverse_iterator itBB = m_mapDepthBuy.rbegin();
-	std::map<std::string, SFuturesDepth>::reverse_iterator itBE = m_mapDepthBuy.rend();
-	std::map<std::string, SFuturesDepth>::iterator itSB = m_mapDepthSell.begin();
-	std::map<std::string, SFuturesDepth>::iterator itSE = m_mapDepthSell.end();
+	std::vector<SFuturesDepth>::reverse_iterator itBB = m_vecDepthBuy.rbegin();
+	std::vector<SFuturesDepth>::reverse_iterator itBE = m_vecDepthBuy.rend();
+	std::vector<SFuturesDepth>::iterator itSB = m_vecDepthSell.begin();
+	std::vector<SFuturesDepth>::iterator itSE = m_vecDepthSell.end();
 	int nIndex = 0;
 	checkSrc = "";
 	while(nIndex < 25)
@@ -1541,7 +1571,7 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 		{
 			if(nIndex != 0)
 				checkSrc.append(":");
-			checkSrc.append(itBB->second.price).append(":").append(itBB->second.size);
+			checkSrc.append(itBB->price).append(":").append(itBB->size);
 			have = true;
 			++itBB;
 		}
@@ -1549,7 +1579,7 @@ bool CManualOKExFuturesDlg::CheckDepthInfo(int checkNum, std::string& checkSrc)
 		{
 			if(nIndex != 0 || have)
 				checkSrc.append(":");
-			checkSrc.append(itSB->second.price).append(":").append(itSB->second.size);
+			checkSrc.append(itSB->price).append(":").append(itSB->size);
 			++itSB;
 		}
 		++nIndex;
