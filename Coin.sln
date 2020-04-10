@@ -26,6 +26,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OKExFutures", "OKExFutures\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ManualOKExFutures", "ManualOKExFutures\proj_win\ManualOKExFutures.vcxproj", "{95281144-9E0F-435C-99D9-37D9F4AEE641}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CrossPlatformQT", "CrossPlatformQT\proj_win\CrossPlatformQT.vcxproj", "{F91A2367-4129-4816-8A01-0D1461CE3350}"
+	ProjectSection(ProjectDependencies) = postProject
+		{60AA734A-980A-4265-B9C6-FF8FAC397ABA} = {60AA734A-980A-4265-B9C6-FF8FAC397ABA}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -69,6 +74,12 @@ Global
 		{95281144-9E0F-435C-99D9-37D9F4AEE641}.HighDebug|Win32.Build.0 = Debug|Win32
 		{95281144-9E0F-435C-99D9-37D9F4AEE641}.Release|Win32.ActiveCfg = Release|Win32
 		{95281144-9E0F-435C-99D9-37D9F4AEE641}.Release|Win32.Build.0 = Release|Win32
+		{F91A2367-4129-4816-8A01-0D1461CE3350}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F91A2367-4129-4816-8A01-0D1461CE3350}.Debug|Win32.Build.0 = Debug|Win32
+		{F91A2367-4129-4816-8A01-0D1461CE3350}.HighDebug|Win32.ActiveCfg = Debug|Win32
+		{F91A2367-4129-4816-8A01-0D1461CE3350}.HighDebug|Win32.Build.0 = Debug|Win32
+		{F91A2367-4129-4816-8A01-0D1461CE3350}.Release|Win32.ActiveCfg = Release|Win32
+		{F91A2367-4129-4816-8A01-0D1461CE3350}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,5 +91,6 @@ Global
 		{C6888D2A-E9C1-4027-8267-99853469F08F} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
 		{22A8A095-3409-4BC8-AFFE-0266AD4141E0} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
 		{95281144-9E0F-435C-99D9-37D9F4AEE641} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
+		{F91A2367-4129-4816-8A01-0D1461CE3350} = {BE262317-44B3-496E-9F14-1668FB1A3C1B}
 	EndGlobalSection
 EndGlobal

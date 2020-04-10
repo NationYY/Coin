@@ -15,13 +15,12 @@ public:
 	virtual void API_SpotTradeData(bool bAdd, std::string& strCoinType, std::string& strMoneyType);
 	virtual void API_SpotKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strMoneyType);
 	virtual void API_SpotTickerData(bool bAdd, std::string& strInstrumentID);
-
-	void API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp);
+	virtual void API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp);
+	virtual void API_FuturesEntrustDepth(bool bAdd, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle);
 
 	void API_FuturesOrderInfo(bool bAdd, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle);
 	void API_SpotOrderInfo(bool bAdd, std::string& strInstrumentID);
-	void API_FuturesEntrustDepth(bool bAdd, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle);
-
+	
 	void API_FuturesAccountInfoByCurrency(bool bAdd, bool bSwap, std::string& strCoinType, std::string& standardCurrency);
 	void API_SpotAccountInfoByCurrency(bool bAdd, std::string& strCoinType);
 

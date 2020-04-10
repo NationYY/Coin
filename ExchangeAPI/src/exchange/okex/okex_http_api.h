@@ -13,14 +13,15 @@ public:
 	virtual void API_GetTradeOrderListState(eMarketType type, int page, bool bBuy) {};
 	virtual void API_GetTradeOrderState(eMarketType type, std::string strID) {};
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) {};
+	virtual void API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse* pResInfo = NULL);
+	virtual void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strLeverage, SHttpResponse* pResInfo = NULL);
+
 
 	void API_FuturesAccountInfoByCurrency(bool bSync, bool bSwap, std::string& currency, std::string& standardCurrency, SHttpResponse* pResInfo = NULL);
 	void API_FuturesOrderInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo = NULL);
 	void API_FuturesTrade(bool bSync, bool bSwap, eFuturesTradeType tradeType, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& price, std::string& size, std::string& leverage, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
-	void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strLeverage, SHttpResponse* pResInfo = NULL);
 	void API_FuturesServerTime();
 	void API_FuturesCancelOrder(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, std::string& orderID, SHttpResponse* pResInfo = NULL);
-	void API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse* pResInfo = NULL);
 	void API_FuturesPositionInfo(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle, SHttpResponse* pResInfo = NULL);
 
 

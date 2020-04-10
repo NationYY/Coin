@@ -63,7 +63,11 @@ public:
 	//订阅合约K线
 	virtual void API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle) {};
 	//订阅合约tick
-	virtual void API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& strFuturesCycle) {};
+	virtual void API_FuturesTickerData(bool bAdd, bool bSwapFutures, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle) {};
+	//订阅合约深度
+	virtual void API_FuturesEntrustDepth(bool bAdd, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle)  {}
+	//登录websocket
+	virtual void API_LoginFutures(std::string& strAPIKey, std::string& strSecretKey, __int64 timeStamp);
 protected:
 	std::string m_strAPIKey;			//用户申请的apiKey
 	std::string m_strSecretKey;		//请求参数签名的私钥

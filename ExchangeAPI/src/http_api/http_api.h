@@ -34,6 +34,8 @@ public:
 	virtual void API_GetTradeOrderListState(eMarketType type, int page, bool bBuy) = 0;
 	virtual void API_GetTradeOrderState(eMarketType type, std::string strID) = 0;
 	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) = 0;
+	virtual void API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse* pResInfo = NULL) = 0;
+	virtual void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strLeverage, SHttpResponse* pResInfo = NULL) = 0;
 private:
 	void _ProcessHttp();
 	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResInfo);
