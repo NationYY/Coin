@@ -365,7 +365,7 @@ void COKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 	case eTimerType_Account:
 		{
 			if(m_bRun)
-				OKEX_HTTP->API_FuturesAccountInfoByCurrency(m_bSwapFutures, m_strCoinType);
+				OKEX_HTTP->API_FuturesAccountInfoByCurrency(true, m_bSwapFutures, m_strCoinType);
 		}
 		break;
 	case eTimerType_TradeOrder:

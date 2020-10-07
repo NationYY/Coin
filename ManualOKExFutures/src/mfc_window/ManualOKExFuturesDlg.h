@@ -121,6 +121,10 @@ struct SFuturesTradePairInfo
 	SFuturesTradeInfo close;
 	std::string closePlanPrice;
 	std::string closePlanSize;
+	double triggerPrice;
+	std::string strTriggerPrice;
+	std::string openPrice;
+	std::string openSize;
 	SFuturesTradePairInfo()
 	{
 		Reset();
@@ -131,6 +135,10 @@ struct SFuturesTradePairInfo
 		close.Reset();
 		closePlanPrice = "";
 		closePlanSize = "";
+		triggerPrice = 0.0;
+		openPrice = "";
+		strTriggerPrice = "";
+		openSize = "";
 	}
 	SFuturesTradePairInfo& operator= (const SFuturesTradePairInfo &t){
 		if(this != &t){
@@ -138,6 +146,10 @@ struct SFuturesTradePairInfo
 			this->close = t.close;
 			this->closePlanPrice = t.closePlanPrice;
 			this->closePlanSize = t.closePlanSize;
+			this->triggerPrice = t.triggerPrice;
+			this->strTriggerPrice = t.strTriggerPrice;
+			this->openPrice = t.openPrice;
+			this->openSize = t.openSize;
 		}
 		return *this;
 	}
@@ -222,7 +234,7 @@ public:
 	std::string m_strFuturesCycle;		//合约周期
 	std::string m_strFuturesTradeSize;	//下单张数
 	std::string m_strLeverage;			//合约倍数
-	int m_nLeverage;					//合约倍数
+	double m_dLeverage;					//合约倍数
 	STickerData m_curTickData;
 	SFuturesAccountInfo m_accountInfo;
 	SFuturesPositionInfo m_positionInfo;
@@ -235,7 +247,6 @@ public:
 	CListCtrl m_listCtrlOrderOpen;
 	CListCtrl m_listCtrlOrderClose;
 	CComboBox m_combCoinType;
-	CComboBox m_combLeverage;
 	CEdit m_editFuturesCycle;
 	CEdit m_editFuturesTradeSize;
 	CComboBox m_combFuturesType;
@@ -262,4 +273,6 @@ public:
 	afx_msg void OnBnClickedButtonBearFirst();
 	afx_msg void OnBnClickedButtonBullFirst();
 	CComboBox m_combMoneyType;
+	CEdit m_editTriggerPrice;
+	CEdit m_editLeverage;
 };

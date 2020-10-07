@@ -82,7 +82,7 @@ CManualOKExFuturesDlg::CManualOKExFuturesDlg(CWnd* pParent /*=NULL*/)
 	m_strFuturesCycle = "";
 	m_strFuturesTradeSize = "";
 	m_strLeverage = "";
-	m_nLeverage = 0;
+	m_dLeverage = 0.0;
 	m_beginMoney = 0.0;
 }
 
@@ -92,7 +92,6 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_OPEN, m_listCtrlOrderOpen);
 	DDX_Control(pDX, IDC_LIST_CLOSE, m_listCtrlOrderClose);
 	DDX_Control(pDX, IDC_COMBO1, m_combCoinType);
-	DDX_Control(pDX, IDC_COMBO2, m_combLeverage);
 	DDX_Control(pDX, IDC_EDIT1, m_editFuturesCycle);
 	DDX_Control(pDX, IDC_EDIT2, m_editFuturesTradeSize);
 	DDX_Control(pDX, IDC_COMBO3, m_combFuturesType);
@@ -108,6 +107,8 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT2, m_staticAccountAvailInfo);
 	DDX_Control(pDX, IDC_STATIC_ACCOUNT3, m_staticCanOpenSize);
 	DDX_Control(pDX, IDC_COMBO4, m_combMoneyType);
+	DDX_Control(pDX, IDC_EDIT8, m_editTriggerPrice);
+	DDX_Control(pDX, IDC_EDIT9, m_editLeverage);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
@@ -161,25 +162,21 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	m_combCoinType.InsertString(1, "LTC");
 	m_combCoinType.InsertString(2, "ETH");
 	m_combCoinType.InsertString(3, "ETC");
-	m_combCoinType.InsertString(4, "BTG");
-	m_combCoinType.InsertString(5, "XRP");
-	m_combCoinType.InsertString(6, "EOS");
-	m_combCoinType.InsertString(7, "BCH");
-	m_combCoinType.InsertString(8, "TRX");
-	m_combCoinType.InsertString(9, "BSV");
+	m_combCoinType.InsertString(4, "XRP");
+	m_combCoinType.InsertString(5, "EOS");
+	m_combCoinType.InsertString(6, "BCH");
+	m_combCoinType.InsertString(7, "TRX");
+	m_combCoinType.InsertString(8, "BSV");
+	m_combCoinType.InsertString(9, "DOT");
 
 	m_combMoneyType.InsertString(0, "USD");
 	m_combMoneyType.InsertString(1, "USDT");
-
-	m_combLeverage.InsertString(0, "10");
-	m_combLeverage.InsertString(1, "15");
-	m_combLeverage.InsertString(2, "20");
 
 	m_combFuturesType.InsertString(0, "交割合约");
 	m_combFuturesType.InsertString(1, "永续合约");
 
 	m_listCtrlOrderOpen.InsertColumn(0, "序号", LVCFMT_CENTER, 40);
-	m_listCtrlOrderOpen.InsertColumn(1, "价格", LVCFMT_CENTER, 75);
+	m_listCtrlOrderOpen.InsertColumn(1, "价格", LVCFMT_CENTER, 80);
 	m_listCtrlOrderOpen.InsertColumn(2, "类型", LVCFMT_CENTER, 45);
 	m_listCtrlOrderOpen.InsertColumn(3, "成交量", LVCFMT_CENTER, 70);
 	m_listCtrlOrderOpen.InsertColumn(4, "状态", LVCFMT_CENTER, 45);
@@ -302,17 +299,17 @@ void CManualOKExFuturesDlg::__InitBaseConfigCtrl()
 		m_combCoinType.SetCurSel(2);
 	else if(strTemp == "ETC")
 		m_combCoinType.SetCurSel(3);
-	else if(strTemp == "BTG")
-		m_combCoinType.SetCurSel(4);
 	else if(strTemp == "XRP")
-		m_combCoinType.SetCurSel(5);
+		m_combCoinType.SetCurSel(4);
 	else if(strTemp == "EOS")
-		m_combCoinType.SetCurSel(6);
+		m_combCoinType.SetCurSel(5);
 	else if(strTemp == "BCH")
-		m_combCoinType.SetCurSel(7);
+		m_combCoinType.SetCurSel(6);
 	else if(strTemp == "TRX")
-		m_combCoinType.SetCurSel(8);
+		m_combCoinType.SetCurSel(7);
 	else if(strTemp == "BSV")
+		m_combCoinType.SetCurSel(8);
+	else if(strTemp == "DOT")
 		m_combCoinType.SetCurSel(9);
 
 	strTemp = m_config.get("futures", "moneyType", "");
@@ -323,10 +320,7 @@ void CManualOKExFuturesDlg::__InitBaseConfigCtrl()
 	strTemp = m_config.get("futures", "futuresCycle", "");
 	m_editFuturesCycle.SetWindowText(strTemp.c_str());
 	strTemp = m_config.get("futures", "leverage", "");
-	if(strTemp == "10")
-		m_combLeverage.SetCurSel(0);
-	else if(strTemp == "20")
-		m_combLeverage.SetCurSel(1);
+	m_editLeverage.SetWindowText(strTemp.c_str());
 	strTemp = m_config.get("futures", "futuresType", "");
 	if(strTemp == "交割合约")
 		m_combFuturesType.SetCurSel(0);
@@ -367,10 +361,10 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 		return false;
 	}
 	CString strLeverage;
-	m_combLeverage.GetWindowText(strLeverage);
+	m_editLeverage.GetWindowText(strLeverage);
 	if(strLeverage == "")
 	{
-		MessageBox("未选择杠杆");
+		MessageBox("未填写杠杆");
 		return false;
 	}
 	CString strMoneyType;
@@ -388,7 +382,7 @@ bool CManualOKExFuturesDlg::__SaveBaseConfigCtrl()
 	m_strMoneyType = strMoneyType.GetBuffer();
 	m_strFuturesCycle = strFuturesCycle.GetBuffer();
 	m_strLeverage = strLeverage.GetBuffer();
-	m_nLeverage = stoi(m_strLeverage);
+	m_dLeverage = stod(m_strLeverage);
 	if(strFuturesType == "永续合约")
 		m_bSwapFutures = true;
 	else
@@ -411,11 +405,6 @@ bool CManualOKExFuturesDlg::__SaveTradeConfigCtrl()
 {
 	CString strFuturesTradeSize;
 	m_editFuturesTradeSize.GetWindowText(strFuturesTradeSize);
-	if(strFuturesTradeSize == "")
-	{
-		MessageBox("未填写下单张数");
-		return false;
-	}
 	m_strFuturesTradeSize = strFuturesTradeSize.GetBuffer();
 	m_config.set_value("futures", "futuresTradeSize", m_strFuturesTradeSize.c_str());
 	m_config.save("./config.ini");
@@ -523,8 +512,7 @@ void CManualOKExFuturesDlg::OnBnClickedStart()
 	}
 	{
 		SHttpResponse resInfo;
-		std::string strLeverage = CFuncCommon::ToString(m_nLeverage);
-		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, strLeverage, &resInfo);
+		OKEX_HTTP->API_FuturesSetLeverage(false, m_bSwapFutures, m_strCoinType, m_strMoneyType, m_strLeverage, &resInfo);
 		if(m_bSwapFutures)
 		{
 			std::string strInstrumentID = m_strCoinType + "-" + m_strMoneyType + "-SWAP";
@@ -566,7 +554,39 @@ void CManualOKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 {
 	m_curTickData = data;
 	m_curTickData.bValid = true;
-	
+	std::vector<SFuturesTradePairInfo>::iterator itB = m_vecTradePairInfo.begin();
+	std::vector<SFuturesTradePairInfo>::iterator itE = m_vecTradePairInfo.end();
+	while(itB != itE)
+	{
+		if(itB->strTriggerPrice != "")
+		{
+			if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+			{
+				if(m_curTickData.last <= itB->triggerPrice)
+				{
+					OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, itB->open.tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, itB->openPrice, itB->openSize, m_strLeverage, itB->open.strClientOrderID);
+					CActionLog("trade", "条件触发 开%s单%s张, price=%s, client_oid=%s", ((itB->open.tradeType == eFuturesTradeType_OpenBull) ? "多" : "空"), itB->openSize.c_str(), itB->openPrice.c_str(), itB->open.strClientOrderID.c_str());
+
+					itB->triggerPrice = 0.0;
+					itB->strTriggerPrice = "";
+					itB->openSize = "";
+				}
+			}
+			else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
+			{
+				if(m_curTickData.last >= itB->triggerPrice)
+				{
+					OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, itB->open.tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, itB->openPrice, itB->openSize, m_strLeverage, itB->open.strClientOrderID);
+					CActionLog("trade", "条件触发 开%s单%s张, price=%s, client_oid=%s", ((itB->open.tradeType == eFuturesTradeType_OpenBull) ? "多" : "空"), itB->openSize.c_str(), itB->openPrice.c_str(), itB->open.strClientOrderID.c_str());
+
+					itB->triggerPrice = 0.0;
+					itB->strTriggerPrice = "";
+					itB->openSize = "";
+				}
+			}
+		}
+		++itB;
+	}
 	_UpdateTradeShow();
 	_UpdateAccountShow();
 }
@@ -903,7 +923,7 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 				if(m_strCoinType == "BTC")
 					sizePrice = 100;
 				double availBalance = stod(m_accountInfo.availBalance);
-				availBalance *= m_nLeverage;
+				availBalance *= m_dLeverage;
 				availBalance *= m_curTickData.last;
 				int canOpenSize = int(availBalance / sizePrice);
 				CString szTemp;
@@ -912,16 +932,34 @@ void CManualOKExFuturesDlg::_UpdateAccountShow()
 			}
 			else if(m_strMoneyType == "USDT")
 			{
-				if(m_strCoinType == "ETC")
-				{
-					double availBalance = stod(m_accountInfo.availBalance);
-					availBalance /= m_curTickData.last;
-					availBalance /= 0.1;
-					availBalance *= m_nLeverage;
-					CString szTemp;
-					szTemp.Format("%d张", availBalance);
-					m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
-				}
+				double dRatio = 1;
+				if(m_strCoinType == "TRX")
+					dRatio = 1000;
+				else if(m_strCoinType == "BTC")
+					dRatio = 0.01;
+				else if(m_strCoinType == "LTC")
+					dRatio = 1;
+				else if(m_strCoinType == "ETH")
+					dRatio = 0.1;
+				else if(m_strCoinType == "ETC")
+					dRatio = 10;
+				else if(m_strCoinType == "XRP")
+					dRatio = 100;
+				else if(m_strCoinType == "EOS")
+					dRatio = 10;
+				else if(m_strCoinType == "BCH")
+					dRatio = 0.1;
+				else if(m_strCoinType == "BSV")
+					dRatio = 1;
+				else if(m_strCoinType == "DOT")
+					dRatio = 1;
+				double availBalance = stod(m_accountInfo.availBalance);
+				availBalance /= m_curTickData.last;
+				availBalance /= dRatio;
+				availBalance *= m_dLeverage;
+				CString szTemp;
+				szTemp.Format("%d张", (int)(availBalance));
+				m_staticCanOpenSize.SetWindowText(szTemp.GetBuffer());
 			}
 		}
 	}
@@ -938,14 +976,19 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 			m_listCtrlOrderOpen.InsertItem(i, "");
 			m_listCtrlOrderClose.InsertItem(i, "");
 		}
-		if(info.open.orderID != "")
+		if(info.open.orderID != "" || info.strTriggerPrice != "")
 		{
 			szFormat.Format("%d", i+1);
 			m_listCtrlOrderOpen.SetItemText(i, 0, szFormat);
-			if(CFuncCommon::CheckEqual(info.open.priceAvg, 0.0))
-				szFormat = CFuncCommon::Double2String(info.open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+			if(info.strTriggerPrice != "")
+				szFormat.Format("%s|%s", info.strTriggerPrice.c_str(), info.openPrice.c_str());
 			else
-				szFormat = CFuncCommon::Double2String(info.open.priceAvg+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+			{
+				if(CFuncCommon::CheckEqual(info.open.priceAvg, 0.0))
+					szFormat = CFuncCommon::Double2String(info.open.price+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+				else
+					szFormat = CFuncCommon::Double2String(info.open.priceAvg+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+			}
 			m_listCtrlOrderOpen.SetItemText(i, 1, szFormat);
 			switch(info.open.tradeType)
 			{
@@ -958,9 +1001,14 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 			default:
 				break;
 			}
-			szFormat.Format("%s/%s", info.open.filledQTY.c_str(), info.open.size.c_str());
+			if(info.strTriggerPrice != "")
+				szFormat.Format("%s", info.openSize.c_str());
+			else
+				szFormat.Format("%s/%s", info.open.filledQTY.c_str(), info.open.size.c_str());
 			m_listCtrlOrderOpen.SetItemText(i, 3, szFormat);
-			if(info.open.status == "-1")
+			if(info.strTriggerPrice != "")
+				m_listCtrlOrderOpen.SetItemText(i, 4, "plan");
+			else if(info.open.status == "-1")
 				m_listCtrlOrderOpen.SetItemText(i, 4, "cancelled");
 			else if(info.open.status == "0")
 				m_listCtrlOrderOpen.SetItemText(i, 4, "open");
@@ -970,51 +1018,118 @@ void CManualOKExFuturesDlg::_UpdateTradeShow()
 				m_listCtrlOrderOpen.SetItemText(i, 4, "filled");
 			if(info.open.filledQTY != "0")
 			{
-				int count = stoi(info.open.filledQTY);
-				int sizePrice = 10;
-				if(m_strCoinType == "BTC")
-					sizePrice = 100;
-				double baozhengjin = (sizePrice/info.open.priceAvg)/m_nLeverage*count;
-				if(info.open.tradeType == eFuturesTradeType_OpenBull)
+				if(m_strMoneyType == "USD")
 				{
-					double calcuPrice = stod(m_vecDepthBuy.rbegin()->price);
-					double profitPersent = ((sizePrice/info.open.priceAvg - sizePrice/calcuPrice)*count)/baozhengjin;
-					double profit = profitPersent*baozhengjin;
-					if(calcuPrice >= info.open.priceAvg)
+					int count = stoi(info.open.filledQTY);
+					int sizePrice = 10;
+					if(m_strCoinType == "BTC")
+						sizePrice = 100;
+					double baozhengjin = (sizePrice/info.open.priceAvg)/m_dLeverage*count;
+					if(info.open.tradeType == eFuturesTradeType_OpenBull)
 					{
-						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
-					}
-					else
-					{
-						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
-					}
+						double calcuPrice = stod(m_vecDepthBuy.rbegin()->price);
+						double profitPersent = ((sizePrice/info.open.priceAvg - sizePrice/calcuPrice)*count)/baozhengjin;
+						double profit = profitPersent*baozhengjin;
+						if(calcuPrice >= info.open.priceAvg)
+						{
+							szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
+						else
+						{
+							szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 5).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
 
+					}
+					else if(info.open.tradeType == eFuturesTradeType_OpenBear)
+					{
+						double calcuPrice = stod(m_vecDepthSell[0].price);
+						double profitPersent = ((sizePrice/calcuPrice - sizePrice/info.open.priceAvg)*count)/baozhengjin;
+						double profit = profitPersent*baozhengjin;
+						if(calcuPrice <= info.open.priceAvg)
+						{
+							szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
+						else
+						{
+							szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
+					}
 				}
-				else if(info.open.tradeType == eFuturesTradeType_OpenBear)
+				else if(m_strMoneyType == "USDT")
 				{
-					double calcuPrice = stod(m_vecDepthSell[0].price);
-					double profitPersent = ((sizePrice/calcuPrice - sizePrice/info.open.priceAvg)*count)/baozhengjin;
-					double profit = profitPersent*baozhengjin;
-					if(calcuPrice <= info.open.priceAvg)
+					double dRatio = 1;
+					if(m_strCoinType == "TRX")
+						dRatio = 1000;
+					else if(m_strCoinType == "BTC")
+						dRatio = 0.01;
+					else if(m_strCoinType == "LTC")
+						dRatio = 1;
+					else if(m_strCoinType == "ETH")
+						dRatio = 0.1;
+					else if(m_strCoinType == "ETC")
+						dRatio = 10;
+					else if(m_strCoinType == "XRP")
+						dRatio = 100;
+					else if(m_strCoinType == "EOS")
+						dRatio = 10;
+					else if(m_strCoinType == "BCH")
+						dRatio = 0.1;
+					else if(m_strCoinType == "BSV")
+						dRatio = 1;
+					else if(m_strCoinType == "DOT")
+						dRatio = 1;
+					int count = stoi(info.open.filledQTY);
+					double baozhengjin = info.open.priceAvg*count/m_dLeverage;
+					if(info.open.tradeType == eFuturesTradeType_OpenBull)
 					{
-						szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						double calcuPrice = stod(m_vecDepthBuy.rbegin()->price);
+						double profitPersent = (calcuPrice-info.open.priceAvg)/info.open.priceAvg*m_dLeverage;
+						double profit = profitPersent*baozhengjin;
+						if(calcuPrice >= info.open.priceAvg)
+						{
+							szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
+						else
+						{
+							szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
+
 					}
-					else
+					else if(info.open.tradeType == eFuturesTradeType_OpenBear)
 					{
-						szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
-						m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						double calcuPrice = stod(m_vecDepthSell[0].price);
+						double profitPersent = (calcuPrice-info.open.priceAvg)/info.open.priceAvg*m_dLeverage;
+						double profit = profitPersent*baozhengjin;
+						if(calcuPrice <= info.open.priceAvg)
+						{
+							szFormat.Format("%s(%s%%)", CFuncCommon::Double2String(profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
+						else
+						{
+							szFormat.Format("-%s(-%s%%)", CFuncCommon::Double2String(-profit+DOUBLE_PRECISION, 4).c_str(), CFuncCommon::Double2String(-profitPersent*100+DOUBLE_PRECISION, 2).c_str());
+							m_listCtrlOrderOpen.SetItemText(i, 5, szFormat.GetBuffer());
+						}
 					}
 				}
+				
 			}
 			else
 				m_listCtrlOrderOpen.SetItemText(i, 5, "");
-			tm _tm;
-			localtime_s(&_tm, ((const time_t*)&(info.open.timeStamp)));
-			szFormat.Format("%02d-%02d %02d:%02d:%02d", _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
-			m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+			if(info.open.timeStamp != 0)
+			{
+				tm _tm;
+				localtime_s(&_tm, ((const time_t*)&(info.open.timeStamp)));
+				szFormat.Format("%02d-%02d %02d:%02d:%02d", _tm.tm_mon+1, _tm.tm_mday, _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
+				m_listCtrlOrderOpen.SetItemText(i, 6, szFormat.GetBuffer());
+			}
+			
 
 			if(info.close.orderID != "")
 			{
@@ -1222,8 +1337,95 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 		price = "-1";
 	else
 		price = openPrice.GetBuffer();
+	CString triggerPrice;
+	m_editTriggerPrice.GetWindowText(triggerPrice);
+	double dTriggerPrice = 0.0;
+	if(triggerPrice != "")
+		dTriggerPrice = stod(triggerPrice.GetBuffer());
 	std::string strClientOrderID = CFuncCommon::GenUUID();
-	OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, type, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, m_strFuturesTradeSize, m_strLeverage, strClientOrderID);
+	std::string strFuturesTradeSize = m_strFuturesTradeSize;
+	if(m_strFuturesTradeSize == "" && m_accountInfo.bValid)
+	{
+		if(m_strMoneyType == "USDT")
+		{
+			double dRatio = 1;
+			int delSize = 0;
+			if(m_strCoinType == "TRX")
+			{
+				dRatio = 1000;
+				delSize = 30;
+			}
+			else if(m_strCoinType == "BTC")
+			{
+				dRatio = 0.01;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "LTC")
+			{
+				dRatio = 1;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "ETH")
+			{
+				dRatio = 0.1;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "ETC")
+			{
+				dRatio = 10;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "XRP")
+			{
+				dRatio = 100;
+				delSize = 3;
+			}
+			else if(m_strCoinType == "EOS")
+			{
+				dRatio = 10;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "BCH")
+			{
+
+				dRatio = 0.1;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "BSV")
+			{
+
+				dRatio = 1;
+				delSize = 1;
+			}
+			else if(m_strCoinType == "DOT")
+			{
+
+				dRatio = 1;
+				delSize = 1;
+			}
+			double availBalance = stod(m_accountInfo.availBalance);
+			availBalance /= m_curTickData.last;
+			availBalance /= dRatio;
+			availBalance *= m_dLeverage;
+			int openSize = (int)availBalance;
+			openSize -= delSize;
+			strFuturesTradeSize = CFuncCommon::ToString(openSize);
+		}
+	}
+	if(strFuturesTradeSize == "")
+	{
+		MessageBox("未填写下单张数");
+		return;
+	}
+	if(triggerPrice != "")
+	{
+		CActionLog("trade", "设置条件开单 开%s单%s张, price=%s, client_oid=%s, tiggerPrice=%s", ((type == eFuturesTradeType_OpenBull) ? "多" : "空"), strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str(), triggerPrice.GetBuffer());
+	}
+	else
+	{
+		OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, type, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, strFuturesTradeSize, m_strLeverage, strClientOrderID);
+		CActionLog("trade", "开%s单%s张, price=%s, client_oid=%s", ((type == eFuturesTradeType_OpenBull) ? "多" : "空"), strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+	}
 	SFuturesTradePairInfo* pInfo;
 	int nIndex = _GetFreeOrderIndex();
 	if(nIndex == -1)
@@ -1234,10 +1436,16 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 	}
 	else
 		pInfo = &m_vecTradePairInfo[nIndex];
+	if(triggerPrice != "")
+	{
+		pInfo->openPrice = price;
+		pInfo->openSize = strFuturesTradeSize;
+	}
 	pInfo->open.strClientOrderID = strClientOrderID;
 	pInfo->open.waitClientOrderIDTime = time(NULL);
 	pInfo->open.tradeType = type;
-	CActionLog("trade", "开%s单%s张, price=%s, client_oid=%s", ((type == eFuturesTradeType_OpenBull) ? "多" : "空"), m_strFuturesTradeSize.c_str(), price.c_str(), strClientOrderID.c_str());
+	pInfo->strTriggerPrice = triggerPrice.GetBuffer();
+	pInfo->triggerPrice = dTriggerPrice;
 }
 
 void CManualOKExFuturesDlg::_SaveData()
@@ -1279,7 +1487,7 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 	for(int i = 0; i<(int)m_vecTradePairInfo.size(); ++i)
 	{
 		SFuturesTradePairInfo& info = m_vecTradePairInfo[i];
-		if(info.open.orderID != "")
+		//if(info.open.orderID != "")
 		{
 			if(m_listCtrlOrderOpen.GetCheck(i))
 			{
@@ -1300,13 +1508,18 @@ void CManualOKExFuturesDlg::OnBnClickedButtonClose()
 						size = info.open.filledQTY;
 					else
 						size = closeSize.GetBuffer();
-					if(info.open.status == "0")
+					if(info.open.status == "0" || info.strTriggerPrice != "")
 					{
 						if(price == "-1")
 							return;
 						info.closePlanPrice = price;
 						if(closeSize == "")
-							info.closePlanSize = info.open.size;
+						{
+							if(info.strTriggerPrice != "")
+								info.closePlanSize = info.openSize;
+							else
+								info.closePlanSize = info.open.size;
+						}
 						else
 							info.closePlanSize = size;
 						bUpdate = true;
