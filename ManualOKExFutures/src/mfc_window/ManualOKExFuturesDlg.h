@@ -122,6 +122,9 @@ struct SFuturesTradePairInfo
 	std::string closePlanPrice;
 	std::string closePlanSize;
 	double triggerPrice;
+	double moveCloseRate;
+	string strMoveCloseRate;
+	int moveCloseStep;
 	std::string strTriggerPrice;
 	std::string openPrice;
 	std::string openSize;
@@ -139,6 +142,9 @@ struct SFuturesTradePairInfo
 		openPrice = "";
 		strTriggerPrice = "";
 		openSize = "";
+		strMoveCloseRate = "";
+		moveCloseRate = 0.0;
+		moveCloseStep = 0;
 	}
 	SFuturesTradePairInfo& operator= (const SFuturesTradePairInfo &t){
 		if(this != &t){
@@ -150,6 +156,9 @@ struct SFuturesTradePairInfo
 			this->strTriggerPrice = t.strTriggerPrice;
 			this->openPrice = t.openPrice;
 			this->openSize = t.openSize;
+			this->moveCloseRate = t.moveCloseRate;
+			this->moveCloseStep = t.moveCloseStep;
+			this->strMoveCloseRate = t.strMoveCloseRate;
 		}
 		return *this;
 	}
@@ -275,4 +284,5 @@ public:
 	CComboBox m_combMoneyType;
 	CEdit m_editTriggerPrice;
 	CEdit m_editLeverage;
+	CEdit m_editMoveCloseRate;
 };

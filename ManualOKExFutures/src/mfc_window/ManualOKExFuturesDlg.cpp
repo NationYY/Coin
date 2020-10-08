@@ -109,6 +109,7 @@ void CManualOKExFuturesDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO4, m_combMoneyType);
 	DDX_Control(pDX, IDC_EDIT8, m_editTriggerPrice);
 	DDX_Control(pDX, IDC_EDIT9, m_editLeverage);
+	DDX_Control(pDX, IDC_EDIT10, m_editMoveCloseRate);
 }
 
 BEGIN_MESSAGE_MAP(CManualOKExFuturesDlg, CDialog)
@@ -582,6 +583,31 @@ void CManualOKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 					itB->triggerPrice = 0.0;
 					itB->strTriggerPrice = "";
 					itB->openSize = "";
+				}
+			}
+		}
+		if(itB->open.orderID != "")
+		{
+			if(itB->open.status == "2" && itB->strMoveCloseRate != "")
+			{
+				double closePrice = stod(itB->closePlanPrice.GetBuffer());
+				if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+				{
+					if(m_curTickData.last >= closePrice || itB->moveCloseStep != 0)
+					{
+						int nStep = int(((m_curTickData.last - itB->open.priceAvg)/itB->open.priceAvg)/itB->moveCloseRate);
+						if(nStep > itB->moveCloseStep)
+							itB->moveCloseStep = nStep;
+					}
+				}
+				else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
+				{
+					if(m_curTickData.last <= closePrice || itB->moveCloseStep != 0)
+					{
+						int nStep = int(((itB->open.priceAvg-m_curTickData.last) / itB->open.priceAvg) / itB->moveCloseRate);
+						if(nStep > itB->moveCloseStep)
+							itB->moveCloseStep = nStep;
+					}
 				}
 			}
 		}
@@ -1337,6 +1363,12 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 		price = "-1";
 	else
 		price = openPrice.GetBuffer();
+	CString moveCloseRate;
+	m_editMoveCloseRate.GetWindowText(moveCloseRate);
+	double dMoveCloseRate = 0.0;
+	if(moveCloseRate != "")
+		dMoveCloseRate = stod(moveCloseRate.GetBuffer());
+
 	CString triggerPrice;
 	m_editTriggerPrice.GetWindowText(triggerPrice);
 	double dTriggerPrice = 0.0;
@@ -1445,6 +1477,8 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 	pInfo->open.tradeType = type;
 	pInfo->strTriggerPrice = triggerPrice.GetBuffer();
 	pInfo->triggerPrice = dTriggerPrice;
+	pInfo->strMoveCloseRate = moveCloseRate.GetBuffer();
+	pInfo->moveCloseRate = dMoveCloseRate;
 }
 
 void CManualOKExFuturesDlg::_SaveData()
@@ -1732,7 +1766,7 @@ void CManualOKExFuturesDlg::_CheckAllOrder()
 				else
 				{
 					
-					if(itB->closePlanPrice != "" && itB->closePlanSize != "" && tNow-itB->open.tLastALLFillTime > 3)
+					if(itB->closePlanPrice != "" && itB->closePlanSize != "" && tNow-itB->open.tLastALLFillTime > 3 && itB->strMoveCloseRate == "")
 					{
 						std::string strClientOrderID = CFuncCommon::GenUUID();
 						eFuturesTradeType tradeType;
