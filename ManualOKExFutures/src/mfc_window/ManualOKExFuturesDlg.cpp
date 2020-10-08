@@ -1363,33 +1363,32 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 			else if(m_strCoinType == "LTC")
 			{
 				dRatio = 1;
-				delSize = 1;
+				delSize = 4;
 			}
 			else if(m_strCoinType == "ETH")
 			{
 				dRatio = 0.1;
-				delSize = 1;
+				delSize = 3;
 			}
 			else if(m_strCoinType == "ETC")
 			{
 				dRatio = 10;
-				delSize = 1;
+				delSize = 3;
 			}
 			else if(m_strCoinType == "XRP")
 			{
 				dRatio = 100;
-				delSize = 3;
+				delSize = 5;
 			}
 			else if(m_strCoinType == "EOS")
 			{
 				dRatio = 10;
-				delSize = 1;
+				delSize = 5;
 			}
 			else if(m_strCoinType == "BCH")
 			{
-
 				dRatio = 0.1;
-				delSize = 1;
+				delSize = 5;
 			}
 			else if(m_strCoinType == "BSV")
 			{
@@ -1399,9 +1398,8 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 			}
 			else if(m_strCoinType == "DOT")
 			{
-
 				dRatio = 1;
-				delSize = 1;
+				delSize = 30;
 			}
 			double availBalance = stod(m_accountInfo.availBalance);
 			double dOpenPrice = stod(price);
