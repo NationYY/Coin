@@ -1404,7 +1404,8 @@ void CManualOKExFuturesDlg::_OpenOrder(eFuturesTradeType type)
 				delSize = 1;
 			}
 			double availBalance = stod(m_accountInfo.availBalance);
-			availBalance /= m_curTickData.last;
+			double dOpenPrice = stod(price);
+			availBalance /= dOpenPrice;
 			availBalance /= dRatio;
 			availBalance *= m_dLeverage;
 			int openSize = (int)availBalance;
