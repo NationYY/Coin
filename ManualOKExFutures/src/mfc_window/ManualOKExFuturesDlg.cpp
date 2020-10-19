@@ -590,23 +590,55 @@ void CManualOKExFuturesDlg::OnRevTickerInfo(STickerData &data)
 		{
 			if(itB->open.status == "2" && itB->strMoveCloseRate != "")
 			{
-				double closePrice = stod(itB->closePlanPrice.GetBuffer());
+				double closePrice = stod(itB->closePlanPrice);
 				if(itB->open.tradeType == eFuturesTradeType_OpenBull)
 				{
-					if(m_curTickData.last >= closePrice || itB->moveCloseStep != 0)
+					if((m_curTickData.last >= closePrice || itB->moveCloseStep != 0) && itB->closePlanSize != "")
 					{
 						int nStep = int(((m_curTickData.last - itB->open.priceAvg)/itB->open.priceAvg)/itB->moveCloseRate);
+						nStep = max(0, nStep);
 						if(nStep > itB->moveCloseStep)
 							itB->moveCloseStep = nStep;
+						else if(nStep < itB->moveCloseStep)
+						{
+							std::string strClientOrderID = CFuncCommon::GenUUID();
+							eFuturesTradeType tradeType;
+							if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+								tradeType = eFuturesTradeType_CloseBull;
+							else
+								tradeType = eFuturesTradeType_CloseBear;
+							std::string price = CFuncCommon::Double2String(m_curTickData.sell+DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+							OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, itB->closePlanSize, m_strLeverage, strClientOrderID);
+							itB->close.strClientOrderID = strClientOrderID;
+							itB->close.waitClientOrderIDTime = time(NULL);
+							itB->close.tradeType = tradeType;
+							itB->closePlanSize = "";	
+						}
 					}
 				}
 				else if(itB->open.tradeType == eFuturesTradeType_OpenBear)
 				{
-					if(m_curTickData.last <= closePrice || itB->moveCloseStep != 0)
+					if((m_curTickData.last <= closePrice || itB->moveCloseStep != 0) && itB->closePlanSize != "")
 					{
 						int nStep = int(((itB->open.priceAvg-m_curTickData.last) / itB->open.priceAvg) / itB->moveCloseRate);
+						nStep = max(0, nStep);
 						if(nStep > itB->moveCloseStep)
 							itB->moveCloseStep = nStep;
+						else if(nStep < itB->moveCloseStep)
+						{
+							std::string strClientOrderID = CFuncCommon::GenUUID();
+							eFuturesTradeType tradeType;
+							if(itB->open.tradeType == eFuturesTradeType_OpenBull)
+								tradeType = eFuturesTradeType_CloseBull;
+							else
+								tradeType = eFuturesTradeType_CloseBear;
+							std::string price = CFuncCommon::Double2String(m_curTickData.buy + DOUBLE_PRECISION, m_nPriceDecimal).c_str();
+							OKEX_HTTP->API_FuturesTrade(true, m_bSwapFutures, tradeType, m_strCoinType, m_strMoneyType, m_strFuturesCycle, price, itB->closePlanSize, m_strLeverage, strClientOrderID);
+							itB->close.strClientOrderID = strClientOrderID;
+							itB->close.waitClientOrderIDTime = time(NULL);
+							itB->close.tradeType = tradeType;
+							itB->closePlanSize = "";
+						}
 					}
 				}
 			}
