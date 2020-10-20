@@ -113,6 +113,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 			}
 			else
 			{
+				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
 				OnTradeFail(strCustomData);
 			}
 		}

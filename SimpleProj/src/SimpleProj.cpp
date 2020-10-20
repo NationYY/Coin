@@ -436,5 +436,8 @@ void UpdateTradeInfo(SFuturesTradeInfo& info)
 void OnTradeFail(std::string& clientOrderID)
 {
 	if(trade_info.strClientOrderID == clientOrderID)
+	{
+		LOCAL_INFO("httpÏÂµ¥Ê§°Ü");
 		step =1;
+	}
 }
