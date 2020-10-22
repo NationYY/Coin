@@ -41,6 +41,7 @@ time_t tLastUpdate15Sec = 0;
 time_t tListenPong = 0;
 STickerData tick_data;
 time_t tigger_time;
+time_t success_time = 0;
 int price_decimal = 0;
 std::string open_off;
 std::string close_rate;
@@ -148,12 +149,12 @@ int _tmain(int argc, _TCHAR* argv[])
 
 void LogicThread()
 {
-	pExchange = new COkexExchange(apiKey, secretKey, passphrase, true);
-	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
-	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
-	pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
-	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pExchange = new COkexExchange(apiKey, secretKey, passphrase);
+	pExchange->SetHttpCallBackMessage(okex_http_callbak_message);
+	pExchange->SetWebSocketCallBackOpen(okex_websocket_callbak_open);
+	pExchange->SetWebSocketCallBackClose(okex_websocket_callbak_close);
+	pExchange->SetWebSocketCallBackFail(okex_websocket_callbak_fail);
+	pExchange->SetWebSocketCallBackMessage(okex_websocket_callbak_message);
 	pExchange->Run();
 
 	clib::log::start_debug_file(false);
@@ -193,12 +194,12 @@ void Update15Sec()
 	{
 		tListenPong = 0;
 		delete pExchange;
-		pExchange = new COkexExchange(apiKey, secretKey, passphrase, true);
-		pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-		pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
-		pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
-		pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
-		pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+		pExchange = new COkexExchange(apiKey, secretKey, passphrase);
+		pExchange->SetHttpCallBackMessage(okex_http_callbak_message);
+		pExchange->SetWebSocketCallBackOpen(okex_websocket_callbak_open);
+		pExchange->SetWebSocketCallBackClose(okex_websocket_callbak_close);
+		pExchange->SetWebSocketCallBackFail(okex_websocket_callbak_fail);
+		pExchange->SetWebSocketCallBackMessage(okex_websocket_callbak_message);
 		pExchange->Run();
 		return;
 	}
@@ -371,17 +372,21 @@ void TradeLogic()
 	else if(step == 2)
 	{
 		time_t tNow = time(NULL);
-		if(tNow - tigger_time > 4)
+		if(success_time > 0 && tNow - success_time > 5)
 		{
 			if(trade_info.status == "0")
 			{
 				OKEX_HTTP->API_FuturesCancelOrder(true, is_swap_futures, coin_type, money_type, futures_cycle, trade_info.orderID);
+				LOCAL_INFO("全部撤单!");
 				step = 3;
 			}
 			else if(trade_info.status == "1" || trade_info.status == "2")
 			{
 				if(trade_info.status == "1")
+				{
 					OKEX_HTTP->API_FuturesCancelOrder(true, is_swap_futures, coin_type, money_type, futures_cycle, trade_info.orderID);
+					LOCAL_INFO("部分撤单!");
+				}
 				std::string strClientOrderID = CFuncCommon::GenUUID();
 				eFuturesTradeType tradeType;
 				double closePrice = stod(close_rate);
@@ -411,7 +416,9 @@ void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID)
 	{
 		trade_info.orderID = serverOrderID;
 		trade_info.waitClientOrderIDTime = 0;
-		LOCAL_INFO("http下单成功 client_order=%s, order=%s", trade_info.strClientOrderID.c_str(), trade_info.orderID.c_str());
+		success_time = time(NULL);
+		std::string rprice = CFuncCommon::Double2String(tick_data.last + DOUBLE_PRECISION, price_decimal).c_str();
+		LOCAL_INFO("http下单成功 client_order=%s, order=%s last=%s", trade_info.strClientOrderID.c_str(), trade_info.orderID.c_str(), rprice.c_str());
 		OKEX_HTTP->API_FuturesOrderInfo(true, is_swap_futures, coin_type, money_type, futures_cycle, serverOrderID);
 	}
 }
@@ -435,7 +442,7 @@ void UpdateTradeInfo(SFuturesTradeInfo& info)
 
 void OnTradeFail(std::string& clientOrderID)
 {
-	if(trade_info.strClientOrderID == clientOrderID)
+	//if(trade_info.strClientOrderID == clientOrderID)
 	{
 		LOCAL_INFO("http下单失败");
 		step =1;

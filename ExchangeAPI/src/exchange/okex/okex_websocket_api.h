@@ -4,7 +4,7 @@
 class COkexWebsocketAPI : public CWebsocketAPI
 {
 public:
-	COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures);
+	COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase);
 	virtual ~COkexWebsocketAPI();
 public:
 	virtual bool Ping();

@@ -84,23 +84,23 @@ extern void OnTradeFail(std::string& clientOrderID);
 
 
 
-void local_websocket_callbak_open(const char* szExchangeName)
+void okex_websocket_callbak_open(const char* szExchangeName)
 {
 	LOCAL_INFO("连接成功");
 	OnWSConnectSuccess();
 }
 
-void local_websocket_callbak_close(const char* szExchangeName)
+void okex_websocket_callbak_close(const char* szExchangeName)
 {
 	LOCAL_ERROR("断开连接");
 }
 
-void local_websocket_callbak_fail(const char* szExchangeName)
+void okex_websocket_callbak_fail(const char* szExchangeName)
 {
 	LOCAL_ERROR("连接失败");
 }
 
-void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
+void okex_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
 	switch(apiType)
 	{
@@ -113,7 +113,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 			}
 			else
 			{
-				LOCAL_ERROR("http type=%d ret=%s", apiType, strRet.c_str());
+				LOCAL_ERROR("http type=%d ret=%s strCustomData=%s", apiType, strRet.c_str(), strCustomData.c_str());
 				OnTradeFail(strCustomData);
 			}
 		}
@@ -151,7 +151,7 @@ void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const
 
 }
 
-void local_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+void okex_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	switch(apiType)
 	{

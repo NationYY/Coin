@@ -13,7 +13,7 @@ class CWebsocketAPI
 public:
 	CWebsocketAPI();
 	virtual ~CWebsocketAPI();
-	void SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase = "", bool bFutures = false);
+	void SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase = "");
 	void SetURI(std::string strURI);
 	void SetExchange(CExchange* pExchange){
 		m_pExchange = pExchange;
@@ -83,7 +83,6 @@ protected:
 	WEBSOCKET_FAIL_FUNCTION_TYPE m_failFunc;
 	bool m_bUTF8;
 	bool m_bGZIP;
-	bool m_bFutures;
 	CExchange* m_pExchange;
 public:
 	bool m_bConnect;

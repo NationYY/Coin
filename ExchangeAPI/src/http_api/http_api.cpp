@@ -348,6 +348,57 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 			header = "Content-type:application/json";
 			pHeaders = curl_slist_append(pHeaders, header.c_str());
 			curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
+			free(out);
+		}
+		break;
+	case eHttpConfirmationType_Binance:
+		{
+			if(reqInfo.reqType == eHttpReqType_Get)
+			{
+				AssembleParams(false, strGetParams, reqInfo.mapParams);
+				if(reqInfo.bSignature)
+				{
+					std::string confirmation = strGetParams;
+					unsigned char *out = NULL;
+					unsigned int outSize = 0;
+					HmacEncode("sha256", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
+					strGetParams.append("&signature=");
+					for(int i = 0; i < (int)outSize; i++)
+					{
+						char szBuffer[12] = { 0 };
+						_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
+						strGetParams.append(szBuffer);
+					}
+					free(out);
+				}
+			}
+			else if(reqInfo.reqType == eHttpReqType_Post)
+			{
+				AssembleParams(false, strPostParams, reqInfo.mapParams);
+				if(reqInfo.bSignature)
+				{
+					std::string confirmation = strPostParams;
+					unsigned char *out = NULL;
+					unsigned int outSize = 0;
+					HmacEncode("sha256", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
+					strPostParams.append("&signature=");
+					for(int i = 0; i < (int)outSize; i++)
+					{
+						char szBuffer[12] = { 0 };
+						_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
+						strPostParams.append(szBuffer);
+					}
+					free(out);
+				}
+			}
+			
+		
+			std::string header;
+			curl_slist* pHeaders = NULL;
+			header = "X-MBX-APIKEY:";
+			header.append(m_strAPIKey);
+			pHeaders = curl_slist_append(pHeaders, header.c_str());
+			curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, pHeaders);
 		}
 		break;
 	default:

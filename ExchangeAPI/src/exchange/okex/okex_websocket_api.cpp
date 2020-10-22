@@ -4,15 +4,10 @@
 #include <websocketpp/base64/base64.hpp>
 #include "log/local_log.h"
 #ifdef _OPEN_OKEX_
-COkexWebsocketAPI::COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures)
+COkexWebsocketAPI::COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase)
 {
-	SetKey(strAPIKey, strSecretKey, strPassphrase, bFutures);
+	SetKey(strAPIKey, strSecretKey, strPassphrase);
 	SetURI("wss://real.okex.com:8443/ws/v3");
-	
-	//if(bFutures)
-	//	SetURI("wss://real.okex.com:10442/ws/v3");
-	//else
-	//	SetURI("wss://real.okex.com:10441/websocket");
 }
 
 

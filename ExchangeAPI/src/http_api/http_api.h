@@ -27,15 +27,16 @@ public:
 	}
 	void RequestAsync(SHttpReqInfo& info);
 	void Request(SHttpReqInfo& reqInfo, SHttpResponse* pResInfo);
-	virtual void API_Balance() = 0;
-	virtual void API_Ticker(eMarketType type) = 0;
-	virtual void API_EntrustDepth(eMarketType type) = 0;
-	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData, std::string strCustomData) = 0;
-	virtual void API_GetTradeOrderListState(eMarketType type, int page, bool bBuy) = 0;
-	virtual void API_GetTradeOrderState(eMarketType type, std::string strID) = 0;
-	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData) = 0;
-	virtual void API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse* pResInfo = NULL) = 0;
-	virtual void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strLeverage, SHttpResponse* pResInfo = NULL) = 0;
+	virtual void API_Ping(){}
+	virtual void API_Balance(){}
+	virtual void API_Ticker(eMarketType type){}
+	virtual void API_EntrustDepth(eMarketType type){}
+	virtual void API_Trade(eMarketType type, std::string strAmount, std::string strPrice, bool bBuy, int customData, std::string strCustomData){}
+	virtual void API_GetTradeOrderListState(eMarketType type, int page, bool bBuy){}
+	virtual void API_GetTradeOrderState(eMarketType type, std::string strID){}
+	virtual void API_CancelTrade(eMarketType type, std::string strID, std::string strCustomData){}
+	virtual void API_FuturesInstruments(bool bSync, bool bSwap, SHttpResponse* pResInfo = NULL){}
+	virtual void API_FuturesSetLeverage(bool bSync, bool bSwap, std::string& strCoinType, std::string& standardCurrency, std::string& strLeverage, SHttpResponse* pResInfo = NULL){}
 private:
 	void _ProcessHttp();
 	void _Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResInfo);

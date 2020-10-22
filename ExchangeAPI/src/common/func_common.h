@@ -8,6 +8,7 @@ public:
 	static std::string Double2String(double value, int decimal);
 	static bool CheckEqual(double a, double b);
 	static char* ToString(unsigned __int64 number);
+	static char* ToString(unsigned long number);
 	static char* ToString(__int64 number);
 	static char* ToString(int number);
 	static char* ToString(unsigned int number);
@@ -20,5 +21,9 @@ public:
 	static char* GenUUID();
 	static time_t ToTime(const char *sz);
 	static int crc32(const unsigned char *buf, unsigned int size);
+	static unsigned long GetUNIXTime();
+
+
+
 };
 

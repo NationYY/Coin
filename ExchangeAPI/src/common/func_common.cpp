@@ -7,6 +7,7 @@
 #include <iostream>
 #include "boost/thread.hpp"
 #include "objbase.h"
+#include <sys/timeb.h>
 CFuncCommon::CFuncCommon()
 {
 }
@@ -96,6 +97,13 @@ bool CFuncCommon::CheckEqual(double a, double b)
 
 
 char* CFuncCommon::ToString(unsigned __int64 number)
+{
+	static __declspec(thread) char szBuff[64] = "";
+	sprintf(szBuff, "%u", number);
+	return szBuff;
+}
+
+char* CFuncCommon::ToString(unsigned long number)
 {
 	static __declspec(thread) char szBuff[64] = "";
 	sprintf(szBuff, "%llu", number);
@@ -321,4 +329,11 @@ int CFuncCommon::crc32(const unsigned char *buf, unsigned int size)
 		crc = crc32tab[(crc ^ buf[i]) & 0xff] ^ (crc >> 8);
 
 	return int(crc^0xFFFFFFFF);
+}
+
+unsigned long CFuncCommon::GetUNIXTime()
+{
+	timeb t;
+	ftime(&t);
+	return unsigned long(t.time * 1000 + t.millitm);
 }

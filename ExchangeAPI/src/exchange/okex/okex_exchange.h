@@ -4,7 +4,7 @@
 class COkexExchange : public CExchange
 {
 public:
-	COkexExchange(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures);
+	COkexExchange(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase);
 	virtual ~COkexExchange();
 	virtual const char* GetName(){
 		return "Okex";

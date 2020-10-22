@@ -4,9 +4,9 @@
 #include "exchange/okex/okex_websocket_api.h"
 #include "log/local_log.h"
 #ifdef _OPEN_OKEX_
-COkexExchange::COkexExchange(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures)
+COkexExchange::COkexExchange(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase)
 {
-	m_pWebSocketAPI = new COkexWebsocketAPI(strAPIKey, strSecretKey, strPassphrase, bFutures);
+	m_pWebSocketAPI = new COkexWebsocketAPI(strAPIKey, strSecretKey, strPassphrase);
 	m_pWebSocketAPI->SetExchange(this);
 	m_pWebSocketAPI->SetGZIP(true);
 	m_pHttpAPI = new COkexHttpAPI(strAPIKey, strSecretKey, strPassphrase);

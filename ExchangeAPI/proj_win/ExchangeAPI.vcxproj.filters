@@ -26,6 +26,9 @@
     <Filter Include="algorithm">
       <UniqueIdentifier>{a17f2f8f-86ab-4f39-9673-2da911fde129}</UniqueIdentifier>
     </Filter>
+    <Filter Include="exchange\binance">
+      <UniqueIdentifier>{d3902a8f-4024-4039-9aae-8fb6957faa30}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\http_api\http_api.cpp">
@@ -67,6 +70,15 @@
     </ClCompile>
     <ClCompile Include="..\src\log\local_action_log.cpp">
       <Filter>log</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\binance\binance_exchange.cpp">
+      <Filter>exchange\binance</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\binance\binance_http_api.cpp">
+      <Filter>exchange\binance</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\exchange\binance\binance_websocket_api.cpp">
+      <Filter>exchange\binance</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +137,15 @@
     </ClInclude>
     <ClInclude Include="..\src\common\dump.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\binance\binance_exchange.h">
+      <Filter>exchange\binance</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\binance\binance_http_api.h">
+      <Filter>exchange\binance</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\exchange\binance\binance_websocket_api.h">
+      <Filter>exchange\binance</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

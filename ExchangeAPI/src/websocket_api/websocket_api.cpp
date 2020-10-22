@@ -2,7 +2,7 @@
 #include "websocket_api.h"
 
 CWebsocketAPI::CWebsocketAPI() : m_pWebsocket(NULL), m_hThread(NULL), m_bConnect(false),
-m_bUTF8(false), m_pExchange(NULL), m_bGZIP(false), m_bFutures(false)
+m_bUTF8(false), m_pExchange(NULL), m_bGZIP(false)
 {
 	m_strAPIKey = m_strURI = m_strSecretKey = m_futuresKlineCheck = m_futuresTickerCheck = "";
 }
@@ -14,12 +14,11 @@ CWebsocketAPI::~CWebsocketAPI()
 		delete m_pWebsocket;
 }
 
-void CWebsocketAPI::SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase, bool bFutures)
+void CWebsocketAPI::SetKey(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase)
 {
 	m_strAPIKey = strAPIKey;
 	m_strSecretKey = strSecretKey;
 	m_strPassphrase = strPassphrase;
-	m_bFutures = bFutures;
 }
 
 void CWebsocketAPI::SetURI(std::string strURI)

@@ -143,6 +143,9 @@
     <ClCompile Include="..\src\algorithm\compress.cpp" />
     <ClCompile Include="..\src\algorithm\hmac.cpp" />
     <ClCompile Include="..\src\common\func_common.cpp" />
+    <ClCompile Include="..\src\exchange\binance\binance_exchange.cpp" />
+    <ClCompile Include="..\src\exchange\binance\binance_http_api.cpp" />
+    <ClCompile Include="..\src\exchange\binance\binance_websocket_api.cpp" />
     <ClCompile Include="..\src\exchange\data_center.cpp" />
     <ClCompile Include="..\src\exchange\exchange.cpp" />
     <ClCompile Include="..\src\exchange\okex\okex_exchange.cpp" />
@@ -165,6 +168,9 @@
     <ClInclude Include="..\src\common\func_common.h" />
     <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\common\thread_safe_queue.h" />
+    <ClInclude Include="..\src\exchange\binance\binance_exchange.h" />
+    <ClInclude Include="..\src\exchange\binance\binance_http_api.h" />
+    <ClInclude Include="..\src\exchange\binance\binance_websocket_api.h" />
     <ClInclude Include="..\src\exchange\data_center.h" />
     <ClInclude Include="..\src\exchange\exchange.h" />
     <ClInclude Include="..\src\exchange\okex\okex_exchange.h" />

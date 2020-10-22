@@ -18,6 +18,7 @@ enum eHttpConfirmationType
 	eHttpConfirmationType_Exx,
 	eHttpConfirmationType_Zbg,
 	eHttpConfirmationType_OKEx,
+	eHttpConfirmationType_Binance,
 	eHttpConfirmationType_Max,
 };
 
@@ -44,6 +45,7 @@ struct SHttpReqInfo
 	eHttpConfirmationType confirmationType;
 	int customData;
 	std::string strCustomData;
+	bool bSignature;
 	SHttpReqInfo()
 	{
 		strMethod = strURL = strCustomData = "";
@@ -51,6 +53,7 @@ struct SHttpReqInfo
 		apiType = eHttpAPIType_Max;
 		confirmationType = eHttpConfirmationType_Max;
 		bUTF8 = false;
+		bSignature = false;
 		customData = 0;
 	}
 };
