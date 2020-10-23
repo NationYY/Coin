@@ -6,6 +6,15 @@ public:
 	CBinanceWebsocketAPI(std::string strAPIKey, std::string strSecretKey);
 	~CBinanceWebsocketAPI();
 public:
+	void SetListenKey(std::string key);
+	virtual void Run();
 	virtual void Ping();
+	//¶©ÔÄºÏÔ¼tick
+	virtual void API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& standardCurrency);
+	void Test();
+private:
+	bool UpdateStream(bool bAdd, std::string stream);
+private:
+	std::string m_strStream;
 };
 

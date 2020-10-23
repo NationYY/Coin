@@ -151,10 +151,10 @@ void LogicThread()
 {
 	pExchange = new COkexExchange(apiKey, secretKey, passphrase);
 	pExchange->SetHttpCallBackMessage(okex_http_callbak_message);
-	pExchange->SetWebSocketCallBackOpen(okex_websocket_callbak_open);
-	pExchange->SetWebSocketCallBackClose(okex_websocket_callbak_close);
-	pExchange->SetWebSocketCallBackFail(okex_websocket_callbak_fail);
-	pExchange->SetWebSocketCallBackMessage(okex_websocket_callbak_message);
+	pExchange->SetMarketWebSocketCallBackOpen(okex_websocket_callbak_open);
+	pExchange->SetMarketWebSocketCallBackClose(okex_websocket_callbak_close);
+	pExchange->SetMarketWebSocketCallBackFail(okex_websocket_callbak_fail);
+	pExchange->SetMarketWebSocketCallBackMessage(okex_websocket_callbak_message);
 	pExchange->Run();
 
 	clib::log::start_debug_file(false);
@@ -196,10 +196,10 @@ void Update15Sec()
 		delete pExchange;
 		pExchange = new COkexExchange(apiKey, secretKey, passphrase);
 		pExchange->SetHttpCallBackMessage(okex_http_callbak_message);
-		pExchange->SetWebSocketCallBackOpen(okex_websocket_callbak_open);
-		pExchange->SetWebSocketCallBackClose(okex_websocket_callbak_close);
-		pExchange->SetWebSocketCallBackFail(okex_websocket_callbak_fail);
-		pExchange->SetWebSocketCallBackMessage(okex_websocket_callbak_message);
+		pExchange->SetMarketWebSocketCallBackOpen(okex_websocket_callbak_open);
+		pExchange->SetMarketWebSocketCallBackClose(okex_websocket_callbak_close);
+		pExchange->SetMarketWebSocketCallBackFail(okex_websocket_callbak_fail);
+		pExchange->SetMarketWebSocketCallBackMessage(okex_websocket_callbak_message);
 		pExchange->Run();
 		return;
 	}

@@ -30,7 +30,7 @@ void CBinanceHttpAPI::API_FuturesSetLeverage(bool bSync, std::string& strCoinTyp
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_SetFuturesLeverage;
 	info.reqType = eHttpReqType_Post;
-	info.strMethod = "/fapi/v1/leverage";
+	info.strMethod = "fapi/v1/leverage";
 	std::string symbol = strCoinType + standardCurrency;
 	info.mapParams["symbol"] = SHttpParam(eHttpParamType_String, symbol);
 	info.mapParams["leverage"] = SHttpParam(eHttpParamType_Int, CFuncCommon::ToString(nLeverage));
@@ -49,7 +49,7 @@ void CBinanceHttpAPI::API_ListenKey(bool bSync, SHttpResponse* pResInfo)
 	SHttpReqInfo info;
 	info.apiType = eHttpAPIType_ListenKey;
 	info.reqType = eHttpReqType_Post;
-	info.strMethod = "/fapi/v1/listenKey";
+	info.strMethod = "fapi/v1/listenKey";
 	info.confirmationType = eHttpConfirmationType_Binance;
 	info.bSignature = true;
 	if(bSync)

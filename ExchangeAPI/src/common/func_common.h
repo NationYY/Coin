@@ -22,7 +22,7 @@ public:
 	static time_t ToTime(const char *sz);
 	static int crc32(const unsigned char *buf, unsigned int size);
 	static unsigned long GetUNIXTime();
-
+	static void ToLower(std::string &source);
 
 
 };

@@ -50,7 +50,7 @@ public:
 	bool IsConnect(){
 		return m_bConnect;
 	}
-	void Run();
+	virtual void Run();
 	void Close();
 	void Update();
 	void PushRet(int type, Json::Value& retObj, const char* szRet);

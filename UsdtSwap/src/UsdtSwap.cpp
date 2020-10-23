@@ -20,9 +20,15 @@ clib::config init_config;
 string okex_api_key = "";
 string okex_secret_key = "";
 string okex_passphrase = "";
-
 string binance_api_key = "";
 string binance_secret_key = "";
+/*¹Ì¶¨ÅäÖÃ*/
+
+std::string strCoinType = "BTC";
+std::string strStandardCurrency = "USDT";
+
+
+////////////
 int nExitCode = 0;
 boost::thread logicThread;
 void LogicThread();
@@ -31,11 +37,14 @@ void OKexPong();
 void BinancePong();
 void OnOkexWSConnectSuccess();
 void OnOkexWSLoginSuccess();
-void OnBinanceWSConnectSuccess();
-void OnBinanceWSLoginSuccess();
+void OnBinanceMarketWSConnectSuccess();
+void OnBinanceAccountWSConnectSuccess();
+void OnBinanceGotListenKey(std::string key);
+void BinanceMarketSubscribe();
 time_t tLastUpdate15Sec = 0;
 time_t tListenOkexPong = 0;
 time_t tListenBinancePing = 0;
+std::string strBinanceListenKey = "";
 #include "algorithm/hmac.h"
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -116,19 +125,26 @@ void LogicThread()
 {
 	pOkexExchange = new COkexExchange(okex_api_key, okex_secret_key, okex_passphrase);
 	pOkexExchange->SetHttpCallBackMessage(okex_http_callbak_message);
-	pOkexExchange->SetWebSocketCallBackOpen(okex_websocket_callbak_open);
-	pOkexExchange->SetWebSocketCallBackClose(okex_websocket_callbak_close);
-	pOkexExchange->SetWebSocketCallBackFail(okex_websocket_callbak_fail);
-	pOkexExchange->SetWebSocketCallBackMessage(okex_websocket_callbak_message);
-	pOkexExchange->Run();
+	pOkexExchange->SetMarketWebSocketCallBackOpen(okex_websocket_callbak_open);
+	pOkexExchange->SetMarketWebSocketCallBackClose(okex_websocket_callbak_close);
+	pOkexExchange->SetMarketWebSocketCallBackFail(okex_websocket_callbak_fail);
+	pOkexExchange->SetMarketWebSocketCallBackMessage(okex_websocket_callbak_message);
+	pOkexExchange->Run(false);
 
 	pBinanceExchange = new CBinanceExchange(binance_api_key, binance_secret_key);
 	pBinanceExchange->SetHttpCallBackMessage(binance_http_callbak_message);
-	pBinanceExchange->SetWebSocketCallBackOpen(binance_websocket_callbak_open);
-	pBinanceExchange->SetWebSocketCallBackClose(binance_websocket_callbak_close);
-	pBinanceExchange->SetWebSocketCallBackFail(binance_websocket_callbak_fail);
-	pBinanceExchange->SetWebSocketCallBackMessage(binance_websocket_callbak_message);
+	pBinanceExchange->SetMarketWebSocketCallBackOpen(binance_market_websocket_callbak_open);
+	pBinanceExchange->SetMarketWebSocketCallBackClose(binance_market_websocket_callbak_close);
+	pBinanceExchange->SetMarketWebSocketCallBackFail(binance_market_websocket_callbak_fail);
+	pBinanceExchange->SetMarketWebSocketCallBackMessage(binance_market_websocket_callbak_message);
+
+	pBinanceExchange->SetAccountWebSocketCallBackOpen(binance_account_websocket_callbak_open);
+	pBinanceExchange->SetAccountWebSocketCallBackClose(binance_account_websocket_callbak_close);
+	pBinanceExchange->SetAccountWebSocketCallBackFail(binance_account_websocket_callbak_fail);
+	pBinanceExchange->SetAccountWebSocketCallBackMessage(binance_account_websocket_callbak_message);
+	BinanceMarketSubscribe();
 	pBinanceExchange->Run();
+
 	clib::log::start_debug_file(false);
 
 	clib::string log_path = "log/";
@@ -168,10 +184,10 @@ void Update15Sec()
 		delete pOkexExchange;
 		pOkexExchange = new COkexExchange(okex_api_key, okex_secret_key, okex_passphrase);
 		pOkexExchange->SetHttpCallBackMessage(okex_http_callbak_message);
-		pOkexExchange->SetWebSocketCallBackOpen(okex_websocket_callbak_open);
-		pOkexExchange->SetWebSocketCallBackClose(okex_websocket_callbak_close);
-		pOkexExchange->SetWebSocketCallBackFail(okex_websocket_callbak_fail);
-		pOkexExchange->SetWebSocketCallBackMessage(okex_websocket_callbak_message);
+		pOkexExchange->SetMarketWebSocketCallBackOpen(okex_websocket_callbak_open);
+		pOkexExchange->SetMarketWebSocketCallBackClose(okex_websocket_callbak_close);
+		pOkexExchange->SetMarketWebSocketCallBackFail(okex_websocket_callbak_fail);
+		pOkexExchange->SetMarketWebSocketCallBackMessage(okex_websocket_callbak_message);
 		pOkexExchange->Run();
 		return;
 	}
@@ -181,10 +197,16 @@ void Update15Sec()
 		delete pBinanceExchange;
 		pBinanceExchange = new CBinanceExchange(binance_api_key, binance_secret_key);
 		pBinanceExchange->SetHttpCallBackMessage(binance_http_callbak_message);
-		pBinanceExchange->SetWebSocketCallBackOpen(binance_websocket_callbak_open);
-		pBinanceExchange->SetWebSocketCallBackClose(binance_websocket_callbak_close);
-		pBinanceExchange->SetWebSocketCallBackFail(binance_websocket_callbak_fail);
-		pBinanceExchange->SetWebSocketCallBackMessage(binance_websocket_callbak_message);
+		pBinanceExchange->SetMarketWebSocketCallBackOpen(binance_market_websocket_callbak_open);
+		pBinanceExchange->SetMarketWebSocketCallBackClose(binance_market_websocket_callbak_close);
+		pBinanceExchange->SetMarketWebSocketCallBackFail(binance_market_websocket_callbak_fail);
+		pBinanceExchange->SetMarketWebSocketCallBackMessage(binance_market_websocket_callbak_message);
+
+		pBinanceExchange->SetAccountWebSocketCallBackOpen(binance_account_websocket_callbak_open);
+		pBinanceExchange->SetAccountWebSocketCallBackClose(binance_account_websocket_callbak_close);
+		pBinanceExchange->SetAccountWebSocketCallBackFail(binance_account_websocket_callbak_fail);
+		pBinanceExchange->SetAccountWebSocketCallBackMessage(binance_account_websocket_callbak_message);
+		BinanceMarketSubscribe();
 		pBinanceExchange->Run();
 	}
 
@@ -204,7 +226,8 @@ void OKexPong()
 
 void BinancePong()
 {
-	BINANCE_WEB_SOCKET->Ping();
+	LOCAL_INFO("binance ping");
+	BINANCE_MARKET_WEB_SOCKET->Ping();
 	tListenBinancePing = time(NULL);
 }
 
@@ -219,15 +242,29 @@ void OnOkexWSLoginSuccess()
 }
 
 
-void OnBinanceWSConnectSuccess()
+void OnBinanceMarketWSConnectSuccess()
 {
-	std::string a = "BTC";
-	std::string b = "USDT";
-	BINANCE_HTTP->API_FuturesSetLeverage(true, a, b, 19);
-	LOCAL_INFO("ping");
+	BinanceMarketSubscribe();
+	BINANCE_HTTP->API_ListenKey(true);
 }
 
-void OnBinanceWSLoginSuccess()
+void OnBinanceAccountWSConnectSuccess()
 {
 
+}
+
+void OnBinanceGotListenKey(std::string key)
+{
+	if(strBinanceListenKey != key)
+	{
+		strBinanceListenKey = key;
+		BINANCE_ACCOUNT_WEB_SOCKET->SetListenKey(key);
+		pBinanceExchange->RunAccountWebSocket();
+	}
+	
+}
+
+void BinanceMarketSubscribe()
+{
+	BINANCE_MARKET_WEB_SOCKET->API_FuturesTickerData(true, strCoinType, strStandardCurrency);
 }

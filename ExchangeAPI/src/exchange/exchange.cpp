@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "exchange.h"
 
-CExchange::CExchange(): m_httpCallbakMessage(NULL), m_webSocketCallbakOpen(NULL), m_webSocketCallbakClose(NULL),
-m_webSocketCallbakMessage(NULL), m_pWebSocketAPI(NULL), m_pHttpAPI(NULL), m_pHttpTradeAPI(NULL)
+CExchange::CExchange(): m_httpCallbakMessage(NULL), m_marketWebSocketCallbakOpen(NULL), m_marketWebSocketCallbakClose(NULL),
+m_marketWebSocketCallbakMessage(NULL), m_pMarketWebSocketAPI(NULL), m_pHttpAPI(NULL), m_pHttpTradeAPI(NULL), m_pAccountWebSocketAPI(NULL),
+m_accountWebSocketCallbakOpen(NULL), m_accountWebSocketCallbakClose(NULL), m_accountWebSocketCallbakFail(NULL), m_accountWebSocketCallbakMessage(NULL)
 {
 }
 
@@ -21,12 +22,19 @@ CExchange::~CExchange()
 		delete m_pHttpTradeAPI;
 		m_pHttpTradeAPI = NULL;
 	}
-	if(m_pWebSocketAPI)
+	if(m_pMarketWebSocketAPI)
 	{
-		m_pWebSocketAPI->Close();
-		delete m_pWebSocketAPI;
-		m_pWebSocketAPI = NULL;
+		m_pMarketWebSocketAPI->Close();
+		delete m_pMarketWebSocketAPI;
+		m_pMarketWebSocketAPI = NULL;
 	}
+	if(m_pAccountWebSocketAPI)
+	{
+		m_pAccountWebSocketAPI->Close();
+		delete m_pAccountWebSocketAPI;
+		m_pAccountWebSocketAPI = NULL;
+	}
+	
 }
 
 void CExchange::Run(bool openWebSokect, int normalHttpThreadCnt, int tradeHttpThreadCnt)
@@ -43,13 +51,25 @@ void CExchange::Run(bool openWebSokect, int normalHttpThreadCnt, int tradeHttpTh
 		m_pHttpTradeAPI->Run(tradeHttpThreadCnt);
 	}
 
-	if(m_pWebSocketAPI && openWebSokect)
+	if(m_pMarketWebSocketAPI && openWebSokect)
 	{
-		m_pWebSocketAPI->SetCallBackOpen(boost::bind(&CExchange::OnWebsocketConnect, this, GetName()));
-		m_pWebSocketAPI->SetCallBackClose(boost::bind(&CExchange::OnWebsocketDisconnect, this, GetName()));
-		m_pWebSocketAPI->SetCallBackFail(boost::bind(&CExchange::OnWebsocketFailConnect, this, GetName()));
-		m_pWebSocketAPI->SetCallBackMessage(boost::bind(&CExchange::OnWebsocketResponse, this, GetName(), _1, _2));
-		m_pWebSocketAPI->Run();
+		m_pMarketWebSocketAPI->SetCallBackOpen(boost::bind(&CExchange::OnMarketWebsocketConnect, this, GetName()));
+		m_pMarketWebSocketAPI->SetCallBackClose(boost::bind(&CExchange::OnMarketWebsocketDisconnect, this, GetName()));
+		m_pMarketWebSocketAPI->SetCallBackFail(boost::bind(&CExchange::OnMarketWebsocketFailConnect, this, GetName()));
+		m_pMarketWebSocketAPI->SetCallBackMessage(boost::bind(&CExchange::OnMarketWebsocketResponse, this, GetName(), _1, _2));
+		m_pMarketWebSocketAPI->Run();
+	}
+}
+
+void CExchange::RunAccountWebSocket()
+{
+	if(m_pAccountWebSocketAPI)
+	{
+		m_pAccountWebSocketAPI->SetCallBackOpen(boost::bind(&CExchange::OnAccountWebsocketConnect, this, GetName()));
+		m_pAccountWebSocketAPI->SetCallBackClose(boost::bind(&CExchange::OnAccountWebsocketDisconnect, this, GetName()));
+		m_pAccountWebSocketAPI->SetCallBackFail(boost::bind(&CExchange::OnAccountWebsocketFailConnect, this, GetName()));
+		m_pAccountWebSocketAPI->SetCallBackMessage(boost::bind(&CExchange::OnAccountWebsocketResponse, this, GetName(), _1, _2));
+		m_pAccountWebSocketAPI->Run();
 	}
 }
 
@@ -57,8 +77,10 @@ void CExchange::Update()
 {
 	if(m_pHttpAPI)
 		m_pHttpAPI->Update();
-	if(m_pWebSocketAPI)
-		m_pWebSocketAPI->Update();
+	if(m_pMarketWebSocketAPI)
+		m_pMarketWebSocketAPI->Update();
+	if(m_pAccountWebSocketAPI)
+		m_pAccountWebSocketAPI->Update();
 	if(m_pHttpTradeAPI)
 		m_pHttpTradeAPI->Update();
 }
@@ -69,26 +91,51 @@ void CExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std
 		m_httpCallbakMessage(type, retObj, strRet, customData, strCustomData);
 }
 
-void CExchange::OnWebsocketConnect(const char* szExchangeName)
+void CExchange::OnMarketWebsocketConnect(const char* szExchangeName)
 {
-	if(m_webSocketCallbakOpen)
-		m_webSocketCallbakOpen(szExchangeName);
+	if(m_marketWebSocketCallbakOpen)
+		m_marketWebSocketCallbakOpen(szExchangeName);
 
 }
-void CExchange::OnWebsocketDisconnect(const char* szExchangeName)
+void CExchange::OnMarketWebsocketDisconnect(const char* szExchangeName)
 {
-	if(m_webSocketCallbakClose)
-		m_webSocketCallbakClose(szExchangeName);
+	if(m_marketWebSocketCallbakClose)
+		m_marketWebSocketCallbakClose(szExchangeName);
 }
 
-void CExchange::OnWebsocketFailConnect(const char* szExchangeName)
+void CExchange::OnMarketWebsocketFailConnect(const char* szExchangeName)
 {
-	if(m_webSocketCallbakFail)
-		m_webSocketCallbakFail(szExchangeName);
+	if(m_marketWebSocketCallbakFail)
+		m_marketWebSocketCallbakFail(szExchangeName);
 }
 
-void CExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+void CExchange::OnMarketWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
-	if(m_webSocketCallbakMessage)
-		m_webSocketCallbakMessage(eWebsocketAPIType_Max, szExchangeName, retObj, strRet);
+	if(m_marketWebSocketCallbakMessage)
+		m_marketWebSocketCallbakMessage(eWebsocketAPIType_Max, szExchangeName, retObj, strRet);
+}
+
+
+void CExchange::OnAccountWebsocketConnect(const char* szExchangeName)
+{
+	if(m_accountWebSocketCallbakOpen)
+		m_accountWebSocketCallbakOpen(szExchangeName);
+
+}
+void CExchange::OnAccountWebsocketDisconnect(const char* szExchangeName)
+{
+	if(m_accountWebSocketCallbakClose)
+		m_accountWebSocketCallbakClose(szExchangeName);
+}
+
+void CExchange::OnAccountWebsocketFailConnect(const char* szExchangeName)
+{
+	if(m_accountWebSocketCallbakFail)
+		m_accountWebSocketCallbakFail(szExchangeName);
+}
+
+void CExchange::OnAccountWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+{
+	if(m_accountWebSocketCallbakMessage)
+		m_accountWebSocketCallbakMessage(eWebsocketAPIType_Max, szExchangeName, retObj, strRet);
 }

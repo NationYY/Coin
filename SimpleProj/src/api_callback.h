@@ -79,7 +79,7 @@ extern void OnRevTickerInfo(STickerData &data);
 extern void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 extern void UpdateTradeInfo(SFuturesTradeInfo& info);
 extern void OnTradeFail(std::string& clientOrderID);
-#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetWebSocket())
+#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetMarketWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pExchange->GetHttp())
 
 

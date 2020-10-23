@@ -6,8 +6,12 @@
 
 CBinanceExchange::CBinanceExchange(std::string strAPIKey, std::string strSecretKey)
 {
-	m_pWebSocketAPI = new CBinanceWebsocketAPI(strAPIKey, strSecretKey);
-	m_pWebSocketAPI->SetExchange(this);
+	m_pMarketWebSocketAPI = new CBinanceWebsocketAPI(strAPIKey, strSecretKey);
+	m_pMarketWebSocketAPI->SetExchange(this);
+
+	m_pAccountWebSocketAPI = new CBinanceWebsocketAPI(strAPIKey, strSecretKey);
+	m_pAccountWebSocketAPI->SetExchange(this);
+
 	m_pHttpAPI = new CBinanceHttpAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI->SetExchange(this);
 }
@@ -22,11 +26,18 @@ void CBinanceExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, co
 	CExchange::OnHttpResponse(type, retObj, strRet, customData, strCustomData);
 }
 
-void CBinanceExchange::OnWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+void CBinanceExchange::OnMarketWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	if(strRet == "ping")
 	{
-		if(m_webSocketCallbakMessage)
-			m_webSocketCallbakMessage(eWebsocketAPIType_Pong, szExchangeName, retObj, strRet);
+		if(m_marketWebSocketCallbakMessage)
+			m_marketWebSocketCallbakMessage(eWebsocketAPIType_Pong, szExchangeName, retObj, strRet);
 	}
+	else if(retObj.isObject() && retObj["e"].isString() && retObj["e"].asString() == "aggTrade")
+	{
+		if(m_marketWebSocketCallbakMessage)
+			m_marketWebSocketCallbakMessage(eWebsocketAPIType_FuturesTicker, szExchangeName, retObj, strRet);
+	}
+	else
+		LOCAL_ERROR(strRet.c_str());
 }

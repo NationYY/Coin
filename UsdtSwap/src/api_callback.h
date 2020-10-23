@@ -10,12 +10,15 @@ extern void BinancePong();
 extern void OnOkexWSConnectSuccess();
 extern void OnOkexWSLoginSuccess();
 
-extern void OnBinanceWSConnectSuccess();
-extern void OnBinanceWSLoginSuccess();
-#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pOkexExchange->GetWebSocket())
+extern void OnBinanceMarketWSConnectSuccess();
+extern void OnBinanceAccountWSConnectSuccess();
+extern void OnBinanceGotListenKey(std::string key);
+#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pOkexExchange->GetMarketWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pOkexExchange->GetHttp())
 
-#define BINANCE_WEB_SOCKET ((CBinanceWebsocketAPI*)pBinanceExchange->GetWebSocket())
+#define BINANCE_MARKET_WEB_SOCKET ((CBinanceWebsocketAPI*)pBinanceExchange->GetMarketWebSocket())
+#define BINANCE_ACCOUNT_WEB_SOCKET ((CBinanceWebsocketAPI*)pBinanceExchange->GetAccountWebSocket())
+
 #define BINANCE_HTTP ((CBinanceHttpAPI*)pBinanceExchange->GetHttp())
 void okex_websocket_callbak_open(const char* szExchangeName)
 {
@@ -43,37 +46,54 @@ void okex_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExc
 	switch(apiType)
 	{
 	case eWebsocketAPIType_SpotTrade:
-	{
-	}
+		{
+		}
 		break;
 	case eWebsocketAPIType_Pong:
-	{
-								   OKexPong();
-	}
+		{
+			OKexPong();
+		}
 		break;
 	case eWebsocketAPIType_SpotKline:
-	{
-	}
+		{
+		}
 		break;
 	}
 }
 
 
-void binance_websocket_callbak_open(const char* szExchangeName)
+void binance_market_websocket_callbak_open(const char* szExchangeName)
 {
-	LOCAL_INFO("Binance websocket连接成功");
-	OnOkexWSConnectSuccess();
+	LOCAL_INFO("Binance 行情websocket连接成功");
+	OnBinanceMarketWSConnectSuccess();
 }
 
-void binance_websocket_callbak_close(const char* szExchangeName)
+void binance_market_websocket_callbak_close(const char* szExchangeName)
 {
-	LOCAL_ERROR("Binance websocket断开连接");
+	LOCAL_ERROR("Binance 行情websocket断开连接");
 }
 
-void binance_websocket_callbak_fail(const char* szExchangeName)
+void binance_market_websocket_callbak_fail(const char* szExchangeName)
 {
-	LOCAL_ERROR("Binance websocket连接失败");
+	LOCAL_ERROR("Binance 行情websocket连接失败");
 }
+
+void binance_account_websocket_callbak_open(const char* szExchangeName)
+{
+	LOCAL_INFO("Binance 账户websocket连接成功");
+	OnBinanceAccountWSConnectSuccess();
+}
+
+void binance_account_websocket_callbak_close(const char* szExchangeName)
+{
+	LOCAL_ERROR("Binance 账户websocket断开连接");
+}
+
+void binance_account_websocket_callbak_fail(const char* szExchangeName)
+{
+	LOCAL_ERROR("Binance 账户websocket连接失败");
+}
+
 
 void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)
 {
@@ -86,31 +106,43 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 		break;
 	case eHttpAPIType_SetFuturesLeverage:
 		{
-			LOCAL_ERROR("eHttpAPIType_SetFuturesLeverage: %s", strRet.c_str());
+			LOCAL_INFO("eHttpAPIType_SetFuturesLeverage: %s", strRet.c_str());
+		}
+		break;
+	case eHttpAPIType_ListenKey:
+		{
+			if(retObj.isObject() && retObj["listenKey"].isString())
+			{
+				OnBinanceGotListenKey(retObj["listenKey"].asString());
+			}
+			else
+			{
+				LOCAL_ERROR("eHttpAPIType_ListenKey: %s", strRet.c_str());
+			}
 		}
 		break;
 	default:
+		LOCAL_ERROR("unkown httpret type=%d ret=%s", apiType, strRet.c_str());
 		break;
 	}
 
 }
 
-void binance_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+void binance_market_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
 {
 	switch(apiType)
 	{
-	case eWebsocketAPIType_SpotTrade:
-		{
-		}
-		break;
 	case eWebsocketAPIType_Pong:
 		{
 			BinancePong();
 		}
 		break;
-	case eWebsocketAPIType_SpotKline:
-		{
-		}
-		break;
+	default:
+		LOCAL_ERROR("unkown market_websocketret type=%d ret=%s", apiType, strRet.c_str());
 	}
+}
+
+void binance_account_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+{
+	LOCAL_ERROR("unkown account_websocketret type=%d ret=%s", apiType, strRet.c_str());
 }

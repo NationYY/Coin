@@ -337,3 +337,9 @@ unsigned long CFuncCommon::GetUNIXTime()
 	ftime(&t);
 	return unsigned long(t.time * 1000 + t.millitm);
 }
+
+void CFuncCommon::ToLower(std::string &source)
+{
+	transform(source.begin(), source.end(), source.begin(), ::tolower);  
+}
+
