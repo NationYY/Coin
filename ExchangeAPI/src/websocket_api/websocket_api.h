@@ -56,10 +56,10 @@ public:
 	void PushRet(int type, Json::Value& retObj, const char* szRet);
 	static unsigned __stdcall CWebsocketAPI::RunThread(LPVOID arg);
 	//订阅现货交易深度
-	virtual void API_EntrustDepth(bool bAdd, std::string& strInstrumentID) = 0;
+	virtual void API_EntrustDepth(bool bAdd, std::string& strInstrumentID) {}
 	//订阅最新成交的订单
-	virtual void API_LatestExecutedOrder(eMarketType type) = 0;
-	virtual bool Ping() = 0;
+	virtual void API_LatestExecutedOrder(eMarketType type) {}
+	virtual void Ping() {}
 	//订阅合约K线
 	virtual void API_FuturesKlineData(bool bAdd, std::string& strKlineType, std::string& strCoinType, std::string& strFuturesCycle) {};
 	//订阅合约tick

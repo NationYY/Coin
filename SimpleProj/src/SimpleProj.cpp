@@ -30,8 +30,8 @@ boost::thread logicThread;
 void LogicThread();
 void Update15Sec();
 void Pong();
-void OnWSConnectSuccess();
-void OnLoginSuccess();
+void OnOkexWSConnectSuccess();
+void OnOkexWSLoginSuccess();
 void OnRevTickerInfo(STickerData &data);
 void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 void UpdateTradeInfo(SFuturesTradeInfo& info);
@@ -209,8 +209,8 @@ void Update15Sec()
 	if(tNow - tLastUpdate15Sec < 15)
 		return;
 	tLastUpdate15Sec = tNow;
-	if(OKEX_WEB_SOCKET->Ping())
-		tListenPong = time(NULL);
+	OKEX_WEB_SOCKET->Ping();
+	tListenPong = time(NULL);
 }
 
 void Pong()
@@ -218,7 +218,7 @@ void Pong()
 	tListenPong = 0;
 }
 
-void OnWSConnectSuccess()
+void OnOkexWSConnectSuccess()
 {
 	if(OKEX_WEB_SOCKET)
 	{
@@ -295,7 +295,7 @@ void OnWSConnectSuccess()
 	}
 }
 
-void OnLoginSuccess()
+void OnOkexWSLoginSuccess()
 {
 	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, is_swap_futures, coin_type, money_type, futures_cycle);
 	LOCAL_INFO("µÇÂ¼³É¹¦");

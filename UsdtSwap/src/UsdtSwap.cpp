@@ -27,11 +27,15 @@ int nExitCode = 0;
 boost::thread logicThread;
 void LogicThread();
 void Update15Sec();
-void Pong();
-void OnWSConnectSuccess();
-void OnLoginSuccess();
+void OKexPong();
+void BinancePong();
+void OnOkexWSConnectSuccess();
+void OnOkexWSLoginSuccess();
+void OnBinanceWSConnectSuccess();
+void OnBinanceWSLoginSuccess();
 time_t tLastUpdate15Sec = 0;
-time_t tListenPong = 0;
+time_t tListenOkexPong = 0;
+time_t tListenBinancePing = 0;
 #include "algorithm/hmac.h"
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -120,6 +124,10 @@ void LogicThread()
 
 	pBinanceExchange = new CBinanceExchange(binance_api_key, binance_secret_key);
 	pBinanceExchange->SetHttpCallBackMessage(binance_http_callbak_message);
+	pBinanceExchange->SetWebSocketCallBackOpen(binance_websocket_callbak_open);
+	pBinanceExchange->SetWebSocketCallBackClose(binance_websocket_callbak_close);
+	pBinanceExchange->SetWebSocketCallBackFail(binance_websocket_callbak_fail);
+	pBinanceExchange->SetWebSocketCallBackMessage(binance_websocket_callbak_message);
 	pBinanceExchange->Run();
 	clib::log::start_debug_file(false);
 
@@ -154,9 +162,9 @@ void LogicThread()
 void Update15Sec()
 {
 	time_t tNow = time(NULL);
-	if(tListenPong && tNow - tListenPong > 15)
+	if(tListenOkexPong && tNow - tListenOkexPong > 15)
 	{
-		tListenPong = 0;
+		tListenOkexPong = 0;
 		delete pOkexExchange;
 		pOkexExchange = new COkexExchange(okex_api_key, okex_secret_key, okex_passphrase);
 		pOkexExchange->SetHttpCallBackMessage(okex_http_callbak_message);
@@ -167,22 +175,51 @@ void Update15Sec()
 		pOkexExchange->Run();
 		return;
 	}
+	if(tListenBinancePing && tNow - tListenBinancePing > 240)
+	{
+		tListenBinancePing = 0;
+		delete pBinanceExchange;
+		pBinanceExchange = new CBinanceExchange(binance_api_key, binance_secret_key);
+		pBinanceExchange->SetHttpCallBackMessage(binance_http_callbak_message);
+		pBinanceExchange->SetWebSocketCallBackOpen(binance_websocket_callbak_open);
+		pBinanceExchange->SetWebSocketCallBackClose(binance_websocket_callbak_close);
+		pBinanceExchange->SetWebSocketCallBackFail(binance_websocket_callbak_fail);
+		pBinanceExchange->SetWebSocketCallBackMessage(binance_websocket_callbak_message);
+		pBinanceExchange->Run();
+	}
 
 	if(tLastUpdate15Sec == 0)
 		tLastUpdate15Sec = tNow;
 	if(tNow - tLastUpdate15Sec < 15)
 		return;
 	tLastUpdate15Sec = tNow;
-	if(OKEX_WEB_SOCKET->Ping())
-		tListenPong = time(NULL);
+	OKEX_WEB_SOCKET->Ping();
+	tListenOkexPong = time(NULL);
 }
 
-void Pong()
+void OKexPong()
 {
-	tListenPong = 0;
+	tListenOkexPong = 0;
 }
 
-void OnWSConnectSuccess()
+void BinancePong()
+{
+	BINANCE_WEB_SOCKET->Ping();
+	tListenBinancePing = time(NULL);
+}
+
+void OnOkexWSConnectSuccess()
+{
+
+}
+
+void OnOkexWSLoginSuccess()
+{
+	
+}
+
+
+void OnBinanceWSConnectSuccess()
 {
 	std::string a = "BTC";
 	std::string b = "USDT";
@@ -190,7 +227,7 @@ void OnWSConnectSuccess()
 	LOCAL_INFO("ping");
 }
 
-void OnLoginSuccess()
+void OnBinanceWSLoginSuccess()
 {
-	
+
 }

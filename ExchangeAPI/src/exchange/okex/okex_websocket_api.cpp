@@ -15,9 +15,9 @@ COkexWebsocketAPI::~COkexWebsocketAPI()
 {
 }
 
-bool COkexWebsocketAPI::Ping()
+void COkexWebsocketAPI::Ping()
 {
-	return Request("ping");
+	Request("ping");
 }
 
 void COkexWebsocketAPI::API_EntrustDepth(bool bAdd, std::string& strInstrumentID)

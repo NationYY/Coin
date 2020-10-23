@@ -7,7 +7,7 @@ public:
 	COkexWebsocketAPI(std::string strAPIKey, std::string strSecretKey, std::string strPassphrase);
 	virtual ~COkexWebsocketAPI();
 public:
-	virtual bool Ping();
+	virtual void Ping();
 	virtual void API_EntrustDepth(bool bAdd, std::string& strInstrumentID);
 	virtual void API_LatestExecutedOrder(eMarketType type){}
 	virtual void API_FuturesKlineData(bool bAdd, bool bSwap, std::string& strKlineType, std::string& strCoinType, std::string& standardCurrency, std::string& strFuturesCycle);

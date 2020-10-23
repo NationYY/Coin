@@ -43,3 +43,18 @@ void CBinanceHttpAPI::API_FuturesSetLeverage(bool bSync, std::string& strCoinTyp
 	else
 		Request(info, pResInfo);
 }
+
+void CBinanceHttpAPI::API_ListenKey(bool bSync, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_ListenKey;
+	info.reqType = eHttpReqType_Post;
+	info.strMethod = "/fapi/v1/listenKey";
+	info.confirmationType = eHttpConfirmationType_Binance;
+	info.bSignature = true;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+	
+}

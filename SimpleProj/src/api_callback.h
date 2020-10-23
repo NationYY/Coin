@@ -73,8 +73,8 @@ struct SFuturesTradeInfo
 };
 extern COkexExchange* pExchange;
 extern void Pong();
-extern void OnWSConnectSuccess();
-extern void OnLoginSuccess();
+extern void OnOkexWSConnectSuccess();
+extern void OnOkexWSLoginSuccess();
 extern void OnRevTickerInfo(STickerData &data);
 extern void OnTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 extern void UpdateTradeInfo(SFuturesTradeInfo& info);
@@ -87,7 +87,7 @@ extern void OnTradeFail(std::string& clientOrderID);
 void okex_websocket_callbak_open(const char* szExchangeName)
 {
 	LOCAL_INFO("连接成功");
-	OnWSConnectSuccess();
+	OnOkexWSConnectSuccess();
 }
 
 void okex_websocket_callbak_close(const char* szExchangeName)
@@ -176,7 +176,7 @@ void okex_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExc
 		break;
 	case eWebsocketAPIType_Login:
 		{
-			OnLoginSuccess();
+			OnOkexWSLoginSuccess();
 		}
 		break;
 	case eWebsocketAPIType_FuturesOrderInfo:

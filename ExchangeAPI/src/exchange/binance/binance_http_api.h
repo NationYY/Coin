@@ -8,5 +8,6 @@ public:
 
 	virtual void API_Ping();
 	virtual void API_FuturesSetLeverage(bool bSync, std::string& strCoinType, std::string& standardCurrency, int nLeverage, SHttpResponse* pResInfo = NULL);
+	virtual void API_ListenKey(bool bSync, SHttpResponse* pResInfo = NULL);
 };
 
