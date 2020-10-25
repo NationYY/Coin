@@ -31,17 +31,17 @@ SFuturesTradePairInfo binance_trade_info;
 
 std::string okex_avail_balance = "0";
 std::string binance_avail_balance = "0";
-/*固定配置*/
-std::string strCoinType = "BTC";
-std::string strStandardCurrency = "USDT";
-int okex_price_decimal = 1;
-int binance_price_decimal = 2;
-int binance_open_decimal = 3;
-std::string leverage = "10";
-double open_ratio = 0.9;//开仓仓位
-int main_dir = 0;//okex的开单方向 0:空 1:多
-double target = 0.01;//目标止盈
-////////////
+/**********************固定配置**********************/
+std::string strCoinType = "BTC";			//目标币
+std::string strStandardCurrency = "USDT";	//本币
+int okex_price_decimal = 1;					//okex价格小数位数
+int binance_price_decimal = 2;				//binance价格小数位数
+int binance_open_decimal = 3;				//binance开仓小数位数
+std::string leverage = "10";				//杠杆
+double open_ratio = 0.9;					//开仓仓位
+int main_dir = 0;							//okex的开单方向 0:空 1:多
+double target = 0.01;						//目标止盈
+/****************************************************/
 int nExitCode = 0;
 boost::thread logicThread;
 void LogicThread();
