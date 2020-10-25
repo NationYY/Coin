@@ -40,7 +40,8 @@ int binance_open_decimal = 3;				//binance开仓小数位数
 std::string leverage = "10";				//杠杆
 double open_ratio = 0.9;					//开仓仓位
 int main_dir = 0;							//okex的开单方向 0:空 1:多
-double target = 0.01;						//目标止盈
+double target_profit_loss; = 0.01;			//目标盈亏
+double okex_each_size = 0.01;				//okex单张对应币数
 /****************************************************/
 int nExitCode = 0;
 boost::thread logicThread;
@@ -551,7 +552,7 @@ void TradeLogic()
 		int nLeverage = atoi(leverage.c_str());
 		double buyCnt = trade_balace / okex_tickdata.last;
 		buyCnt *= nLeverage;
-		buyCnt /= 0.01;
+		buyCnt /= okex_each_size;
 		int size = int(buyCnt*open_ratio);
 		eFuturesTradeType type;
 		double price = 0.0;
@@ -627,7 +628,7 @@ void TradeLogic()
 		}
 		LOCAL_INFO("[step2] okex最终成交%s张,平均价格%s", okex_fillSize.c_str(),  CFuncCommon::Double2String(okex_price_avg+DOUBLE_PRECISION, okex_price_decimal).c_str());
 		int fillSize = atoi(okex_fillSize.c_str());
-		okex_cost = fillSize*0.01*okex_price_avg;
+		okex_cost = fillSize*okex_each_size*okex_price_avg;
 		step = eStepType_3;
 	}
 	else if(step == eStepType_3)
@@ -712,7 +713,7 @@ void TradeLogic()
 	{
 		if(main_dir == 0)
 		{
-			if(okex_tickdata.last > okex_price_avg && ((okex_tickdata.last-okex_price_avg)/okex_price_avg) >= target)
+			if(okex_tickdata.last > okex_price_avg && ((okex_tickdata.last-okex_price_avg)/okex_price_avg) >= target_profit_loss)
 			{
 				eFuturesTradeType type = eFuturesTradeType_CloseBear;
 				double price = okex_tickdata.sell*1.01;
@@ -728,7 +729,7 @@ void TradeLogic()
 		}
 		else
 		{
-			if(okex_tickdata.last < okex_price_avg && ((okex_price_avg-okex_tickdata.last) / okex_price_avg) >= target)
+			if(okex_tickdata.last < okex_price_avg && ((okex_price_avg-okex_tickdata.last) / okex_price_avg) >= target_profit_loss)
 			{
 				eFuturesTradeType type = eFuturesTradeType_CloseBull;
 				double price = okex_tickdata.buy*0.99;
