@@ -3,6 +3,7 @@ enum eHttpReqType
 {
 	eHttpReqType_Get = 1,
 	eHttpReqType_Post,
+	eHttpReqType_Delete,
 	eHttpReqType_Max
 };
 

@@ -215,12 +215,12 @@ BOOL CManualOKExFuturesDlg::OnInitDialog()
 	__InitBaseConfigCtrl();
 	__InitTradeConfigCtrl();
 
-	pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
+	pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase);
 	pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-	pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
-	pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
-	pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
-	pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+	pExchange->SetMarketWebSocketCallBackOpen(local_websocket_callbak_open);
+	pExchange->SetMarketWebSocketCallBackClose(local_websocket_callbak_close);
+	pExchange->SetMarketWebSocketCallBackFail(local_websocket_callbak_fail);
+	pExchange->SetMarketWebSocketCallBackMessage(local_websocket_callbak_message);
 	pExchange->Run();
 
 	SetTimer(eTimerType_APIUpdate, 1, NULL);
@@ -428,12 +428,12 @@ void CManualOKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 				LOCAL_ERROR("ping³¬Ê±ÖØÁ¬");
 				m_tListenPong = 0;
 				delete pExchange;
-				pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase, true);
+				pExchange = new COkexExchange(m_apiKey, m_secretKey, m_passphrase);
 				pExchange->SetHttpCallBackMessage(local_http_callbak_message);
-				pExchange->SetWebSocketCallBackOpen(local_websocket_callbak_open);
-				pExchange->SetWebSocketCallBackClose(local_websocket_callbak_close);
-				pExchange->SetWebSocketCallBackFail(local_websocket_callbak_fail);
-				pExchange->SetWebSocketCallBackMessage(local_websocket_callbak_message);
+				pExchange->SetMarketWebSocketCallBackOpen(local_websocket_callbak_open);
+				pExchange->SetMarketWebSocketCallBackClose(local_websocket_callbak_close);
+				pExchange->SetMarketWebSocketCallBackFail(local_websocket_callbak_fail);
+				pExchange->SetMarketWebSocketCallBackMessage(local_websocket_callbak_message);
 				pExchange->Run();
 			}
 			if(m_tWaitNewSubDepth && tNow - m_tWaitNewSubDepth >= 5)
@@ -446,8 +446,8 @@ void CManualOKExFuturesDlg::OnTimer(UINT_PTR nIDEvent)
 		break;
 	case eTimerType_Ping:
 		{
-			if(OKEX_WEB_SOCKET->Ping())
-				m_tListenPong = time(NULL);
+			OKEX_WEB_SOCKET->Ping();
+			m_tListenPong = time(NULL);
 		}
 		break;
 	case eTimerType_Account:

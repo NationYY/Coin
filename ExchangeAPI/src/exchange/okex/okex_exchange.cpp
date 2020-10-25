@@ -100,7 +100,7 @@ void COkexExchange::OnMarketWebsocketResponse(const char* szExchangeName, Json::
 			m_marketWebSocketCallbakMessage(eWebsocketAPIType_SpotTrade, szExchangeName, retObj, strRet);
 	}
 	else
-		LOCAL_ERROR(strRet.c_str());
+		LOCAL_ERROR("okex unkown market_websokect %s", strRet.c_str());
 }
 
 void COkexExchange::OnHttpResponse(eHttpAPIType type, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)

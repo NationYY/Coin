@@ -27,6 +27,8 @@ enum eHttpAPIType
 	eHttpAPIType_GetSpotSomeKline,				//获取现货部分K线
 	eHttpAPIType_Ping,							//响应
 	eHttpAPIType_ListenKey,						//币安的ws key
+	eHttpAPIType_FuturesAccountInfo,			//币安的合约账户信息
+	eHttpAPIType_FuturesTransfer,				//合约资金划转
 	eHttpAPIType_Max,
 };
 

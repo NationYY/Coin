@@ -73,6 +73,7 @@ protected:
 	std::string m_strSecretKey;		//请求参数签名的私钥
 	std::string m_strPassphrase;
 	std::string m_strURI;
+	bool m_bHaveSetURI;
 	WebSocket* m_pWebsocket;
 	HANDLE m_hThread;
 	std::deque<SWebSocketResponse> m_queueResponseInfo;

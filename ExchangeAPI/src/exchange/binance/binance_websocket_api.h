@@ -11,7 +11,7 @@ public:
 	virtual void Ping();
 	//¶©ÔÄºÏÔ¼tick
 	virtual void API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& standardCurrency);
-	void Test();
+	virtual void API_FuturesEntrustDepth(bool bAdd, std::string& strCoinType, std::string& standardCurrency);
 private:
 	bool UpdateStream(bool bAdd, std::string stream);
 private:

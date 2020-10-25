@@ -32,6 +32,19 @@ void CBinanceWebsocketAPI::API_FuturesTickerData(bool bAdd, std::string& strCoin
 	}
 }
 
+void CBinanceWebsocketAPI::API_FuturesEntrustDepth(bool bAdd, std::string& strCoinType, std::string& standardCurrency)
+{
+	std::string symbol = strCoinType + standardCurrency;
+	CFuncCommon::ToLower(symbol);
+	std::string stream = symbol + "@depth5@100ms";
+	if(!UpdateStream(true, stream))
+	{
+		char szBuffer[128];
+		_snprintf(szBuffer, 128, "{\"method\":\"SUBSCRIBE\",\"params\":[\"%s@depth5@100ms\"],\"id\":%d}", symbol.c_str(), eWebsocketAPIType_FuturesEntrustDepth);
+		Request(szBuffer);
+	}
+}
+
 void CBinanceWebsocketAPI::SetListenKey(std::string key)
 {
 	std::string url = "wss://fstream.binance.com/ws/" + key;
@@ -54,14 +67,12 @@ bool CBinanceWebsocketAPI::UpdateStream(bool bAdd, std::string stream)
 
 void CBinanceWebsocketAPI::Run()
 {
-	std::string url = "wss://fstream.binance.com/ws/";
-	url = url + m_strStream;
-	SetURI(url.c_str());
-	CWebsocketAPI::Run();
-}
+	if(!m_bHaveSetURI)
+	{
+		std::string url = "wss://fstream.binance.com/ws/";
+		url = url + m_strStream;
+		SetURI(url.c_str());
+	}
 
-void CBinanceWebsocketAPI::Test()
-{
-	Request("{\"method\":\"SUBSCRIBE\",\"params\":[\"btcusdt@aggTrade\"],\"id\":1}");
-	
+	CWebsocketAPI::Run();
 }

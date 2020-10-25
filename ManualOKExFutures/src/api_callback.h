@@ -4,7 +4,7 @@
 #include "exchange/okex/okex_http_api.h"
 extern CManualOKExFuturesDlg* g_pDlg;
 extern CExchange* pExchange;
-#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetWebSocket())
+#define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pExchange->GetMarketWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pExchange->GetHttp())
 
 void local_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, const std::string& strRet, int customData, std::string strCustomData)

@@ -55,7 +55,7 @@ void CHttpAPI::Run(int threadNums)
 	m_pMainCurl = curl_easy_init();
 	curl_easy_setopt(m_pMainCurl, CURLOPT_SSL_VERIFYPEER, false); // if want to use https  
 	curl_easy_setopt(m_pMainCurl, CURLOPT_SSL_VERIFYHOST, false); // set peer and host verify false  
-	curl_easy_setopt(m_pMainCurl, CURLOPT_VERBOSE, 1);
+	//curl_easy_setopt(m_pMainCurl, CURLOPT_VERBOSE, 1);
 	curl_easy_setopt(m_pMainCurl, CURLOPT_READFUNCTION, NULL);
 	curl_easy_setopt(m_pMainCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 	curl_easy_setopt(m_pMainCurl, CURLOPT_NOSIGNAL, 1);
@@ -70,7 +70,7 @@ void CHttpAPI::Run(int threadNums)
 		pHeaders = curl_slist_append(pHeaders, szBuffer);
 	}
 	curl_easy_setopt(m_pMainCurl, CURLOPT_HTTPHEADER, pHeaders);
-
+	curl_easy_setopt(m_pMainCurl, CURLOPT_NOPROGRESS, 1);
 	m_threadNum = threadNums;
 	//curl_global_init(CURL_GLOBAL_ALL);
 	for(int i = 0; i < threadNums; ++i)
@@ -129,12 +129,14 @@ void CHttpAPI::_ProcessHttp()
 	CURL* pCurl = curl_easy_init();
 	curl_easy_setopt(pCurl, CURLOPT_SSL_VERIFYPEER, false); // if want to use https  
 	curl_easy_setopt(pCurl, CURLOPT_SSL_VERIFYHOST, false); // set peer and host verify false  
-	curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
+	//curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1);
 	curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, NULL);
 	curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
 	curl_easy_setopt(pCurl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(pCurl, CURLOPT_CONNECTTIMEOUT, 10);
 	curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 10);
+	curl_easy_setopt(pCurl, CURLOPT_NOPROGRESS, 1);
+
 	curl_slist* pHeaders = NULL;
 	pHeaders = curl_slist_append(pHeaders, "User-Agent:Mozilla / 5.0£¨Windows NT 6.1; WOW64£©AppleWebKit / 537.36£¨KHTML£¬ÈçGecko£©Chrome / 39.0.2171.71 Safari / 537.36");
 	if(m_strContentType != "")
@@ -179,6 +181,7 @@ void CHttpAPI::_GetReq(CURL* pCurl, std::string& _strURL, const char* szMethod, 
 	curl_easy_setopt(pCurl, CURLOPT_URL, strURL.c_str());
 	curl_easy_setopt(pCurl, CURLOPT_POST, 0); // post req 
 	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&strResponse);
+	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "GET");
 	CURLcode res = curl_easy_perform(pCurl);
 }
 
@@ -191,6 +194,21 @@ void CHttpAPI::_PostReq(CURL* pCurl, std::string& _strURL, const char* szMethod,
 	curl_easy_setopt(pCurl, CURLOPT_URL, strURL.c_str());
 	curl_easy_setopt(pCurl, CURLOPT_POST, 1); // post req
 	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, szPostParams);
+	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&strResponse);
+	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "POST");
+	CURLcode res = curl_easy_perform(pCurl);
+}
+
+void CHttpAPI::_DeleteReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szPostParams, std::string& strResponse)
+{
+	std::string strURL = m_strURL;
+	if(_strURL != "")
+		strURL = _strURL;
+	strURL.append("/").append(szMethod);
+	curl_easy_setopt(pCurl, CURLOPT_URL, strURL.c_str());
+	curl_easy_setopt(pCurl, CURLOPT_POST, 1); // post req
+	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, szPostParams);
+	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "DELETE");
 	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&strResponse);
 	CURLcode res = curl_easy_perform(pCurl);
 }
@@ -230,6 +248,7 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 {
 	std::string strGetParams = "";
 	std::string strPostParams = "";
+	std::string strDeleteParams = "";
 	switch(reqInfo.confirmationType)
 	{
 	case eHttpConfirmationType_Coinex:
@@ -353,46 +372,23 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 		break;
 	case eHttpConfirmationType_Binance:
 		{
-			if(reqInfo.reqType == eHttpReqType_Get)
+			AssembleParams(false, strGetParams, reqInfo.mapParams);
+			if(reqInfo.bSignature)
 			{
-				AssembleParams(false, strGetParams, reqInfo.mapParams);
-				if(reqInfo.bSignature)
+				std::string confirmation = strGetParams;
+				unsigned char *out = NULL;
+				unsigned int outSize = 0;
+				HmacEncode("sha256", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
+				strGetParams.append("&signature=");
+				for(int i = 0; i < (int)outSize; i++)
 				{
-					std::string confirmation = strGetParams;
-					unsigned char *out = NULL;
-					unsigned int outSize = 0;
-					HmacEncode("sha256", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
-					strGetParams.append("&signature=");
-					for(int i = 0; i < (int)outSize; i++)
-					{
-						char szBuffer[12] = { 0 };
-						_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
-						strGetParams.append(szBuffer);
-					}
-					free(out);
+					char szBuffer[12] = { 0 };
+					_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
+					strGetParams.append(szBuffer);
 				}
+				free(out);
 			}
-			else if(reqInfo.reqType == eHttpReqType_Post)
-			{
-				AssembleParams(false, strPostParams, reqInfo.mapParams);
-				if(reqInfo.bSignature)
-				{
-					std::string confirmation = strPostParams;
-					unsigned char *out = NULL;
-					unsigned int outSize = 0;
-					HmacEncode("sha256", m_strSecretKey.c_str(), m_strSecretKey.length(), confirmation.c_str(), confirmation.length(), out, outSize);
-					strPostParams.append("&signature=");
-					for(int i = 0; i < (int)outSize; i++)
-					{
-						char szBuffer[12] = { 0 };
-						_snprintf(szBuffer, 12, "%02x", (unsigned int)out[i]);
-						strPostParams.append(szBuffer);
-					}
-					free(out);
-				}
-			}
-			
-		
+			strPostParams = strDeleteParams = strGetParams;
 			std::string header;
 			curl_slist* pHeaders = NULL;
 			header = "X-MBX-APIKEY:";
@@ -414,8 +410,14 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 	else if(reqInfo.reqType == eHttpReqType_Post)
 	{
 		if(strPostParams == "")
-			AssembleParams(true, strPostParams, reqInfo.mapParams);
+			AssembleParams(false, strPostParams, reqInfo.mapParams);
 		_PostReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strPostParams.c_str(), strResponse);
+	}
+	else if(reqInfo.reqType == eHttpReqType_Delete)
+	{
+		if(strDeleteParams == "")
+			AssembleParams(false, strDeleteParams, reqInfo.mapParams);
+		_DeleteReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strDeleteParams.c_str(), strResponse);
 	}
 	if(pResInfo)
 	{

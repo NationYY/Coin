@@ -14,6 +14,10 @@ CBinanceExchange::CBinanceExchange(std::string strAPIKey, std::string strSecretK
 
 	m_pHttpAPI = new CBinanceHttpAPI(strAPIKey, strSecretKey);
 	m_pHttpAPI->SetExchange(this);
+
+	m_pHttpTradeAPI = new CBinanceHttpAPI(strAPIKey, strSecretKey);
+	m_pHttpTradeAPI->SetExchange(this);
+	m_pHttpTradeAPI->SetURL("https://api.binance.com");
 }
 
 
@@ -38,6 +42,25 @@ void CBinanceExchange::OnMarketWebsocketResponse(const char* szExchangeName, Jso
 		if(m_marketWebSocketCallbakMessage)
 			m_marketWebSocketCallbakMessage(eWebsocketAPIType_FuturesTicker, szExchangeName, retObj, strRet);
 	}
+	else if(retObj.isObject() && retObj["e"].isString() && retObj["e"].asString() == "depthUpdate")
+	{
+		if(m_marketWebSocketCallbakMessage)
+			m_marketWebSocketCallbakMessage(eWebsocketAPIType_FuturesEntrustDepth, szExchangeName, retObj, strRet);
+	}
 	else
-		LOCAL_ERROR(strRet.c_str());
+		LOCAL_ERROR("binance unkown market_websokect %s", strRet.c_str());
+}
+
+void CBinanceExchange::OnAccountWebsocketResponse(const char* szExchangeName, Json::Value& retObj, const std::string& strRet)
+{
+	if(retObj.isObject() && retObj["e"].isString() && retObj["e"].asString() == "ORDER_TRADE_UPDATE")
+	{
+		if(m_accountWebSocketCallbakMessage)
+			m_accountWebSocketCallbakMessage(eWebsocketAPIType_FuturesOrderInfo, szExchangeName, retObj, strRet);
+	}
+	else if(retObj.isObject() && retObj["e"].isString() && retObj["e"].asString() == "ACCOUNT_UPDATE")
+	{
+	}
+	else
+		LOCAL_ERROR("binance unkown account_websokect %s", strRet.c_str());
 }
