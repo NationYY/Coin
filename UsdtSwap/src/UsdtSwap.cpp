@@ -466,13 +466,13 @@ void UpdateBinanceTradeInfo(SFuturesTradeInfo& info)
 	{
 		if((binance_trade_info.close.status == "1" || binance_trade_info.close.status == "2") && info.status == "0")
 			return;
-		binance_trade_info.open.timeStamp = info.timeStamp;
-		binance_trade_info.open.filledQTY = info.filledQTY;
-		binance_trade_info.open.price = info.price;
-		binance_trade_info.open.priceAvg = info.priceAvg;
-		binance_trade_info.open.status = info.status;
-		binance_trade_info.open.size = info.size;
-		binance_trade_info.open.tLastUpdate = time(NULL);
+		binance_trade_info.close.timeStamp = info.timeStamp;
+		binance_trade_info.close.filledQTY = info.filledQTY;
+		binance_trade_info.close.price = info.price;
+		binance_trade_info.close.priceAvg = info.priceAvg;
+		binance_trade_info.close.status = info.status;
+		binance_trade_info.close.size = info.size;
+		binance_trade_info.close.tLastUpdate = time(NULL);
 	}
 }
 

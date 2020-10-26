@@ -428,7 +428,7 @@ void binance_websocket_callbak_message(eWebsocketAPIType apiType, const char* sz
 			else if(nowType == "NEW_INSURANCE" || nowType == "NEW_ADL")
 				info.isForceClose = true;
 			UpdateBinanceTradeInfo(info);
-			LOCAL_INFO("ws更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
+			LOCAL_INFO("ws更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["o"]["p"].asString().c_str(), retObj["o"]["ap"].asString().c_str(), info.status.c_str());
 		}
 		break;
 	default:

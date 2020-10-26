@@ -101,7 +101,7 @@ public:
 
 	void Ping()
 	{
-		m_endpoint.send(m_hdl, "", websocketpp::frame::opcode::pong);
+		m_endpoint.ping(m_hdl, "");
 	}
 
     context_ptr on_tls_init(websocketpp::connection_hdl)
