@@ -16,7 +16,7 @@ CBinanceWebsocketAPI::~CBinanceWebsocketAPI()
 
 void CBinanceWebsocketAPI::Ping()
 {
-	Request("pong");
+	CWebsocketAPI::Ping();
 }
 
 void CBinanceWebsocketAPI::API_FuturesTickerData(bool bAdd, std::string& strCoinType, std::string& standardCurrency)

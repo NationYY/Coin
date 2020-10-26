@@ -99,6 +99,11 @@ public:
 
     }
 
+	void Ping()
+	{
+		m_endpoint.send(m_hdl, "", websocketpp::frame::opcode::pong);
+	}
+
     context_ptr on_tls_init(websocketpp::connection_hdl)
 	{
         context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);

@@ -40,6 +40,14 @@ bool CWebsocketAPI::Request(const char* szRequestInfo)
 	return false;
 }
 
+void CWebsocketAPI::Ping()
+{
+	if(!m_bConnect)
+		return;
+	if(m_pWebsocket)
+		m_pWebsocket->Ping();
+}
+
 void CWebsocketAPI::Close()
 {
 	if(m_pWebsocket)
