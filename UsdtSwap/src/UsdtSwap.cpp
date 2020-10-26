@@ -817,7 +817,7 @@ void TradeLogic()
 		if(lose > 0)
 		{
 			int closeSize = atoi(okex_trade_info.close.filledQTY.c_str());
-			lose += ((okex_cost*okex_shouxufei) + (okex_trade_info.close.priceAvg*closeSize)*okex_shouxufei)*2;
+			lose += ((okex_cost*okex_shouxufei) + (okex_trade_info.close.priceAvg*closeSize*okex_each_size)*okex_shouxufei)*2;
 			//币安也要计算出同样的损失
 			double targetPrice = 0.0;
 			eFuturesTradeType type;
