@@ -59,6 +59,19 @@ void CBinanceHttpAPI::API_ListenKey(bool bSync, SHttpResponse* pResInfo)
 	
 }
 
+void CBinanceHttpAPI::API_ListenKeyLive(bool bSync, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_ListenKey;
+	info.reqType = eHttpReqType_Put;
+	info.strMethod = "fapi/v1/listenKey";
+	info.confirmationType = eHttpConfirmationType_Binance;
+	info.bSignature = false;
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+}
 
 void CBinanceHttpAPI::API_FuturesAccountInfo(bool bSync, SHttpResponse* pResInfo)
 {

@@ -213,6 +213,20 @@ void CHttpAPI::_DeleteReq(CURL* pCurl, std::string& _strURL, const char* szMetho
 	CURLcode res = curl_easy_perform(pCurl);
 }
 
+void CHttpAPI::_PutReq(CURL* pCurl, std::string& _strURL, const char* szMethod, const char* szPostParams, std::string& strResponse)
+{
+	std::string strURL = m_strURL;
+	if(_strURL != "")
+		strURL = _strURL;
+	strURL.append("/").append(szMethod);
+	curl_easy_setopt(pCurl, CURLOPT_URL, strURL.c_str());
+	curl_easy_setopt(pCurl, CURLOPT_POST, 1); // post req
+	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, szPostParams);
+	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&strResponse);
+	CURLcode res = curl_easy_perform(pCurl);
+}
+
 void CHttpAPI::Update()
 {
 	if(m_queueResponseInfo.size())
@@ -249,6 +263,7 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 	std::string strGetParams = "";
 	std::string strPostParams = "";
 	std::string strDeleteParams = "";
+	std::string strPutParams = "";
 	switch(reqInfo.confirmationType)
 	{
 	case eHttpConfirmationType_Coinex:
@@ -388,7 +403,7 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 				}
 				free(out);
 			}
-			strPostParams = strDeleteParams = strGetParams;
+			strPostParams = strDeleteParams = strPutParams = strGetParams;
 			std::string header;
 			curl_slist* pHeaders = NULL;
 			header = "X-MBX-APIKEY:";
@@ -419,6 +434,14 @@ void CHttpAPI::_Request(CURL* pCurl, SHttpReqInfo& reqInfo, SHttpResponse* pResI
 			AssembleParams(false, strDeleteParams, reqInfo.mapParams);
 		_DeleteReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strDeleteParams.c_str(), strResponse);
 	}
+	else if(reqInfo.reqType == eHttpReqType_Put)
+	{
+		if(strPutParams == "")
+			AssembleParams(true, strPutParams, reqInfo.mapParams);
+		_PutReq(pCurl, reqInfo.strURL, reqInfo.strMethod.c_str(), strPutParams.c_str(), strResponse);
+	}
+
+	
 	if(pResInfo)
 	{
 		pResInfo->apiType = reqInfo.apiType;

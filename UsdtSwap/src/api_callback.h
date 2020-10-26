@@ -293,9 +293,12 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 	{
 	case eHttpAPIType_ListenKey:
 		{
-			if(retObj.isObject() && retObj["listenKey"].isString())
+			if(retObj.isObject())
 			{
-				OnBinanceGotListenKey(retObj["listenKey"].asString());
+				if(retObj["listenKey"].isString())
+					OnBinanceGotListenKey(retObj["listenKey"].asString());
+				else
+					LOCAL_INFO("Binance listenKey live %s", strRet.c_str());
 			}
 			else
 			{
@@ -327,8 +330,10 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 				{
 					if(retObj["orderId"].isInt())
 						BinanceTradeSuccess(retObj["clientOrderId"].asString(), retObj["orderId"].asInt());
-					if(retObj["orderId"].isInt64())
+					else if(retObj["orderId"].isInt64())
 						BinanceTradeSuccess(retObj["clientOrderId"].asString(), retObj["orderId"].asInt64());
+					else
+						LOCAL_ERROR("binance 下单单号返回类型不对 %s", strRet.c_str());
 				}
 			}
 		}
@@ -359,7 +364,7 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 				else if(_filledQTY > DOUBLE_PRECISION && filledQTY == origQty)
 					info.status = "2";
 				UpdateBinanceTradeInfo(info);
-				//LOCAL_INFO("http更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
+				LOCAL_INFO("http更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
 			}
 		}
 		break;
@@ -423,7 +428,7 @@ void binance_websocket_callbak_message(eWebsocketAPIType apiType, const char* sz
 			else if(nowType == "NEW_INSURANCE" || nowType == "NEW_ADL")
 				info.isForceClose = true;
 			UpdateBinanceTradeInfo(info);
-			//LOCAL_INFO("ws更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
+			LOCAL_INFO("ws更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
 		}
 		break;
 	default:

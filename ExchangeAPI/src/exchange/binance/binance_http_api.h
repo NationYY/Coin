@@ -9,6 +9,7 @@ public:
 	virtual void API_Ping();
 	virtual void API_FuturesSetLeverage(bool bSync, std::string& strCoinType, std::string& standardCurrency, int nLeverage, SHttpResponse* pResInfo = NULL);
 	virtual void API_ListenKey(bool bSync, SHttpResponse* pResInfo = NULL);
+	virtual void API_ListenKeyLive(bool bSync, SHttpResponse* pResInfo = NULL);
 	virtual void API_FuturesAccountInfo(bool bSync, SHttpResponse* pResInfo);
 	void API_FuturesTrade(bool bSync, eFuturesTradeType tradeType, std::string& strCoinType, std::string& standardCurrency, std::string& price, std::string& size, std::string& clientOrderID, SHttpResponse* pResInfo = NULL);
 	void API_SwapFuturesTransferToSpot(bool bSync, std::string& standardCurrency, std::string amount, SHttpResponse* pResInfo = NULL);
