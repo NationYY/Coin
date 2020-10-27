@@ -225,7 +225,7 @@ void LogicThread()
 		{
 			char szBuffer[128] = {};
 			if(okex_first_balance > DOUBLE_PRECISION && binance_first_balance > DOUBLE_PRECISION)
-				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f [begin]=%.1f [now]=%.1f [trigger]=%0.2f", okex_tickdata.last, binance_tickdata.last, okex_first_balance+binance_first_balance, okex_new_balance+binance_new_balance+binance_transfer_balance+okex_transfer_balance, okex_target_profit_loss_price);
+				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f [begin]=%.1f [now]=%.1f [trigger]=%0.2f [finisht]=%d", okex_tickdata.last, binance_tickdata.last, okex_first_balance+binance_first_balance, okex_new_balance+binance_new_balance+binance_transfer_balance+okex_transfer_balance, okex_target_profit_loss_price, finish_times);
 			else
 				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f", okex_tickdata.last, binance_tickdata.last);
 			SetConsoleTitle(szBuffer);
@@ -502,7 +502,7 @@ double binance_price_avg = 0.0;
 double okex_cost = 0.0;
 double binance_cost = 0.0;
 
-
+int finish_times = 0;
 void TradeLogic()
 {
 	if(step == eStepType_0)
@@ -846,7 +846,7 @@ void TradeLogic()
 				binance_trade_info.close.strClientOrderID = strClientOrderID;
 				binance_trade_info.close.tradeType = type;
 				binance_trade_info.close.status = "0";
-				LOCAL_INFO("[step7] okex平仓亏损%.2f, binance平仓下单price=%s, size=%s", lose, strPrice.c_str(), strOpenCnt.c_str());
+				LOCAL_INFO("[step7] okex平仓亏损%.2f, binance平仓下单price=%s, size=%s, last=%.2f", lose, strPrice.c_str(), strOpenCnt.c_str(), binance_tickdata.last);
 				step = eStepType_8;
 			}
 		}
@@ -857,6 +857,7 @@ void TradeLogic()
 		{
 			if(finish_time == 0)
 			{
+				finish_times++;
 				LOCAL_INFO("[step8] binance平仓完成");
 				finish_time = time(NULL);
 				double binance_balance, okex_balance;
