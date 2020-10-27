@@ -886,8 +886,12 @@ void TradeLogic()
 				okex_new_balance = okex_balance;
 				binance_new_balance = binance_balance;
 			}
-			if(time(NULL) - finish_time > 20*60 && !bStop)
+			if(time(NULL) - finish_time > 10*60 && !bStop)
 			{
+				if(main_dir == 0)
+					main_dir = 1;
+				else
+					main_dir = 0;
 				LOCAL_INFO("[step8] 进入新一轮");
 				step = eStepType_0;
 			}
