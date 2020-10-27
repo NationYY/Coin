@@ -77,7 +77,7 @@ double binance_first_balance = 0.0;
 
 double okex_new_balance = 0.0;
 double okex_transfer_balance = 0.0;
-
+double okex_target_profit_loss_price = 0.0;
 
 double binance_new_balance = 0.0;
 double binance_transfer_balance = 0.0;
@@ -225,7 +225,7 @@ void LogicThread()
 		{
 			char szBuffer[128] = {};
 			if(okex_first_balance > DOUBLE_PRECISION && binance_first_balance > DOUBLE_PRECISION)
-				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f [begin]=%.1f [now]=%.1f", okex_tickdata.last, binance_tickdata.last, okex_first_balance+binance_first_balance, okex_new_balance+binance_new_balance+binance_transfer_balance+okex_transfer_balance);
+				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f [begin]=%.1f [now]=%.1f [trigger]=%0.2f", okex_tickdata.last, binance_tickdata.last, okex_first_balance+binance_first_balance, okex_new_balance+binance_new_balance+binance_transfer_balance+okex_transfer_balance, okex_target_profit_loss_price);
 			else
 				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f", okex_tickdata.last, binance_tickdata.last);
 			SetConsoleTitle(szBuffer);
@@ -520,6 +520,7 @@ void TradeLogic()
 		trade_balace = 0;
 		okex_fillSize = "";
 		okex_price_avg = 0.0;
+		okex_target_profit_loss_price = 0.0;
 		okex_cost = 0.0;
 		binance_fillSize = "";
 		binance_price_avg = 0.0;
@@ -665,6 +666,10 @@ void TradeLogic()
 		LOCAL_INFO("[step2] okex最终成交%s张,平均价格%s", okex_fillSize.c_str(),  CFuncCommon::Double2String(okex_price_avg+DOUBLE_PRECISION, okex_price_decimal).c_str());
 		int fillSize = atoi(okex_fillSize.c_str());
 		okex_cost = fillSize*okex_each_size*okex_price_avg;
+		if(main_dir == 0)
+			okex_target_profit_loss_price = okex_price_avg*(1+target_profit_loss);
+		else
+			okex_target_profit_loss_price = okex_price_avg*(1-target_profit_loss);
 		step = eStepType_3;
 	}
 	else if(step == eStepType_3)
@@ -676,13 +681,13 @@ void TradeLogic()
 		{
 			type = eFuturesTradeType_OpenBull;
 			open_cnt = okex_cost/binance_tickdata.sell;
-			price = binance_tickdata.sell*1.01;
+			price = binance_tickdata.sell*1.0005;
 		}
 		else
 		{
 			type = eFuturesTradeType_OpenBear;
 			open_cnt = okex_cost/binance_tickdata.buy;
-			price = binance_tickdata.buy*0.99;
+			price = binance_tickdata.buy*0.9995;
 		}
 		LOCAL_INFO("[step3] binance开单price=%s, size=%s", CFuncCommon::Double2String(price + DOUBLE_PRECISION, binance_price_decimal).c_str(), CFuncCommon::Double2String(open_cnt + DOUBLE_PRECISION, binance_open_decimal).c_str());
 		std::string strClientOrderID = CFuncCommon::GenUUID();
@@ -881,7 +886,7 @@ void TradeLogic()
 				okex_new_balance = okex_balance;
 				binance_new_balance = binance_balance;
 			}
-			if(time(NULL) - finish_time > 20 && bStop)
+			if(time(NULL) - finish_time > 20*60 && !bStop)
 			{
 				LOCAL_INFO("[step8] 进入新一轮");
 				step = eStepType_0;

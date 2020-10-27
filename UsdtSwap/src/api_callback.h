@@ -320,7 +320,7 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 		break;
 	case eHttpAPIType_FuturesTrade:
 		{
-			if(retObj.isObject() && (retObj["code"].isString()))
+			if(retObj.isObject() && (retObj["code"].isIntegral()))
 			{
 				LOCAL_ERROR("binance 下单失败 %s", strRet.c_str());
 			}
@@ -340,7 +340,7 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 		break;
 	case eHttpAPIType_FuturesTradeInfo:
 		{
-			if(retObj.isObject() && (retObj["code"].isString()))
+			if(retObj.isObject() && (retObj["code"].isIntegral()))
 				LOCAL_ERROR("binance 查询订单失败 %s", strRet.c_str());
 			else
 			{
