@@ -78,7 +78,7 @@ double binance_first_balance = 0.0;
 double okex_new_balance = 0.0;
 double okex_transfer_balance = 0.0;
 double okex_target_profit_loss_price = 0.0;
-
+int finish_times = 0;
 double binance_new_balance = 0.0;
 double binance_transfer_balance = 0.0;
 #include "algorithm/hmac.h"
@@ -502,7 +502,7 @@ double binance_price_avg = 0.0;
 double okex_cost = 0.0;
 double binance_cost = 0.0;
 
-int finish_times = 0;
+
 void TradeLogic()
 {
 	if(step == eStepType_0)
