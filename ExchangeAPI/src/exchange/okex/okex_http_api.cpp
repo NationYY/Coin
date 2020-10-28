@@ -351,4 +351,23 @@ void COkexHttpAPI::API_SwapFuturesTransferToZiJin(bool bSync, std::string& strCo
 	else
 		Request(info, pResInfo);
 }
+void COkexHttpAPI::API_ZiJinTransferToSwapFutures(bool bSync, std::string& strCoinType, std::string& standardCurrency, std::string amount, SHttpResponse* pResInfo)
+{
+	SHttpReqInfo info;
+	info.apiType = eHttpAPIType_FuturesTransfer;
+	info.reqType = eHttpReqType_Post;
+	info.strMethod = "api/account/v3/transfer";
+	info.confirmationType = eHttpConfirmationType_OKEx;
+	info.bUTF8 = true;
+	info.mapParams["currency"] = SHttpParam(eHttpParamType_String, standardCurrency.c_str());
+	info.mapParams["amount"] = SHttpParam(eHttpParamType_String, amount.c_str());
+	info.mapParams["from"] = SHttpParam(eHttpParamType_String, "6");
+	info.mapParams["to"] = SHttpParam(eHttpParamType_String, "9");
+	std::string instrument_id = strCoinType + "-" + standardCurrency;
+	info.mapParams["to_instrument_id"] = SHttpParam(eHttpParamType_String, instrument_id.c_str());
+	if(bSync)
+		RequestAsync(info);
+	else
+		Request(info, pResInfo);
+}
 #endif

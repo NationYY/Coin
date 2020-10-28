@@ -36,12 +36,14 @@ std::string strStandardCurrency = "USDT";	//本币
 int okex_price_decimal = 1;					//okex价格小数位数
 int binance_price_decimal = 2;				//binance价格小数位数
 int binance_open_decimal = 3;				//binance开仓小数位数
-std::string leverage = "10";				//杠杆
+std::string okex_leverage = "10";				//杠杆
+std::string binance_leverage = "10";				//杠杆
 double open_ratio = 0.9;					//开仓仓位
 int main_dir = 0;							//okex的开单方向 0:空 1:多
 double target_profit_loss = 0.01;			//目标盈亏
 double okex_each_size = 0.01;				//okex单张对应币数
 double okex_shouxufei = 0.0004;
+int okex_add_money = 1000;					//okex补充资金
 /****************************************************/
 int nExitCode = 0;
 bool bStop = false;
@@ -65,6 +67,7 @@ void UpdateBinanceTradeInfo(SFuturesTradeInfo& info);
 void TradeLogic();
 void OkexTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 void BinanceTradeSuccess(std::string& clientOrderID, __int64 serverOrderID);
+void UpdateOkexChiCang(int size);
 time_t tLastUpdate15Sec = 0;
 time_t tListenOkexPong = 0;
 time_t tListenBinancePing = 0;
@@ -81,6 +84,8 @@ double okex_target_profit_loss_price = 0.0;
 int finish_times = 0;
 double binance_new_balance = 0.0;
 double binance_transfer_balance = 0.0;
+int okex_chicang = 0;
+bool is_okex_baocang = false;
 #include "algorithm/hmac.h"
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -97,6 +102,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	okex_secret_key = init_config.get("okex", "secret_key", "");
 	okex_passphrase = init_config.get("okex", "passphrase", "");
 	okex_price_decimal = init_config.get_int("okex", "price_decimal", 1);
+	okex_leverage = init_config.get("okex", "leverage", "10");
 	std::string _main_dir = init_config.get("okex", "main_dir", "空");
 	if(_main_dir == "空")
 		main_dir = 0;
@@ -104,15 +110,17 @@ int _tmain(int argc, _TCHAR* argv[])
 		main_dir = 1;
 	std::string _okex_each_size = init_config.get("okex", "each_size", "0.01");
 	okex_each_size = stod(_okex_each_size);
+	okex_add_money = init_config.get_int("okex", "add_money", 1000);
 
+	
 	binance_api_key = init_config.get("binance", "api_key", "");
 	binance_secret_key = init_config.get("binance", "secret_key", "");
 	binance_price_decimal = init_config.get_int("binance", "price_decimal", 2);
 	binance_open_decimal = init_config.get_int("binance", "open_decimal", 3);
-
+	binance_leverage = init_config.get("binance", "leverage", "10");
 	strCoinType = init_config.get("trade", "coin_type", "BTC");
 	strStandardCurrency = init_config.get("trade", "local_currency", "USDT");
-	leverage = init_config.get("trade", "leverage", "10");
+	
 	std::string _open_ratio = init_config.get("trade", "open_ratio", "0.9");
 	open_ratio = stod(_open_ratio);
 	std::string _target_profit_loss = init_config.get("trade", "target_profit_loss", "0.01");
@@ -239,6 +247,11 @@ void LogicThread()
 	CLocalActionLog::ReleaseInstance();
 }
 
+void UpdateOkexChiCang(int size)
+{
+	okex_chicang = size;
+}
+
 void Update15Sec()
 {
 	time_t tNow = time(NULL);
@@ -304,7 +317,7 @@ void BinancePong()
 void OnOkexWSConnectSuccess()
 {
 	SHttpResponse resInfo;
-	OKEX_HTTP->API_FuturesSetLeverage(false, true, strCoinType, strStandardCurrency, leverage, &resInfo);
+	OKEX_HTTP->API_FuturesSetLeverage(false, true, strCoinType, strStandardCurrency, okex_leverage, &resInfo);
 	std::string strInstrumentID = strCoinType + "-" + strStandardCurrency + "-SWAP";
 	if(!resInfo.retObj.isObject() || ((resInfo.retObj["instrument_id"].asString() != strInstrumentID) && (resInfo.retObj["code"].asInt() != 35017)))
 	{
@@ -328,7 +341,7 @@ void OnBinanceMarketWSConnectSuccess()
 	BinanceMarketSubscribe();
 	BINANCE_HTTP->API_ListenKey(true);
 	SHttpResponse resInfo;
-	int nLeverage = atoi(leverage.c_str());
+	int nLeverage = atoi(binance_leverage.c_str());
 	BINANCE_HTTP->API_FuturesSetLeverage(false, strCoinType, strStandardCurrency, nLeverage, &resInfo);
 	if(resInfo.retObj.isObject() && resInfo.retObj["leverage"].isInt() && resInfo.retObj["leverage"].asInt() == nLeverage)
 	{
@@ -368,6 +381,7 @@ void OkexSubscribe()
 {
 	OKEX_WEB_SOCKET->API_FuturesTickerData(true, true, strCoinType, strStandardCurrency, emptyString);
 	OKEX_WEB_SOCKET->API_FuturesOrderInfo(true, true, strCoinType, strStandardCurrency, emptyString);
+	OKEX_WEB_SOCKET->API_FuturesPositionInfo(true, true, strCoinType, strStandardCurrency, emptyString);
 }
 
 
@@ -524,6 +538,8 @@ void TradeLogic()
 		okex_cost = 0.0;
 		binance_fillSize = "";
 		binance_price_avg = 0.0;
+		okex_chicang = 0;
+		is_okex_baocang = false;
 		okex_trade_info.Reset();
 		binance_trade_info.Reset();
 		//获取两边的余额
@@ -551,6 +567,22 @@ void TradeLogic()
 				double margin = stod(szMargin);
 				okex_balance = equity - margin;
 				okex_avail_balance = CFuncCommon::Double2String(equity - margin, 0);
+
+				if(okex_balance < okex_add_money && okex_add_money-okex_balance > 1)
+				{
+					int add = int(okex_add_money - okex_balance);
+					std::string amount = CFuncCommon::ToString(add);
+					SHttpResponse _resInfo;
+					OKEX_HTTP->API_ZiJinTransferToSwapFutures(false, strCoinType, strStandardCurrency, amount, &_resInfo);
+					if(_resInfo.retObj.isObject() && ((_resInfo.retObj["result"].isBool() && _resInfo.retObj["result"].asBool() == true)))
+					{
+						okex_balance += add;
+						okex_avail_balance = CFuncCommon::Double2String(okex_balance, 0);
+						if(okex_first_balance > DOUBLE_PRECISION)
+							okex_first_balance += add;
+					}
+					Sleep(2000);
+				}
 			}
 			else
 				return;
@@ -585,7 +617,7 @@ void TradeLogic()
 	else if(step == eStepType_1)
 	{
 		//Okex先下单
-		int nLeverage = atoi(leverage.c_str());
+		int nLeverage = atoi(okex_leverage.c_str());
 		double buyCnt = trade_balace / okex_tickdata.last;
 		buyCnt *= nLeverage;
 		buyCnt /= okex_each_size;
@@ -608,7 +640,7 @@ void TradeLogic()
 		std::string strClientOrderID = CFuncCommon::GenUUID();
 		std::string strPrice = CFuncCommon::Double2String(price+DOUBLE_PRECISION, okex_price_decimal).c_str();
 		std::string strSize = CFuncCommon::ToString(size);
-		OKEX_HTTP->API_FuturesTrade(true, true, type, strCoinType, strStandardCurrency, emptyString, strPrice, strSize, leverage, strClientOrderID, NULL);
+		OKEX_HTTP->API_FuturesTrade(true, true, type, strCoinType, strStandardCurrency, emptyString, strPrice, strSize, okex_leverage, strClientOrderID, NULL);
 		okex_trade_info.open.strClientOrderID = strClientOrderID;
 		okex_trade_info.open.tradeType = type;
 		okex_trade_info.open.status = "0";
@@ -665,6 +697,7 @@ void TradeLogic()
 		}
 		LOCAL_INFO("[step2] okex最终成交%s张,平均价格%s", okex_fillSize.c_str(),  CFuncCommon::Double2String(okex_price_avg+DOUBLE_PRECISION, okex_price_decimal).c_str());
 		int fillSize = atoi(okex_fillSize.c_str());
+		okex_chicang = fillSize;
 		okex_cost = fillSize*okex_each_size*okex_price_avg;
 		if(main_dir == 0)
 			okex_target_profit_loss_price = okex_price_avg*(1+target_profit_loss);
@@ -677,16 +710,18 @@ void TradeLogic()
 		eFuturesTradeType type;
 		double price = 0.0;
 		double open_cnt = 0.0;
+		double okex_le = stod(okex_leverage);
+		double binance_le = stod(binance_leverage);
 		if(main_dir == 0)
 		{
 			type = eFuturesTradeType_OpenBull;
-			open_cnt = okex_cost/binance_tickdata.sell;
+			open_cnt = (okex_cost/okex_le*binance_le)/binance_tickdata.sell;
 			price = binance_tickdata.sell*1.0005;
 		}
 		else
 		{
 			type = eFuturesTradeType_OpenBear;
-			open_cnt = okex_cost/binance_tickdata.buy;
+			open_cnt = (okex_cost/okex_le*binance_le)/binance_tickdata.buy;
 			price = binance_tickdata.buy*0.9995;
 		}
 		LOCAL_INFO("[step3] binance开单price=%s, size=%s", CFuncCommon::Double2String(price + DOUBLE_PRECISION, binance_price_decimal).c_str(), CFuncCommon::Double2String(open_cnt + DOUBLE_PRECISION, binance_open_decimal).c_str());
@@ -762,7 +797,7 @@ void TradeLogic()
 				std::string strClientOrderID = CFuncCommon::GenUUID();
 				std::string strPrice = CFuncCommon::Double2String(price + DOUBLE_PRECISION, okex_price_decimal).c_str();
 				std::string strSize = okex_fillSize;
-				OKEX_HTTP->API_FuturesTrade(true, true, type, strCoinType, strStandardCurrency, emptyString, strPrice, strSize, leverage, strClientOrderID, NULL);
+				OKEX_HTTP->API_FuturesTrade(true, true, type, strCoinType, strStandardCurrency, emptyString, strPrice, strSize, okex_leverage, strClientOrderID, NULL);
 				okex_trade_info.close.strClientOrderID = strClientOrderID;
 				okex_trade_info.close.tradeType = type;
 				okex_trade_info.close.status = "0";
@@ -779,7 +814,7 @@ void TradeLogic()
 				std::string strClientOrderID = CFuncCommon::GenUUID();
 				std::string strPrice = CFuncCommon::Double2String(price + DOUBLE_PRECISION, okex_price_decimal).c_str();
 				std::string strSize = okex_fillSize;
-				OKEX_HTTP->API_FuturesTrade(true, true, type, strCoinType, strStandardCurrency, emptyString, strPrice, strSize, leverage, strClientOrderID, NULL);
+				OKEX_HTTP->API_FuturesTrade(true, true, type, strCoinType, strStandardCurrency, emptyString, strPrice, strSize, okex_leverage, strClientOrderID, NULL);
 				okex_trade_info.close.strClientOrderID = strClientOrderID;
 				okex_trade_info.close.tradeType = type;
 				okex_trade_info.close.status = "0";
@@ -792,6 +827,12 @@ void TradeLogic()
 			LOCAL_INFO("[step5] binance爆仓");
 			step = eStepType_end;
 		}
+		if(okex_chicang == 0)
+		{
+			step = eStepType_6;
+			is_okex_baocang = true;
+			LOCAL_INFO("[step5] okex爆仓");
+		}
 	}
 	else if(step == eStepType_6)
 	{
@@ -800,23 +841,58 @@ void TradeLogic()
 			step = eStepType_7;
 			LOCAL_INFO("[step6] okex平仓完成");
 		}
+		if(is_okex_baocang)
+		{
+			step = eStepType_7;
+			LOCAL_INFO("[step6] okex爆仓跳过");
+		}
 	}
 	else if(step == eStepType_7)
 	{
 		//计算亏损
 		double lose = 0.0;
-		if(main_dir == 0)
+		if(is_okex_baocang)
 		{
-			if(okex_trade_info.close.priceAvg > okex_trade_info.open.priceAvg)
+			SHttpResponse resInfo;
+			OKEX_HTTP->API_FuturesAccountInfoByCurrency(false, true, strCoinType, strStandardCurrency, &resInfo);
+			if(resInfo.retObj["info"].isObject() && resInfo.retObj["info"]["equity"].isString())
 			{
-				lose = okex_cost*((okex_trade_info.close.priceAvg - okex_trade_info.open.priceAvg) / okex_trade_info.open.priceAvg);
+
+				std::string szEquity = resInfo.retObj["info"]["equity"].asString();
+				std::string szMargin = resInfo.retObj["info"]["margin"].asString();
+				double equity = stod(szEquity);
+				double margin = stod(szMargin);
+				lose = trade_balace - (equity - margin);
 			}
 		}
 		else
 		{
-			if(okex_trade_info.close.priceAvg < okex_trade_info.open.priceAvg)
+			if(main_dir == 0)
 			{
-				lose = okex_cost*((okex_trade_info.open.priceAvg - okex_trade_info.close.priceAvg) / okex_trade_info.open.priceAvg);
+				if(okex_trade_info.close.priceAvg > okex_trade_info.open.priceAvg)
+				{
+					lose = okex_cost*((okex_trade_info.close.priceAvg - okex_trade_info.open.priceAvg) / okex_trade_info.open.priceAvg);
+				}
+			}
+			else
+			{
+				if(okex_trade_info.close.priceAvg < okex_trade_info.open.priceAvg)
+				{
+					lose = okex_cost*((okex_trade_info.open.priceAvg - okex_trade_info.close.priceAvg) / okex_trade_info.open.priceAvg);
+				}
+			}
+			LOCAL_INFO("Okex 计算出亏损%.2f", lose);
+			SHttpResponse resInfo;
+			OKEX_HTTP->API_FuturesAccountInfoByCurrency(false, true, strCoinType, strStandardCurrency, &resInfo);
+			if(resInfo.retObj["info"].isObject() && resInfo.retObj["info"]["equity"].isString())
+			{
+
+				std::string szEquity = resInfo.retObj["info"]["equity"].asString();
+				std::string szMargin = resInfo.retObj["info"]["margin"].asString();
+				double equity = stod(szEquity);
+				double margin = stod(szMargin);
+				double aa = trade_balace - (equity - margin);
+				LOCAL_INFO("Okex 获取出亏损%.2f", aa);
 			}
 		}
 		if(lose > 0)

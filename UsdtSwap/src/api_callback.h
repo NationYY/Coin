@@ -107,6 +107,8 @@ extern void UpdateOkexTradeInfo(SFuturesTradeInfo& info);
 extern void UpdateBinanceTradeInfo(SFuturesTradeInfo& info);
 extern void OkexTradeSuccess(std::string& clientOrderID, std::string& serverOrderID);
 extern void BinanceTradeSuccess(std::string& clientOrderID, __int64 serverOrderID);
+extern void UpdateOkexChiCang(int size);
+extern int main_dir;
 #define OKEX_WEB_SOCKET ((COkexWebsocketAPI*)pOkexExchange->GetMarketWebSocket())
 #define OKEX_HTTP ((COkexHttpAPI*)pOkexExchange->GetHttp())
 
@@ -248,6 +250,32 @@ void okex_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExc
 			OnOkexWSLoginSuccess();
 		}
 		break;
+	case eWebsocketAPIType_FuturesPositionInfo:
+		{
+			if(retObj.isObject() && retObj["data"].isArray() && retObj["data"][0]["holding"].isArray())
+			{
+				for(int i = 0; i < retObj["data"][0]["holding"].size(); ++i)
+				{
+					if(main_dir == 0 && retObj["data"][0]["holding"][i]["side"].asString() == "short")
+					{
+						std::string size = retObj["data"][0]["holding"][i]["position"].asString();
+						int nSize = atoi(size.c_str());
+						LOCAL_ERROR("okex 更新持仓信息 %d", nSize);
+						UpdateOkexChiCang(nSize);
+					}
+					else if(main_dir == 1 && retObj["data"][0]["holding"][i]["side"].asString() == "long")
+					{
+						std::string size = retObj["data"][0]["holding"][i]["position"].asString();
+						int nSize = atoi(size.c_str());
+						LOCAL_ERROR("okex 更新持仓信息 %d", nSize);
+						UpdateOkexChiCang(nSize);
+					}
+				}
+			}
+			else
+				LOCAL_ERROR("okex 更新持仓信息失败 %s", strRet.c_str());
+		}
+		break;
 	default:
 		LOCAL_ERROR("not handle okex_websocket_ret type=%d ret=%s", apiType, strRet.c_str());
 	}
@@ -364,7 +392,7 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 				else if(_filledQTY > DOUBLE_PRECISION && filledQTY == origQty)
 					info.status = "2";
 				UpdateBinanceTradeInfo(info);
-				LOCAL_INFO("http更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
+				//LOCAL_INFO("http更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["price"].asString().c_str(), retObj["price_avg"].asString().c_str(), info.status.c_str());
 			}
 		}
 		break;
@@ -428,7 +456,7 @@ void binance_websocket_callbak_message(eWebsocketAPIType apiType, const char* sz
 			else if(nowType == "NEW_INSURANCE" || nowType == "NEW_ADL")
 				info.isForceClose = true;
 			UpdateBinanceTradeInfo(info);
-			LOCAL_INFO("ws更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["o"]["p"].asString().c_str(), retObj["o"]["ap"].asString().c_str(), info.status.c_str());
+			//LOCAL_INFO("ws更新Binance订单信息 client_order=%s, order=%s, filledQTY=%s, price=%s, priceAvg=%s, status=%s", info.strClientOrderID.c_str(), info.orderID.c_str(), info.filledQTY.c_str(), retObj["o"]["p"].asString().c_str(), retObj["o"]["ap"].asString().c_str(), info.status.c_str());
 		}
 		break;
 	default:

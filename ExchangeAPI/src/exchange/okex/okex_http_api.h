@@ -39,7 +39,7 @@ public:
 	void API_SpotInstruments(bool bSync, SHttpResponse* pResInfo = NULL);
 
 	void API_SwapFuturesTransferToZiJin(bool bSync, std::string& strCoinType, std::string& standardCurrency, std::string amount, SHttpResponse* pResInfo = NULL);
-	
+	void API_ZiJinTransferToSwapFutures(bool bSync, std::string& strCoinType, std::string& standardCurrency, std::string amount, SHttpResponse* pResInfo = NULL);
 public:
 	int m_futuresAccountInfoByCurrencyIndex;
 	int m_SpotAccountInfoByCurrencyIndex;
