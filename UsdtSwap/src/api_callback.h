@@ -260,14 +260,14 @@ void okex_websocket_callbak_message(eWebsocketAPIType apiType, const char* szExc
 					{
 						std::string size = retObj["data"][0]["holding"][i]["position"].asString();
 						int nSize = atoi(size.c_str());
-						LOCAL_ERROR("okex 更新持仓信息 %d", nSize);
+						LOCAL_INFO("okex 更新持仓信息 %d", nSize);
 						UpdateOkexChiCang(nSize);
 					}
 					else if(main_dir == 1 && retObj["data"][0]["holding"][i]["side"].asString() == "long")
 					{
 						std::string size = retObj["data"][0]["holding"][i]["position"].asString();
 						int nSize = atoi(size.c_str());
-						LOCAL_ERROR("okex 更新持仓信息 %d", nSize);
+						LOCAL_INFO("okex 更新持仓信息 %d", nSize);
 						UpdateOkexChiCang(nSize);
 					}
 				}
