@@ -325,8 +325,8 @@ void binance_http_callbak_message(eHttpAPIType apiType, Json::Value& retObj, con
 			{
 				if(retObj["listenKey"].isString())
 					OnBinanceGotListenKey(retObj["listenKey"].asString());
-				else
-					LOCAL_INFO("Binance listenKey live %s", strRet.c_str());
+				//else
+				//	LOCAL_INFO("Binance listenKey live %s", strRet.c_str());
 			}
 			else
 			{
