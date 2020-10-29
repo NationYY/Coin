@@ -45,6 +45,7 @@ double okex_each_size = 0.01;				//okex单张对应币数
 double okex_shouxufei = 0.0004;
 int okex_add_money = 1000;					//okex补充资金
 /****************************************************/
+int next_main_dir = -1;
 int nExitCode = 0;
 bool bStop = false;
 boost::thread logicThread;
@@ -175,11 +176,23 @@ int _tmain(int argc, _TCHAR* argv[])
 					}
 					else if(strcmp(tempBuf, "stop") == 0)
 					{
+						LOCAL_INFO("结束后暂停");
 						bStop = true;
 					}
 					else if(strcmp(tempBuf, "go") == 0)
 					{
+						LOCAL_INFO("结束后继续");
 						bStop = false;
+					}
+					else if(strcmp(tempBuf, "空") == 0)
+					{
+						LOCAL_INFO("下轮Okex开空");
+						next_main_dir = 0;
+					}
+					else if(strcmp(tempBuf, "多") == 0)
+					{
+						LOCAL_INFO("下轮Okex开多");
+						next_main_dir = 1;
 					}
 				}
 			}
@@ -527,7 +540,7 @@ double binance_price_avg = 0.0;
 double okex_cost = 0.0;
 double binance_cost = 0.0;
 
-
+bool first_trigger = false;
 void TradeLogic()
 {
 	if(step == eStepType_0)
@@ -554,6 +567,7 @@ void TradeLogic()
 		move_stop_step = 0;
 		okex_trade_info.Reset();
 		binance_trade_info.Reset();
+		first_trigger = false;
 		//获取两边的余额
 		double binance_balance, okex_balance;
 		{
@@ -832,9 +846,17 @@ void TradeLogic()
 		{
 			if(okex_tickdata.last > okex_price_avg && ((okex_tickdata.last-okex_price_avg)/okex_price_avg) >= target_profit_loss)
 			{
+				if(!first_trigger)
+				{
+					first_trigger = true;
+					LOCAL_INFO("[step5] okex首次触发收益价格");
+				}
 				int nowStop = int((((okex_tickdata.last-okex_price_avg)/okex_price_avg)-target_profit_loss)/move_stop);
 				if(nowStop > move_stop_step)
+				{
 					move_stop_step = nowStop;
+					LOCAL_INFO("[step5] okex移动止盈进入step%d", nowStop);
+				}
 				else if(move_stop_step > 0 && nowStop < move_stop_step)
 				{
 					eFuturesTradeType type = eFuturesTradeType_CloseBear;
@@ -847,7 +869,7 @@ void TradeLogic()
 					okex_trade_info.close.tradeType = type;
 					okex_trade_info.close.status = "0";
 					step = eStepType_6;
-					LOCAL_INFO("[step5] okex触发收益价格平仓 price=%s, strSize=%s", strPrice.c_str(), strSize.c_str());
+					LOCAL_INFO("[step5] okex触发收益价格平仓 price=%s, size=%s", strPrice.c_str(), strSize.c_str());
 				}
 			}
 		}
@@ -855,9 +877,17 @@ void TradeLogic()
 		{
 			if(okex_tickdata.last < okex_price_avg && ((okex_price_avg-okex_tickdata.last) / okex_price_avg) >= target_profit_loss)
 			{
+				if(!first_trigger)
+				{
+					first_trigger = true;
+					LOCAL_INFO("[step5] okex首次触发收益价格");
+				}
 				int nowStop = int((((okex_price_avg-okex_tickdata.last) / okex_price_avg)-target_profit_loss)/move_stop);
 				if(nowStop > move_stop_step)
+				{
 					move_stop_step = nowStop;
+					LOCAL_INFO("[step5] okex移动止盈进入step%d", nowStop);
+				}
 				else if(move_stop_step > 0 && nowStop < move_stop_step)
 				{
 					eFuturesTradeType type = eFuturesTradeType_CloseBull;
@@ -1017,10 +1047,18 @@ void TradeLogic()
 			}
 			if(time(NULL) - finish_time > 10*60 && !bStop && !binance_trade_info.open.isForceClose)
 			{
-				if(main_dir == 0)
-					main_dir = 1;
+				if(next_main_dir != -1)
+				{
+					main_dir = next_main_dir;
+					next_main_dir = -1;
+				}
 				else
-					main_dir = 0;
+				{
+					if(main_dir == 0)
+						main_dir = 1;
+					else
+						main_dir = 0;
+				}
 				LOCAL_INFO("[step8] 进入新一轮");
 				step = eStepType_0;
 			}
