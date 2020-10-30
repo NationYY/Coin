@@ -1045,7 +1045,7 @@ void TradeLogic()
 				okex_new_balance = okex_balance;
 				binance_new_balance = binance_balance;
 			}
-			if(time(NULL) - finish_time > 10*60 && !bStop && !binance_trade_info.open.isForceClose)
+			if(time(NULL) - finish_time > 5*60 && !bStop && !binance_trade_info.open.isForceClose)
 			{
 				if(next_main_dir != -1)
 				{
