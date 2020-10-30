@@ -252,9 +252,10 @@ void LogicThread()
 		{
 			char szBuffer[128] = {};
 			if(okex_first_balance > DOUBLE_PRECISION && binance_first_balance > DOUBLE_PRECISION)
-				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f [begin]=%.1f [now]=%.1f [trigger]=%0.2f [finisht]=%d", okex_tickdata.last, binance_tickdata.last, okex_first_balance+binance_first_balance, okex_new_balance+binance_new_balance+binance_transfer_balance+okex_transfer_balance, okex_target_profit_loss_price, finish_times);
+				_snprintf(szBuffer, 128, "[okex_last]=%s [binance_last]=%s [begin]=%.1f [now]=%.1f [trigger]=%s [finisht]=%d", CFuncCommon::Double2String(okex_tickdata.last + DOUBLE_PRECISION, okex_price_decimal).c_str(), CFuncCommon::Double2String(binance_tickdata.last + DOUBLE_PRECISION, binance_price_decimal).c_str(), okex_first_balance + binance_first_balance, okex_new_balance + binance_new_balance + binance_transfer_balance + okex_transfer_balance, CFuncCommon::Double2String(okex_target_profit_loss_price + DOUBLE_PRECISION, okex_price_decimal).c_str()
+				, finish_times);
 			else
-				_snprintf(szBuffer, 128, "[okex_last]=%.1f [binance_last]=%.2f", okex_tickdata.last, binance_tickdata.last);
+				_snprintf(szBuffer, 128, "[okex_last]=%s [binance_last]=%s", CFuncCommon::Double2String(okex_tickdata.last + DOUBLE_PRECISION, okex_price_decimal).c_str(), CFuncCommon::Double2String(binance_tickdata.last + DOUBLE_PRECISION, binance_price_decimal).c_str());
 			SetConsoleTitle(szBuffer);
 		}
 		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
@@ -938,7 +939,8 @@ void TradeLogic()
 				okex_trade_info.close.tradeType = type;
 				okex_trade_info.close.status = "0";
 				step = eStepType_8;
-				LOCAL_INFO("[step5] binance爆仓 okex平仓下单price=%s, size=%s, last=%.2f", strPrice.c_str(), strSize.c_str(), okex_tickdata.last);
+				
+				LOCAL_INFO("[step5] binance爆仓 okex平仓下单price=%s, size=%s, last=%s", strPrice.c_str(), strSize.c_str(), CFuncCommon::Double2String(okex_tickdata.last + DOUBLE_PRECISION, okex_price_decimal).c_str());
 			}
 		}
 		if(okex_chicang == 0)
@@ -953,7 +955,7 @@ void TradeLogic()
 		if(okex_trade_info.close.status == "2")
 		{
 			step = eStepType_7;
-			LOCAL_INFO("[step6] okex平仓完成 price=%.2f, size=%s", okex_trade_info.close.priceAvg, okex_trade_info.close.filledQTY.c_str());
+			LOCAL_INFO("[step6] okex平仓完成 price=%s, size=%s", CFuncCommon::Double2String(okex_trade_info.close.priceAvg + DOUBLE_PRECISION, okex_price_decimal).c_str(), okex_trade_info.close.filledQTY.c_str());
 		}
 		if(is_okex_baocang)
 		{
@@ -1004,7 +1006,7 @@ void TradeLogic()
 				binance_trade_info.close.strClientOrderID = strClientOrderID;
 				binance_trade_info.close.tradeType = type;
 				binance_trade_info.close.status = "0";
-				LOCAL_INFO("[step7] okex平仓亏损%.2f, binance平仓下单price=%s, size=%s, last=%.2f", lose, strPrice.c_str(), strOpenCnt.c_str(), binance_tickdata.last);
+				LOCAL_INFO("[step7] okex平仓亏损%.2f, binance平仓下单price=%s, size=%s, last=%s", lose, strPrice.c_str(), strOpenCnt.c_str(), CFuncCommon::Double2String(binance_tickdata.last + DOUBLE_PRECISION, binance_price_decimal).c_str());
 				step = eStepType_8;
 			}
 		}
@@ -1045,7 +1047,7 @@ void TradeLogic()
 				okex_new_balance = okex_balance;
 				binance_new_balance = binance_balance;
 			}
-			if(time(NULL) - finish_time > 5*60 && !bStop && !binance_trade_info.open.isForceClose)
+			if(time(NULL) - finish_time > 20*60 && !bStop && !binance_trade_info.open.isForceClose)
 			{
 				if(next_main_dir != -1)
 				{
@@ -1054,10 +1056,14 @@ void TradeLogic()
 				}
 				else
 				{
-					if(main_dir == 0)
+					if(okex_tickdata.last < okex_trade_info.close.priceAvg)
+					{
 						main_dir = 1;
+					}
 					else
+					{
 						main_dir = 0;
+					}
 				}
 				LOCAL_INFO("[step8] 进入新一轮");
 				step = eStepType_0;
