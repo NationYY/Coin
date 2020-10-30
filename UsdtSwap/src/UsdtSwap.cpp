@@ -1058,11 +1058,11 @@ void TradeLogic()
 				{
 					if(okex_tickdata.last < okex_trade_info.close.priceAvg)
 					{
-						main_dir = 1;
+						main_dir = 0;
 					}
 					else
 					{
-						main_dir = 0;
+						main_dir = 1;
 					}
 				}
 				LOCAL_INFO("[step8] 进入新一轮");
